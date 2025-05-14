@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRIPSODA - 로그인/회원가입</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #0ED8D5;
+      --primary-dark: #04A6A4;
+      --primary-light: #E0F7F7;
+      --secondary-color: #FF8C38;
+      --text-color: #333333;
+      --text-secondary: #666666;
+      --text-light: #888888;
+      --background-color: #F8F9FA;
+      --white: #FFFFFF;
+      --border-color: #EEEEEE;
+      --error-color: #FF4D4D;
+      --success-color: #4CAF50;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --transition: all 0.3s ease;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans KR', sans-serif; }
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: url('/api/placeholder/1920/1080');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    .container {
+      display: flex;
+      max-width: 1300px;
+      width: 100%;
+      min-height: 650px;
+      background-color: var(--white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+    .left-banner {
+      flex: 0 0 45%;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(120deg, var(--primary-color), var(--primary-dark));
+    }
+    .banner-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
+      z-index: 1;
+    }
+    .banner-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.9;
+      filter: saturate(1.2);
+      transition: transform 15s ease;
+    }
+    .left-banner:hover .banner-image { transform: scale(1.05); }
+    .banner-text {
+      position: absolute;
+      top: 25%;
+      left: 10%;
+      color: var(--white);
+      z-index: 2;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .banner-text h1 {
+      font-size: 3.2rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+    }
+    .banner-text p {
+      font-size: 1.1rem;
+      font-weight: 400;
+      max-width: 80%;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+    .banner-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: var(--white);
+      color: var(--primary-dark);
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+    }
+    .banner-button:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      background-color: var(--primary-light);
+    }
+    .qr-code {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      width: 100px;
+      height: 100px;
+      background-color: var(--white);
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      z-index: 2;
+      transition: var(--transition);
+    }
+    .qr-code:hover { transform: scale(1.05); }
+    .app-download {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      color: var(--white);
+      font-size: 0.95rem;
+      z-index: 2;
+    }
+    .app-store-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .app-store-buttons img {
+      height: 36px;
+      cursor: pointer;
+      transition: var(--transition);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    .app-store-buttons img:hover { transform: translateY(-2px); }
+
+    /* 오른쪽 영역 디자인 업그레이드 */
+    .right-content {
+      flex: 0 0 55%;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background-color: var(--white);
+      overflow: hidden;
+    }
+
+    /* 배경 디자인 요소 추가 */
+    .right-bg-element {
+      position: absolute;
+      opacity: 0.05;
+      z-index: 0;
+    }
+    .bg-circle-1 {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      top: -100px;
+      right: -100px;
+    }
+    .bg-circle-2 {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: var(--secondary-color);
+      bottom: -50px;
+      left: -50px;
+    }
+    .bg-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-image: url('/api/placeholder/600/600');
+      background-size: 200px;
+      opacity: 0.03;
+      z-index: 0;
+    }
+
+    .logo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo img {
+      height: 50px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: var(--transition);
+    }
+    .logo img:hover {
+      transform: scale(1.05);
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 450px;
+      margin: 0 auto;
+      padding: 30px;
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .auth-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 10px;
+      position: relative;
+      display: inline-block;
+    }
+    .auth-header h2::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+      border-radius: 3px;
+    }
+    .auth-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+
+    /* 로그인 방식 카드 디자인 */
+    .social-login {
+      margin-bottom: 25px;
+    }
+    .social-login-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      position: relative;
+      font-weight: 500;
+    }
+    .social-login-title::before,
+    .social-login-title::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 35%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border-color));
+    }
+    .social-login-title::before {
+      left: 0;
+      background: linear-gradient(to right, var(--border-color), transparent);
+    }
+    .social-login-title::after { right: 0; }
+
+    .social-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 180px;
+      padding: 12px 15px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      background-color: var(--white);
+      transition: var(--transition);
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .social-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+              90deg,
+              rgba(255,255,255,0) 0%,
+              rgba(255,255,255,0.2) 50%,
+              rgba(255,255,255,0) 100%
+      );
+      transition: left 0.7s ease;
+    }
+
+    .social-button:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .social-button:hover::before {
+      left: 100%;
+    }
+
+    .social-button.google {
+      color: #4285F4;
+      border-color: #4285F4;
+    }
+    .social-button.naver {
+      color: #03C75A;
+      border-color: #03C75A;
+    }
+    .social-button i {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    /* 추가 정보 폼 디자인 개선 */
+    .auth-form {
+      margin-top: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: var(--white);
+      font-size: 1rem;
+      color: var(--text-color);
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(14, 216, 213, 0.2);
+    }
+    .form-input.error { border-color: var(--error-color); }
+    .error-message {
+      color: var(--error-color);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: none;
+    }
+    .error-message.visible { display: block; }
+
+    .form-button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 20px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+              90deg,
+              rgba(255,255,255,0) 0%,
+              rgba(255,255,255,0.3) 50%,
+              rgba(255,255,255,0) 100%
+      );
+      transition: left 0.7s ease;
+    }
+
+    .form-button:hover {
+      background: linear-gradient(45deg, var(--primary-dark), var(--primary-color));
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .form-button:hover::before {
+      left: 100%;
+    }
+
+    .form-button:disabled {
+      background: var(--text-light);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 여행 관련 이미지 추가 */
+    .destination-images {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      position: relative;
+      z-index: 1;
+      padding: 0 20px;
+    }
+
+    .destination-image {
+      width: 120px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      box-shadow: var(--shadow-md);
+      transform: rotate(calc(var(--rotation) * 1deg));
+      transition: var(--transition);
+      cursor: pointer;
+      border: 3px solid white;
+    }
+
+    .destination-image:hover {
+      transform: translateY(-10px) rotate(calc(var(--rotation) * 1deg));
+      z-index: 10;
+    }
+
+    .destination-image:nth-child(1) { --rotation: -5; }
+    .destination-image:nth-child(2) { --rotation: 3; }
+    .destination-image:nth-child(3) { --rotation: -2; }
+    .destination-image:nth-child(4) { --rotation: 4; }
+
+    .testimonial {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding: 15px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(45deg, rgba(14, 216, 213, 0.1), rgba(255, 140, 56, 0.1));
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .testimonial-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .testimonial-content {
+      flex: 1;
+    }
+
+    .testimonial-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .testimonial-author {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-color);
+      margin-top: 5px;
+    }
+
+    .additional-info,
+    .optional-info {
+      display: none;
+    }
+    .additional-info.active,
+    .optional-info.active {
+      display: block;
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .form-button.secondary {
+      background: var(--white);
+      color: var(--primary-dark);
+      border: 1px solid var(--primary-color);
+    }
+
+    .form-button.secondary:hover {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: auto;
+      padding-top: 20px;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 1200px) {
+      .container {
+        max-width: 90%;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .destination-images {
+        display: none;
+      }
+
+      .testimonial {
+        margin-top: 30px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+      .left-banner, .right-content {
+        flex: 0 0 100%;
+      }
+      .left-banner {
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="left-banner">
+    <div class="banner-overlay"></div>
+    <img src="/api/placeholder/800/1200" alt="여행 친구들" class="banner-image">
+    <div class="banner-text">
+      <h1>함께라면<br>못 갈 곳은<br>없어</h1>
+      <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
+      <a href="#" class="banner-button">지금 시작하기</a>
+    </div>
+    <div class="app-download">
+      <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
+      <div class="app-store-buttons">
+        <img src="/api/placeholder/120/40" alt="Google Play">
+        <img src="/api/placeholder/120/40" alt="App Store">
+      </div>
+    </div>
+    <img src="/api/placeholder/100/100" alt="QR 코드" class="qr-code">
+  </div>
+  <div class="right-content">
+    <!-- 배경 디자인 요소 -->
+    <div class="right-bg-element bg-circle-1"></div>
+    <div class="right-bg-element bg-circle-2"></div>
+    <div class="bg-pattern"></div>
+
+    <div class="logo">
+      <img src="/api/placeholder/150/50" alt="TRIPSODA 로고">
+    </div>
+    <div class="auth-container" id="auth-container">
+      <div class="auth-header">
+        <h2>환영합니다</h2>
+        <p>여행을 사랑하는 모험가들의 커뮤니티</p>
+      </div>
+      <div class="social-login">
+        <div class="social-login-title">소셜 계정으로 간편하게</div>
+        <div class="social-buttons">
+          <button class="social-button google" id="google-login">
+            <i class="fab fa-google"></i> Google
+          </button>
+          <button class="social-button naver" id="naver-login">
+            <i class="fas fa-n"></i> Naver
+          </button>
+        </div>
+      </div>
+    </div>
+    <form class="auth-form additional-info" id="additional-info-form">
+      <input type="hidden" id="social-id">
+      <input type="hidden" id="provider">
+      <input type="hidden" id="email">
+      <input type="hidden" id="name">
+      <div class="form-group">
+        <label class="form-label">닉네임 <span style="color: var(--error-color);">*</span></label>
+        <input type="text" class="form-input" id="nickname" placeholder="한글 2~10자 입력" required>
+        <span class="error-message" id="nickname-error">닉네임은 한글 2~10자만 사용 가능합니다.</span>
+      </div>
+      <button type="button" class="form-button" id="next-btn" disabled>다음</button>
+    </form>
+
+    <form class="auth-form optional-info" id="optional-info-form">
+      <div class="form-group">
+        <label class="form-label">연락처 (선택사항)</label>
+        <input type="tel" class="form-input" id="phone" placeholder="예: 010-1234-5678">
+        <span class="error-message" id="phone-error">올바른 전화번호 형식으로 입력해주세요. (예: 010-1234-5678)</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">인사말 (선택사항)</label>
+        <textarea class="form-input" id="greeting" placeholder="100자 이내로 나를 소개해보세요" rows="3" maxlength="100"></textarea>
+        <div style="text-align: right; font-size: 0.85rem; color: var(--text-light);"><span id="greeting-count">0</span>/100</div>
+      </div>
+      <div class="form-buttons">
+        <button type="button" class="form-button secondary" id="skip-btn">건너뛰기</button>
+        <button type="button" class="form-button" id="complete-btn">가입 완료</button>
+      </div>
+    </form>
+
+    <!-- 여행 이미지 추가 -->
+    <div class="destination-images">
+      <img src="/api/placeholder/120/80" alt="여행지1" class="destination-image">
+      <img src="/api/placeholder/120/80" alt="여행지2" class="destination-image">
+      <img src="/api/placeholder/120/80" alt="여행지3" class="destination-image">
+      <img src="/api/placeholder/120/80" alt="여행지4" class="destination-image">
+    </div>
+
+    <!-- 추천사 추가 -->
+    <div class="testimonial">
+      <img src="/api/placeholder/50/50" alt="사용자 아바타" class="testimonial-avatar">
+      <div class="testimonial-content">
+        <p class="testimonial-text">"트립소다 덕분에 혼자였다면 절대 찾지 못했을 숨겨진 장소들을 발견했어요. 소중한 추억이 생겼습니다!"</p>
+        <p class="testimonial-author">김여행 • 서울</p>
+      </div>
+    </div>
+
+    <footer>
+      © 2025 TRIPSODA, Inc. All rights reserved.
+    </footer>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const googleBtn = document.getElementById('google-login');
+    const naverBtn = document.getElementById('naver-login');
+    const authContainer = document.getElementById('auth-container');
+    const additionalForm = document.getElementById('additional-info-form');
+    const optionalForm = document.getElementById('optional-info-form');
+    const nextBtn = document.getElementById('next-btn');
+    const skipBtn = document.getElementById('skip-btn');
+    const completeBtn = document.getElementById('complete-btn');
+
+    // 필수 입력 사항 유효성 검사
+    const nicknameInput = document.getElementById('nickname');
+    const nicknameError = document.getElementById('nickname-error');
+    function validateNickname() {
+      const value = nicknameInput.value.trim();
+      const koreanRegex = /^[가-힣]{2,10}$/;
+      if (!koreanRegex.test(value)) {
+        nicknameInput.classList.add('error');
+        nicknameError.classList.add('visible');
+        nextBtn.disabled = true;
+        return false;
+      } else {
+        nicknameInput.classList.remove('error');
+        nicknameError.classList.remove('visible');
+        nextBtn.disabled = false;
+        return true;
+      }
+    }
+    nicknameInput.addEventListener('input', validateNickname);
+
+    // 선택 입력 사항 유효성 검사
+    const phoneInput = document.getElementById('phone');
+    const phoneError = document.getElementById('phone-error');
+    function validatePhone() {
+      const value = phoneInput.value.trim();
+      if (value === '') return true;
+      const phoneRegex = /^01[0-9]-[0-9]{3,4}-[0-9]{4}$/;
+      if (!phoneRegex.test(value)) {
+        phoneInput.classList.add('error');
+        phoneError.classList.add('visible');
+        return false;
+      } else {
+        phoneInput.classList.remove('error');
+        phoneError.classList.remove('visible');
+        return true;
+      }
+    }
+    phoneInput.addEventListener('input', validatePhone);
+
+    const greetingInput = document.getElementById('greeting');
+    const greetingCount = document.getElementById('greeting-count');
+    greetingInput.addEventListener('input', function() {
+      greetingCount.textContent = this.value.length;
+    });
+
+    // 소셜 로그인 처리
+    async function handleSocialLogin(provider) {
+      const socialData = {
+        id: provider + '_' + Math.floor(Math.random()*100000),
+        email: provider === 'google' ? 'user@gmail.com' : 'user@naver.com',
+        name: provider === 'google' ? '김구글' : '이네이버',
+        provider
+      };
+      const exists = await mockCheckAccountExists(socialData.id, socialData.provider);
+      if (exists) {
+        alert('기존 회원입니다. 바로 로그인합니다!');
+        window.location.href = '/main';
+      } else {
+        showAdditionalForm(socialData);
+      }
+    }
+
+    async function mockCheckAccountExists(id, provider) {
+      return Math.random() < 0.5;
+    }
+
+    // 필수 입력 폼 표시
+    function showAdditionalForm(socialData) {
+      document.getElementById('social-id').value = socialData.id;
+      document.getElementById('provider').value = socialData.provider;
+      document.getElementById('email').value = socialData.email;
+      document.getElementById('name').value = socialData.name;
+      nicknameInput.value = socialData.name.replace(/[^가-힣]/g, '').slice(0,10);
+      validateNickname(); // 초기 유효성 검사 실행
+
+      authContainer.style.display = 'none';
+      additionalForm.classList.add('active');
+
+      // 이미지와 후기 섹션 숨기기
+      document.querySelector('.destination-images').style.display = 'none';
+      document.querySelector('.testimonial').style.display = 'none';
+    }
+
+    // 선택 입력 폼 표시
+    function showOptionalForm() {
+      additionalForm.classList.remove('active');
+      optionalForm.classList.add('active');
+    }
+
+    // 회원가입 완료 처리
+    function completeRegistration() {
+      if (!validatePhone()) return;
+
+      const userData = {
+        socialId: document.getElementById('social-id').value,
+        provider: document.getElementById('provider').value,
+        email: document.getElementById('email').value,
+        name: document.getElementById('name').value,
+        nickname: nicknameInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        greeting: greetingInput.value.trim()
+      };
+
+      alert('회원가입이 완료되었습니다!');
+      window.location.href = '/main';
+    }
+
+    // 이벤트 리스너
+    googleBtn.addEventListener('click', function() {
+      handleSocialLogin('google');
+    });
+
+    naverBtn.addEventListener('click', function() {
+      handleSocialLogin('naver');
+    });
+
+    nextBtn.addEventListener('click', function() {
+      if (validateNickname()) {
+        showOptionalForm();
+      }
+    });
+
+    skipBtn.addEventListener('click', function() {
+      completeRegistration();
+    });
+
+    completeBtn.addEventListener('click', function() {
+      completeRegistration();
+    });
+  });
+</script>
+</body>
+</html>

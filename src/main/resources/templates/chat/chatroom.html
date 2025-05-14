@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRIPSODA - 채팅방</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <style>
+        /* 전체 스타일 */
+        :root {
+            --primary-color: #0ED8D5;
+            --primary-dark: #04A6A4;
+            --primary-light: #E0F7F7;
+            --secondary-color: #FF8C38;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --text-light: #888888;
+            --background-color: #F8F9FA;
+            --white: #FFFFFF;
+            --border-color: #EEEEEE;
+            --unread-color: #E9F5FF;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* 컨테이너 레이아웃 */
+        .container {
+            display: flex;
+            max-width: 1300px;
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* 왼쪽 배너 영역 */
+        .left-banner {
+            flex: 0 0 45%;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(120deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .banner-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+            z-index: 1;
+        }
+
+        .banner-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
+            filter: saturate(1.2);
+            transition: transform 15s ease;
+        }
+
+        .left-banner:hover .banner-image {
+            transform: scale(1.05);
+        }
+
+        .banner-text {
+            position: absolute;
+            top: 25%;
+            left: 10%;
+            color: var(--white);
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-text h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .banner-text p {
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 80%;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .banner-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--white);
+            color: var(--primary-dark);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .banner-button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            background-color: var(--primary-light);
+        }
+
+        .qr-code {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 100px;
+            height: 100px;
+            background-color: var(--white);
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-md);
+            z-index: 2;
+            transition: var(--transition);
+        }
+
+        .qr-code:hover {
+            transform: scale(1.05);
+        }
+
+        .app-download {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            color: var(--white);
+            font-size: 0.95rem;
+            z-index: 2;
+        }
+
+        .app-store-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .app-store-buttons img {
+            height: 36px;
+            cursor: pointer;
+            transition: var(--transition);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .app-store-buttons img:hover {
+            transform: translateY(-2px);
+        }
+
+        /* 오른쪽 콘텐츠 영역 */
+        .right-content {
+            flex: 0 0 55%;
+            background-color: var(--white);
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .right-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .right-content::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        .right-content::-webkit-scrollbar-thumb {
+            background-color: #DDD;
+            border-radius: 20px;
+        }
+
+        /* 헤더 영역 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--white);
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--white);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .back-button:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .channel-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .channel-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-light);
+        }
+
+        .channel-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .channel-stats {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .header-action:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        /* 채팅 영역 */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px); /* 헤더 및 입력칸 높이 제외 */
+        }
+
+        /* 메시지 영역 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: var(--background-color);
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: #DDD;
+            border-radius: 20px;
+        }
+
+        .message-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 70%;
+        }
+
+        .message-group.sent {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message-group.received {
+            align-self: flex-start;
+        }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .sent .message-bubble {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-bottom-right-radius: 4px;
+        }
+
+        .received .message-bubble {
+            background-color: var(--white);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-sender {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            margin-left: 15px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 5px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+
+        .message-status {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 2px;
+        }
+
+        /* 시스템 메시지 */
+        .system-message {
+            align-self: center;
+            background-color: rgba(0, 0, 0, 0.05);
+            color: var(--text-secondary);
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 10px 0;
+        }
+
+
+        /* 이미지 메시지 */
+        .image-message {
+            max-width: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .image-message img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: var(--transition);
+        }
+
+        .image-message img:hover {
+            transform: scale(1.03);
+        }
+
+        /* 위치 메시지 */
+        .location-message {
+            width: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .location-message .location-name {
+            padding: 10px;
+            background-color: var(--white);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .location-message .location-address {
+            padding: 0 10px 10px;
+            background-color: var(--white);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .location-message .location-map {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        /* 날짜 구분선 */
+        .date-divider {
+            position: relative;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .date-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: var(--border-color);
+            z-index: 1;
+        }
+
+        .date-text {
+            position: relative;
+            background-color: var(--background-color);
+            padding: 0 15px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: inline-block;
+            z-index: 2;
+        }
+
+        /* 읽음 표시 */
+        .read-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .read-indicator-count {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .read-indicator-avatars {
+            display: flex;
+        }
+
+        .read-indicator-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--white);
+            margin-left: -6px;
+        }
+
+        .read-indicator-avatar:first-child {
+            margin-left: 0;
+        }
+
+        /* 입력 영역 */
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: var(--white);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-input-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-input-action {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chat-input-action:hover {
+            color: var(--primary-color);
+        }
+
+        .chat-input-wrap {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 120px;
+            transition: var(--transition);
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(14, 216, 213, 0.1);
+        }
+
+        .chat-submit {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chat-submit:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chat-submit:disabled {
+            background-color: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 공지사항 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            width: 500px;
+            max-width: 90%;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-20px);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--text-color);
+            transform: rotate(90deg);
+        }
+
+        .notice-content {
+            background-color: var(--background-color);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+
+        .notice-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notice-title i {
+            color: var(--primary-color);
+        }
+
+        .notice-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .participants-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .participant {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .participant:hover {
+            background-color: var(--background-color);
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+            border: 2px solid var(--primary-light);
+        }
+
+        .participant-info {
+            flex: 1;
+        }
+
+        .participant-name {
+            font-weight: 600;
+        }
+
+        .participant-role {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .host-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* 네비게이션 바 (모바일용) */
+        .navbar {
+            display: none; /* 기본적으로 숨김 (모바일 전용) */
+            justify-content: space-around;
+            background-color: var(--white);
+            padding: 16px 0;
+            border-top: 1px solid var(--border-color);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 1300px;
+            margin: 0 auto;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .nav-item:hover:not(.active) {
+            color: var(--primary-dark);
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .center-add-button {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.4rem;
+            margin-top: -40px;
+            box-shadow: 0 4px 15px rgba(3, 139, 139, 0.3);
+            transition: var(--transition);
+        }
+
+        .center-add-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(3, 139, 139, 0.4);
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-group {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* 스크롤 버튼 */
+        .scroll-bottom {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-bottom.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-bottom:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* 반응형 */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .left-banner {
+                flex: 0 0 250px;
+            }
+
+            .right-content {
+                flex: 1;
+            }
+
+            .navbar {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+
+            .channel-avatar {
+                width: 36px;
+                height: 36px;
+            }
+
+            .channel-title {
+                font-size: 1rem;
+            }
+
+            .header-action, .back-button {
+                width: 32px;
+                height: 32px;
+            }
+
+            .message-group {
+                max-width: 80%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .chat-messages {
+                padding: 15px 10px;
+            }
+
+            .chat-input-container {
+                padding: 10px;
+            }
+
+            .image-message, .location-message {
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 왼쪽 배너 영역 -->
+    <div class="left-banner">
+        <div class="banner-overlay"></div>
+        <img src="/api/placeholder/800/1200" alt="여행 친구들" class="banner-image">
+        <div class="banner-text">
+            <h1>함께라면<br>못 갈 곳은<br>없어</h1>
+            <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
+            <a href="#" class="banner-button">지금 시작하기</a>
+        </div>
+        <div class="app-download">
+            <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
+            <div class="app-store-buttons">
+                <img src="/api/placeholder/120/40" alt="Google Play">
+                <img src="/api/placeholder/120/40" alt="App Store">
+            </div>
+        </div>
+        <img src="/api/placeholder/100/100" alt="QR 코드" class="qr-code">
+    </div>
+
+    <!-- 오른쪽 콘텐츠 영역 -->
+    <div class="right-content">
+        <!-- 헤더 영역 -->
+        <div class="header">
+            <div class="header-left">
+                <div class="back-button" id="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="channel-info">
+                    <img src="/api/placeholder/40/40" alt="채팅방 이미지" class="channel-avatar">
+                    <div>
+                        <div class="channel-title">제주도 여행 동행자 모집</div>
+                        <div class="channel-stats">5명 참여 중</div>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="header-action" id="add-user-button">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="header-action" id="info-button">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 채팅 영역 -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chat-messages">
+                <!-- 날짜 구분선 -->
+                <div class="date-divider">
+                    <span class="date-text">2025년 5월 10일</span>
+                </div>
+
+                <!-- 시스템 메시지 (입장) -->
+                <div class="system-message">
+                    <i class="fas fa-bell"></i> 김여행님이 입장하셨습니다.
+                </div>
+
+                <!-- 받은 메시지 그룹 -->
+                <div class="message-group received">
+                    <div class="message-sender">제주도가이드</div>
+                    <div class="message-bubble">안녕하세요! 제주도 여행 계획 있으신가요?</div>
+                    <div class="message-time">오전 10:30</div>
+                </div>
+
+                <!-- 보낸 메시지 그룹 -->
+                <div class="message-group sent">
+                    <div class="message-bubble">네, 다음 달에 제주도 여행 계획 중이에요.</div>
+                    <div class="message-time">오전 10:32</div>
+                    <div class="message-status">읽음 2</div>
+                </div>
+
+                <!-- 받은 메시지 그룹 (이미지) -->
+                <div class="message-group received">
+                    <div class="message-sender">제주도가이드</div>
+                    <div class="message-bubble">제가 최근에 다녀온 곳인데 정말 좋았어요!</div>
+                    <div class="image-message">
+                        <img src="/api/placeholder/200/150" alt="제주도 풍경">
+                    </div>
+                    <div class="message-time">오전 10:35</div>
+                </div>
+
+                <!-- 시스템 메시지 (입장) -->
+                <div class="system-message">
+                    <i class="fas fa-bell"></i> 여행매니아님이 입장하셨습니다.
+                </div>
+
+                <!-- 받은 메시지 그룹 (다른 사용자) -->
+                <div class="message-group received">
+                    <div class="message-sender">여행매니아</div>
+                    <div class="message-bubble">안녕하세요! 저도 제주도 정보 공유 받고 싶어서 들어왔어요.</div>
+                    <div class="message-time">오전 11:15</div>
+                </div>
+
+                <!-- 받은 메시지 그룹 (위치 공유) -->
+                <div class="message-group received">
+                    <div class="message-sender">제주도가이드</div>
+                    <div class="message-bubble">이 곳은 꼭 가보세요! 제가 가장 추천하는 맛집입니다.</div>
+                    <div class="location-message">
+                        <div class="location-name">제주 흑돼지 맛집</div>
+                        <div class="location-address">제주특별자치도 제주시 한림읍</div>
+                        <img src="/api/placeholder/250/150" alt="지도" class="location-map">
+                    </div>
+                    <div class="message-time">오전 11:30</div>
+                </div>
+
+                <!-- 보낸 메시지 그룹 -->
+                <div class="message-group sent">
+                    <div class="message-bubble">정보 감사합니다! 저도 일정 짜면 공유할게요.</div>
+                    <div class="message-time">오후 3:45</div>
+                    <div class="read-indicator">
+                        <div class="read-indicator-count">읽음 2</div>
+                        <div class="read-indicator-avatars">
+                            <img src="/api/placeholder/18/18" alt="읽은 사용자" class="read-indicator-avatar">
+                            <img src="/api/placeholder/18/18" alt="읽은 사용자" class="read-indicator-avatar">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 날짜 구분선 (오늘) -->
+                <div class="date-divider">
+                    <span class="date-text">오늘</span>
+                </div>
+
+                <!-- 시스템 메시지 (공지) -->
+                <div class="system-message">
+                    <i class="fas fa-bullhorn"></i> 공지: 이번 주말 제주도 여행 정보 공유 이벤트가 있습니다!
+                </div>
+            </div>
+
+            <!-- 스크롤 하단으로 버튼 -->
+            <div class="scroll-bottom" id="scroll-bottom">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+
+            <!-- 채팅 입력 영역 -->
+            <div class="chat-input-container">
+                <div class="chat-input-actions">
+                    <div class="chat-input-action" id="image-button">
+                        <i class="far fa-image"></i>
+                    </div>
+                    <div class="chat-input-action" id="location-button">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                </div>
+                <div class="chat-input-wrap">
+                    <textarea class="chat-input" id="chat-input" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+                </div>
+                <button class="chat-submit" id="chat-submit" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 네비게이션 바 (모바일용) -->
+        <div class="navbar">
+            <div class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>커뮤니티</span>
+            </div>
+            <div class="nav-item">
+                <i class="far fa-compass"></i>
+                <span>히트맵</span>
+            </div>
+            <div class="nav-item">
+                <div class="center-add-button">
+                    <i class="fas fa-plus"></i>
+                </div>
+            </div>
+            <div class="nav-item">
+                <i class="far fa-user"></i>
+                <span>내 프로필</span>
+            </div>
+            <div class="nav-item active">
+                <i class="fas fa-comments"></i>
+                <span>채팅</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 공지사항 모달 -->
+<div class="modal-overlay" id="info-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title">채팅방 정보</h3>
+            <div class="modal-close" id="close-info-modal">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="notice-content">
+            <div class="notice-title">
+                <i class="fas fa-bullhorn"></i> 공지사항
+            </div>
+            <div class="notice-text">
+                이 채팅방은 제주도 여행을 함께할 동행자를 구하고 여행 정보를 공유하는 공간입니다.
+                서로 존중하는 마음으로 대화해주세요. 광고나 스팸 메시지는 자제해주세요.
+            </div>
+        </div>
+        <div class="notice-content">
+            <div class="notice-title">
+                <i class="fas fa-info-circle"></i> 설명
+            </div>
+            <div class="notice-text">
+                제주도 맛집, 숙소, 관광지 등 정보 공유 환영합니다.
+                주로 5월 중순~하순 제주도 여행 계획 중인 분들이 모여 있습니다.
+                질문이나 정보 공유 자유롭게 해주세요!
+            </div>
+        </div>
+        <div class="notice-title" style="margin-top: 20px; margin-bottom: 15px;">
+            <i class="fas fa-users"></i> 참여자 목록 (5명)
+        </div>
+        <div class="participants-list">
+            <div class="participant">
+                <img src="/api/placeholder/40/40" alt="참여자" class="participant-avatar">
+                <div class="participant-info">
+                    <div class="participant-name">제주도가이드 <span class="host-badge">방장</span></div>
+                    <div class="participant-role">2025.05.08 참여</div>
+                </div>
+            </div>
+            <div class="participant">
+                <img src="/api/placeholder/40/40" alt="참여자" class="participant-avatar">
+                <div class="participant-info">
+                    <div class="participant-name">여행매니아</div>
+                    <div class="participant-role">2025.05.08 참여</div>
+                </div>
+            </div>
+            <div class="participant">
+                <img src="/api/placeholder/40/40" alt="참여자" class="participant-avatar">
+                <div class="participant-info">
+                    <div class="participant-name">제주토박이</div>
+                    <div class="participant-role">2025.05.09 참여</div>
+                </div>
+            </div>
+            <div class="participant">
+                <img src="/api/placeholder/40/40" alt="참여자" class="participant-avatar">
+                <div class="participant-info">
+                    <div class="participant-name">강아지랑제주</div>
+                    <div class="participant-role">2025.05.10 참여</div>
+                </div>
+            </div>
+            <div class="participant">
+                <img src="/api/placeholder/40/40" alt="참여자" class="participant-avatar">
+                <div class="participant-info">
+                    <div class="participant-name">김여행</div>
+                    <div class="participant-role">2025.05.10 참여</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 뒤로가기 버튼
+        const backButton = document.getElementById('back-button');
+        backButton.addEventListener('click', function () {
+            window.location.href = 'chat-list.html'; // 채팅방 목록 페이지로 이동
+        });
+
+        // 공지사항 모달
+        const infoButton = document.getElementById('info-button');
+        const infoModal = document.getElementById('info-modal');
+        const closeInfoModal = document.getElementById('close-info-modal');
+
+        // 모달 열기/닫기 함수
+        function openModal(modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 정보 버튼 클릭 시 모달 열기
+        infoButton.addEventListener('click', function () {
+            openModal(infoModal);
+        });
+
+        // 모달 닫기
+        closeInfoModal.addEventListener('click', function () {
+            closeModal(infoModal);
+        });
+
+        // 모달 외부 클릭 시 닫기
+        infoModal.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal(infoModal);
+            }
+        });
+
+        // 채팅 입력 처리
+        const chatInput = document.getElementById('chat-input');
+        const chatSubmit = document.getElementById('chat-submit');
+        const chatMessages = document.getElementById('chat-messages');
+        const scrollBottom = document.getElementById('scroll-bottom');
+
+        // 입력란 높이 자동 조절
+        chatInput.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+
+            // 전송 버튼 활성화/비활성화
+            if (this.value.trim()) {
+                chatSubmit.disabled = false;
+            } else {
+                chatSubmit.disabled = true;
+            }
+        });
+
+        // 엔터키로 메시지 전송
+        chatInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey && this.value.trim()) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 전송 버튼 클릭 시 메시지 전송
+        chatSubmit.addEventListener('click', function () {
+            if (chatInput.value.trim()) {
+                sendMessage();
+            }
+        });
+
+        // 메시지 전송 함수
+        function sendMessage() {
+            const messageText = chatInput.value.trim();
+
+            // 새 메시지 생성
+            const newMessage = document.createElement('div');
+            newMessage.className = 'message-group sent';
+            newMessage.innerHTML = `
+        <div class="message-bubble">${messageText}</div>
+        <div class="message-time">방금 전</div>
+        <div class="message-status">전송됨</div>
+      `;
+
+            // 메시지 추가
+            chatMessages.appendChild(newMessage);
+
+            // 스크롤 맨 아래로
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 입력란 초기화
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            chatSubmit.disabled = true;
+
+            // 가짜 응답 (데모용)
+            setTimeout(() => {
+                const replyMessage = document.createElement('div');
+                replyMessage.className = 'message-group received';
+                replyMessage.innerHTML = `
+          <div class="message-sender">제주도가이드</div>
+          <div class="message-bubble">네, 좋은 정보 공유해주셔서 감사합니다!</div>
+          <div class="message-time">방금 전</div>
+        `;
+                chatMessages.appendChild(replyMessage);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // 상태 업데이트
+                newMessage.querySelector('.message-status').textContent = '읽음 1';
+            }, 2000);
+        }
+    });
+
+</script>
+</body>
+</html>
