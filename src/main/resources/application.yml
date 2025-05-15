@@ -17,16 +17,16 @@ spring:
         dialect: org.hibernate.dialect.OracleDialect
 
   # Security ? OAuth2 ??
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: your-google-client-id
-            client-secret: your-google-client-secret
-            scope:
-              - email
-              - profile
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: 808517443690-tphu3qn8q96cqaknvutc978gmrc24in4.apps.googleusercontent.com
+#            client-secret: AIzaSyAM6flDj7toqktYW83oYswdJrH-xrEsz4U
+#            scope:
+#              - email
+#              - profile
           # ??? ?? ?? OAuth2 ???? ??? ? ????
           # naver, kakao ?
 
