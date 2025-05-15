@@ -1,6 +1,7 @@
 package com.test.foodtrip.domain.travel.entity;
 
 
+import com.test.foodtrip.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
