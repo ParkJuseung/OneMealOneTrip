@@ -9,6 +9,6 @@ public class TestController {
     @GetMapping("/trip/travel")
     public String travel() {
 
-        return "course";
+        return "test";
     }
 }
