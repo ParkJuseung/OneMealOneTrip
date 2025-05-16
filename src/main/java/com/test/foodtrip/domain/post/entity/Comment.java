@@ -51,6 +51,10 @@ public class Comment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    // Comment 클래스 내부에 아래 필드 추가
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentReaction> reactions = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -65,5 +69,25 @@ public class Comment {
     public void addReply(Comment reply) {
         this.replies.add(reply);
         reply.setParent(this);
+    }
+
+
+    // 편의 메서드 추가
+    public void addReaction(CommentReaction reaction) {
+        this.reactions.add(reaction);
+        reaction.setComment(this);
+    }
+
+    // 반응 수 계산 메서드
+    public long getLikeCount() {
+        return reactions.stream()
+                .filter(r -> r.getReactionType() == CommentReaction.ReactionType.LIKE)
+                .count();
+    }
+
+    public long getDislikeCount() {
+        return reactions.stream()
+                .filter(r -> r.getReactionType() == CommentReaction.ReactionType.DISLIKE)
+                .count();
     }
 }
