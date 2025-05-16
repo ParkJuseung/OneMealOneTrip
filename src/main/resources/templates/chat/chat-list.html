@@ -26,13 +26,13 @@
 
     <div class="chat-filters">
         <div class="chat-filter active">전체</div>
-        <div class="chat-filter">내 채팅방</div>
-        <div class="chat-filter">참여중</div>
+        <div class="chat-filter">🔥인기</div>
+        <div class="chat-filter">나의 채팅방</div>
     </div>
 
     <!-- 채팅방 목록 -->
-    <div class="chat-list">
-        <!-- 채팅방 1 -->
+    <!--<div class="chat-list">
+         채팅방 1 
         <div class="chat-room" data-id="1">
             <img src="/api/placeholder/60/60" alt="채팅방 이미지" class="chat-avatar">
             <div class="chat-info">
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <!-- 채팅방 2 (읽지 않은 메시지가 있는 경우) -->
+         채팅방 2 (읽지 않은 메시지가 있는 경우) 
         <div class="chat-room unread" data-id="2">
             <img src="/api/placeholder/60/60" alt="채팅방 이미지" class="chat-avatar">
             <div class="chat-info">
@@ -82,7 +82,7 @@
             </div>
         </div>
 
-        <!-- 채팅방 3 -->
+         채팅방 3 
         <div class="chat-room" data-id="3">
             <img src="/api/placeholder/60/60" alt="채팅방 이미지" class="chat-avatar">
             <div class="chat-info">
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        <!-- 채팅방 4 -->
+         채팅방 4 
         <div class="chat-room" data-id="4">
             <img src="/api/placeholder/60/60" alt="채팅방 이미지" class="chat-avatar">
             <div class="chat-info">
@@ -129,7 +129,7 @@
             </div>
         </div>
 
-        <!-- 채팅방 5 (읽지 않은 메시지가 있는 경우) -->
+         채팅방 5 (읽지 않은 메시지가 있는 경우) 
         <div class="chat-room unread" data-id="5">
             <img src="/api/placeholder/60/60" alt="채팅방 이미지" class="chat-avatar">
             <div class="chat-info">
@@ -155,14 +155,44 @@
         </div>
     </div>
 
-    <!-- 빈 상태 (채팅방이 없을 때) - 기본적으로 숨김 처리 -->
+     빈 상태 (채팅방이 없을 때) - 기본적으로 숨김 처리 
     <div class="empty-state" style="display: none;">
         <i class="far fa-comment-dots"></i>
         <div class="empty-state-title">아직 참여 중인 채팅방이 없어요</div>
         <p class="empty-state-text">새로운 채팅방을 만들거나 다른 채팅방에 참여해보세요!</p>
         <button class="create-first-chat">새 채팅방 만들기</button>
     </div>
+</div>-->
+
+<div class="chat-list">
+    <div class="chat-room" 
+         th:each="room : ${chatRooms}" 
+         th:attr="data-id=${room.id}">
+         
+        <img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/api/placeholder/60/60'}"
+             alt="채팅방 이미지" class="chat-avatar"/>
+
+        <div class="chat-info">
+            <div class="chat-header">
+                <div class="chat-title" th:text="${room.title}">채팅방 제목</div>
+                <div class="chat-time" th:text="${#temporals.format(room.createdAt, 'MM-dd HH:mm')}">시간</div>
+            </div>
+
+            <div class="chat-preview">
+                <div class="chat-last-message">최근 메시지를 불러옵니다...</div> <!-- 이후 확장 -->
+            </div>
+
+            <div class="chat-hashtags">
+                <div class="chat-hashtag">#해시태그</div> <!-- 추후 확장용 -->
+            </div>
+
+            <div class="chat-participants">
+                <div class="chat-participant-count">+0</div> <!-- 참여자 수 표기 (추후 확장용) -->
+            </div>
+        </div>
+    </div>
 </div>
+
 
 
 <!-- 채팅방 생성 모달 -->

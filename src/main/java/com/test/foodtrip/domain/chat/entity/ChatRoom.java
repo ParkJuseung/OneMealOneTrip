@@ -2,18 +2,21 @@ package com.test.foodtrip.domain.chat.entity;
 
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "CHAT_ROOM")
-@Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "chatroom")
+@Getter 
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 내부용 기본 생성자
+@AllArgsConstructor
+@Builder
 public class ChatRoom {
 
     @Id
@@ -22,14 +25,15 @@ public class ChatRoom {
     @Column(name = "chatroom_id")
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", length = 100, nullable = false)
     private String title;
 
     @Column(name = "thumbnail_image_url", length = 255)
     private String thumbnailImageUrl;
 
-    @Column(name = "is_deleted", nullable = false, length = 1)
-    private String isDeleted = "N";
+    @Builder.Default
+    @Column(name = "is_deleted", length = 1, nullable = false)
+    private String isDeleted = "N"; // 기본값: 삭제되지 않음
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -39,6 +43,7 @@ public class ChatRoom {
 
     // 양방향 관계
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    // 하나의 채팅방은 여러명의 사용자를 가질 수 있다.
     private List<ChatroomUser> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,7 +57,7 @@ public class ChatRoom {
 
     @ManyToMany
     @JoinTable(
-            name = "CHAT_ROOM_HASHTAG",
+            name = "CHATROOMHASHTAG",
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
