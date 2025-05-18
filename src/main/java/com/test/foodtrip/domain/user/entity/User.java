@@ -2,20 +2,20 @@ package com.test.foodtrip.domain.user.entity;
 
 import com.test.foodtrip.domain.post.entity.Comment;
 import com.test.foodtrip.domain.post.entity.Post;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "USERS")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Table(name = "USERS")
 public class User {
 
     @Id
@@ -54,9 +54,11 @@ public class User {
     @Column(name = "profile_image", length = 255)
     private String profileImage;
 
+    @Builder.Default
     @Column(name = "role", nullable = false, length = 20)
     private String role = "USER";
 
+    @Builder.Default
     @Column(name = "active", nullable = false, length = 1)
     private String active = "Y";
 
@@ -67,21 +69,26 @@ public class User {
     private LocalDateTime updatedAt;
 
     // 양방향 관계
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UsersInfo userInfo;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TravelBucket> travelBuckets = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Follow> following = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Follow> followers = new ArrayList<>();
 
