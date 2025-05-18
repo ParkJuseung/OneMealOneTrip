@@ -1,4 +1,4 @@
 package com.test.foodtrip.domain.user.service;
 
-public class TestService {
+public class UserService {
 }

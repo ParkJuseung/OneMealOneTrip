@@ -36,3 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 /.metadata/
+
+
+### 추가 ###
+build.gradle
+.DS_Store
+src/main/resources/application.yml
