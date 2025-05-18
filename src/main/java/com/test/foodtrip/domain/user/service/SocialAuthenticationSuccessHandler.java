@@ -23,7 +23,7 @@ public class SocialAuthenticationSuccessHandler
     public SocialAuthenticationSuccessHandler(UserRepository userRepository) {
         super();
         this.userRepository = userRepository;
-        setDefaultTargetUrl("/index");
+        setDefaultTargetUrl("/");
 
     }
 
@@ -68,7 +68,7 @@ public class SocialAuthenticationSuccessHandler
         } else {
             System.out.println(">>> 기존 유저로 판단, 기본 성공 핸들러 실행");
 
-            getRedirectStrategy().sendRedirect(request, response, "/index");
+            getRedirectStrategy().sendRedirect(request, response, "/");
 
 
         }
