@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.user.controller;
 
+
 import com.test.foodtrip.domain.user.dto.MyPageDTO;
 import com.test.foodtrip.domain.user.service.MyPageService;
 import lombok.RequiredArgsConstructor;
@@ -37,4 +38,5 @@ public class MyPageController {
         model.addAttribute("user", dto);
         return "mypage";
     }
+
 }

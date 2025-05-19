@@ -1,3 +1,4 @@
+
 // src/main/java/com/test/foodtrip/domain/user/service/MyPageService.java
 package com.test.foodtrip.domain.user.service;
 

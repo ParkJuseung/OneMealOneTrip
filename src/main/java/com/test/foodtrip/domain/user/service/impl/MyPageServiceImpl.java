@@ -1,3 +1,4 @@
+
 // src/main/java/com/test/foodtrip/domain/user/service/impl/MyPageServiceImpl.java
 package com.test.foodtrip.domain.user.service.impl;
 
@@ -19,4 +20,5 @@ public class MyPageServiceImpl implements MyPageService {
                 .map(user -> new MyPageDTO(/*필드 매핑*/))
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
     }
+
 }

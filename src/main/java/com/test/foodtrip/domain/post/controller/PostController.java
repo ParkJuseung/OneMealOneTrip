@@ -9,6 +9,7 @@ public class PostController {
     @GetMapping(value= {"/", "/home"})
     public String index() {
         return "index";
+
     }
 
     @GetMapping("/post")
