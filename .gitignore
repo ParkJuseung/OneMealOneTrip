@@ -42,4 +42,4 @@ out/
 ### 추가 ###
 build.gradle
 .DS_Store
-src/main/resources/application-secret.yml
+src/main/resources/application.yml
