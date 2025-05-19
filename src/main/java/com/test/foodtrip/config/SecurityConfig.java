@@ -19,6 +19,10 @@ import com.test.foodtrip.domain.user.service.SocialAuthenticationSuccessHandler;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /**
+     * 뷰에서 전달된 prompt/auth_type 파라미터를
+     * OAuth2 인증 요청 URL에 그대로 포함시키도록 해 줍니다.
+     */
     @Bean
     public OAuth2AuthorizationRequestResolver authorizationRequestResolver(
             ClientRegistrationRepository registrations) {
@@ -36,11 +40,13 @@ public class SecurityConfig {
                     if (sra != null) {
                         HttpServletRequest request = sra.getRequest();
 
+                        // Google/Kakao 계정 선택용 prompt
                         String prompt = request.getParameter("prompt");
                         if (prompt != null) {
                             attrs.put("prompt", prompt);
                         }
 
+                        // Naver 재인증용 auth_type
                         String authType = request.getParameter("auth_type");
                         if (authType != null) {
                             attrs.put("auth_type", authType);
@@ -52,6 +58,10 @@ public class SecurityConfig {
         return resolver;
     }
 
+    /**
+     * SecurityFilterChain 빈은 한 번만 정의해야 합니다.
+     * OAuth2 로그인, 세션·쿠키 무효화, 정적 리소스 허용 등을 모두 이곳에 설정하세요.
+     */
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity http,
@@ -61,24 +71,29 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
+                // CSRF 보호 비활성화 (API 클라이언트 or JS에서 직접 요청 시 필요)
                 .csrf(csrf -> csrf.disable())
+                // 정적 리소스와 로그인/가입/인증 엔드포인트는 모두 허용
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/css/**", "/js/**", "/images/**",
-                                "/login", "/signup",
-                                "/oauth2/authorization/**", "/login/oauth2/**",
-                                "/api/**"
+                                "/", "/index", "/login", "/signup", "/api/**",
+                                "/oauth2/authorization/**", "/login/oauth2/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                // OAuth2 로그인 설정
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
                         .authorizationEndpoint(a -> a
                                 .authorizationRequestResolver(resolver)
                         )
-                        .userInfoEndpoint(u -> u.userService(oauth2UserService))
+                        .userInfoEndpoint(u -> u
+                                .userService(oauth2UserService)
+                        )
                         .successHandler(successHandler)
                 )
+                // 로그아웃 설정
                 .logout(logout -> logout
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
