@@ -35,7 +35,7 @@ public class SignupController {
         System.out.println(">>> [Controller] oauth2_attrs = " + attrs);
 
         if (attrs == null) {
-            return "redirect:/main";
+            return "redirect:/index";
         }
 
         SignupDTO signupDTO = new SignupDTO();
@@ -71,6 +71,19 @@ public class SignupController {
             return "user/login";
         }
 
+        // 닉네임 중복 검사
+        if (userRepository.existsByNickname(signupDTO.getNickname())) {
+            bindingResult.rejectValue(
+                    "nickname",
+                    "duplicate",
+                    "이미 사용 중인 닉네임입니다."
+            );
+            model.addAttribute("showSignup", true);
+            model.addAttribute("provider", attrs.get("provider"));
+            model.addAttribute("socialEmail", attrs.get("social_email"));
+            model.addAttribute("name", attrs.get("name"));
+            return "user/login";
+        }
 
         if (signupDTO.getPhone() != null && signupDTO.getPhone().isBlank()) {
             signupDTO.setPhone(null);
@@ -97,6 +110,6 @@ public class SignupController {
         session.setAttribute("user_id", user.getId());
 
 
-        return "redirect:/main";
+        return "redirect:/index";
     }
 }
