@@ -1,7 +1,8 @@
 spring:
-  # ?????? ?? (Oracle)
   config:
-    import: "application-secret.yml"
+    import: optional:application-secret.yml
+
+  # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
     url: jdbc:oracle:thin:@localhost:1521:xe
@@ -17,6 +18,20 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.OracleDialect
+
+#  # Security ? OAuth2 ??
+#  security:
+#    oauth2:
+#      client:
+#        registration:
+#          google:
+#            client-id: your-google-client-id
+#            client-secret: your-google-client-secret
+#            scope:
+#              - email
+#              - profile
+#          # ??? ?? ?? OAuth2 ???? ??? ? ????
+#          # naver, kakao ?
 
   # Thymeleaf ??
   thymeleaf:
