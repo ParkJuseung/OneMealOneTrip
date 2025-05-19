@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class PostController {
 
-    @GetMapping("/")
+    @GetMapping(value= {"/", "/home"})
     public String index() {
-        return "layout/main";
+        return "index";
     }
 
     @GetMapping("/post")
