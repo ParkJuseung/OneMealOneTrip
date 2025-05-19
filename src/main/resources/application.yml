@@ -8,7 +8,7 @@ spring:
   # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521:freepdb1
+    url: jdbc:oracle:thin:@localhost:1521:xe
     username: foodtrip
     password: java1234
 
