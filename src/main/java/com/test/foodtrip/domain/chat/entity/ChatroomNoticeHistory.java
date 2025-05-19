@@ -9,7 +9,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "CHATROOM_NOTICE_HISTORY")
+@Table(name = "CHATROOMNOTICEHISTORY")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatroomNoticeHistory {

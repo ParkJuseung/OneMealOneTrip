@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "CHATROOM_LIKE", uniqueConstraints = {
+@Table(name = "CHATROOMLIKE", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"chatroom_id", "user_id"})
 })
 @Getter @Setter
