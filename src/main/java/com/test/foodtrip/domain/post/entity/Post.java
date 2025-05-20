@@ -2,18 +2,20 @@ package com.test.foodtrip.domain.post.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "POST")
-@Getter @Setter
+@Getter
+@Setter
+@ToString
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
 
@@ -62,6 +64,10 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
+    // Post 클래스 내부에 아래 필드 추가
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostTagging> tags = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -81,5 +87,19 @@ public class Post {
     public void addComment(Comment comment) {
         comments.add(comment);
         comment.setPost(this);
+    }
+
+    // 편의 메서드 추가
+    public void addTag(PostTag tag) {
+        PostTagging tagging = new PostTagging(this, tag);
+        this.tags.add(tagging);
+        tag.getPosts().add(tagging);
+    }
+
+    public void removeTag(PostTag tag) {
+        this.tags.removeIf(tagging ->
+                tagging.getPostTag().getId().equals(tag.getId()));
+        tag.getPosts().removeIf(tagging ->
+                tagging.getPost().getId().equals(this.getId()));
     }
 }

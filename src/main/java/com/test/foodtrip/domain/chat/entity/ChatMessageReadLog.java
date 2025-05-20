@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "CHAT_MESSAGE_READ_LOG")
+@Table(name = "CHATMESSAGEREADLOG")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageReadLog {
