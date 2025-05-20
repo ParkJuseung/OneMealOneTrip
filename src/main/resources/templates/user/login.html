@@ -242,7 +242,7 @@
     }
 
     .logo img {
-      height: 50px;
+      height: 150px;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
       transition: var(--transition);
     }
@@ -771,7 +771,7 @@
   <div class="left-banner">
     <div class="banner-overlay"></div>
     <!-- src → th:src -->
-    <img th:src="@{/api/placeholder/800/1200}" alt="여행 친구들" class="banner-image">
+    <img th:src="@{images/login/banner.jpeg}" alt="여행 친구들" class="banner-image">
     <div class="banner-text">
       <h1>함께라면<br>못 갈 곳은<br>없어</h1>
       <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
@@ -780,11 +780,11 @@
     <div class="app-download">
       <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
       <div class="app-store-buttons">
-        <img th:src="@{/api/placeholder/120/40}" alt="Google Play">
-        <img th:src="@{/api/placeholder/120/40}" alt="App Store">
+        <img th:src="@{images/login/google-play.png}" alt="Google Play">
+        <img th:src="@{images/login/app-store.png}" alt="App Store">
       </div>
     </div>
-    <img th:src="@{/api/placeholder/100/100}" alt="QR 코드" class="qr-code">
+    <img th:src="@{images/login/qr-code.png}" alt="QR 코드" class="qr-code">
   </div>
   <div class="right-content">
     <!-- 배경 디자인 요소 (변경 없음) -->
@@ -793,7 +793,7 @@
     <div class="bg-pattern"></div>
 
     <div class="logo">
-      <img th:src="@{/images/logo.png}" alt="TRIPSODA 로고" width="150" height="50"/>
+      <img th:src="@{images/login/logo.png}" alt="TRIPSODA 로고" width="150" height="50"/>
     </div>
     <div th:if="${!showSignup}" class="auth-container" id="auth-container">
       <div class="auth-header">
@@ -919,10 +919,10 @@
     <!-- 여행 관련 이미지 추가 -->
     <div class="destination-images">
       <!-- src → th:src -->
-      <img th:src="@{/api/placeholder/120/80}" alt="여행지1" class="destination-image">
-      <img th:src="@{/api/placeholder/120/80}" alt="여행지2" class="destination-image">
-      <img th:src="@{/api/placeholder/120/80}" alt="여행지3" class="destination-image">
-      <img th:src="@{/api/placeholder/120/80}" alt="여행지4" class="destination-image">
+      <img th:src="@{images/login/review_image1.jpeg}" alt="여행지1" class="destination-image">
+      <img th:src="@{images/login/review_image2.jpeg}" alt="여행지2" class="destination-image">
+      <img th:src="@{images/login/review_image3.jpeg}" alt="여행지3" class="destination-image">
+      <img th:src="@{images/login/review_image4.jpeg}" alt="여행지4" class="destination-image">
     </div>
 
     <!-- 추천사 추가 -->
