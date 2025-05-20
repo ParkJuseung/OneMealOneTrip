@@ -3,11 +3,13 @@ package com.test.foodtrip.domain.post.service;
 import com.test.foodtrip.domain.post.dto.CommentCreateRequest;
 import com.test.foodtrip.domain.post.dto.CommentDTO;
 import com.test.foodtrip.domain.post.dto.CommentUpdateRequest;
+import com.test.foodtrip.domain.post.dto.CommentWithRepliesDTO;
 import com.test.foodtrip.domain.post.entity.Comment;
 import com.test.foodtrip.domain.post.entity.CommentReaction;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.entity.enums.DeleteStatus;
 import com.test.foodtrip.domain.post.entity.enums.ReactionType;
+import com.test.foodtrip.domain.post.mapper.CommentMapper;
 import com.test.foodtrip.domain.post.repository.CommentReactionRepository;
 import com.test.foodtrip.domain.post.repository.CommentRepository;
 import com.test.foodtrip.domain.post.repository.PostRepository;
@@ -20,7 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -33,6 +37,8 @@ public class CommentService {
     private final CommentReactionRepository commentReactionRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentMapper commentMapper;
+
 
     /**
      * 게시글에 댓글 생성
@@ -234,5 +240,57 @@ public class CommentService {
         }
 
         return CommentDTO.fromEntity(comment, isLiked, isDisliked);
+    }
+
+    /**
+     * 게시글의 댓글 목록 조회 (페이징) - MyBatis 사용 버전
+     */
+    public Map<String, Object> getCommentsWithMyBatis(Long postId, int page, int size, Long currentUserId) {
+        int offset = page * size;
+
+        // 인기 댓글 조회 (MyBatis)
+        List<Comment> popularComments = commentMapper.findPopularComments(postId, 3);
+
+        // 댓글과 대댓글 함께 조회 (MyBatis)
+        List<CommentWithRepliesDTO> comments = commentMapper.findCommentsWithReplies(postId, offset, size);
+
+        // 댓글 통계 조회 (좋아요/싫어요 수, 인기 여부, 블라인드 여부)
+        List<Map<String, Object>> commentStats = commentMapper.getCommentStats(postId);
+
+        // 통계 정보를 댓글 DTO에 매핑
+        Map<Long, Map<String, Object>> statsMap = commentStats.stream()
+                .collect(Collectors.toMap(
+                        stats -> (Long) stats.get("comment_id"),
+                        stats -> stats
+                ));
+
+        // 사용자 반응 정보 조회 (현재 사용자가 각 댓글에 좋아요/싫어요를 눌렀는지)
+        Map<Long, String> userReactions = new HashMap<>();
+        if (currentUserId != null) {
+            List<Long> commentIds = comments.stream()
+                    .map(CommentWithRepliesDTO::getId)
+                    .collect(Collectors.toList());
+
+            commentIds.addAll(comments.stream()
+                    .flatMap(c -> c.getReplies().stream())
+                    .map(CommentDTO::getId)
+                    .collect(Collectors.toList()));
+
+            List<Map<String, Object>> reactions = commentMapper.getUserReactions(currentUserId, commentIds);
+
+            userReactions = reactions.stream()
+                    .collect(Collectors.toMap(
+                            reaction -> (Long) reaction.get("comment_id"),
+                            reaction -> (String) reaction.get("reaction_type")
+                    ));
+        }
+
+        // 결과 응답 생성
+        Map<String, Object> result = new HashMap<>();
+        result.put("comments", comments);
+        result.put("statsMap", statsMap);
+        result.put("userReactions", userReactions);
+
+        return result;
     }
 }

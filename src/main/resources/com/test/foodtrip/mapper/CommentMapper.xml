@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.test.foodtrip.domain.post.mapper.CommentMapper">
+
+    <!-- 인기 댓글 조회 (좋아요가 5개 이상인 댓글) -->
+    <select id="findPopularComments" resultType="com.test.foodtrip.domain.post.entity.Comment">
+        SELECT c.*
+        FROM Comments c
+                 LEFT JOIN (
+            SELECT comment_id, COUNT(*) AS like_count
+            FROM CommentReaction
+            WHERE reaction_type = 'LIKE'
+            GROUP BY comment_id
+        ) likes ON c.comment_id = likes.comment_id
+        WHERE c.post_id = #{postId}
+          AND c.parent_id IS NULL
+          AND c.is_deleted = 'N'
+          AND likes.like_count >= 5
+        ORDER BY likes.like_count DESC
+            FETCH FIRST #{limit} ROWS ONLY
+    </select>
+
+    <!-- 댓글과 대댓글 함께 조회 (페이징 처리) -->
+    <select id="findCommentsWithReplies" resultMap="commentWithRepliesMap">
+        SELECT c.*, u.user_id AS user_id, u.nickname, u.profile_image,
+               r.comment_id AS reply_id, r.content AS reply_content, r.created_at AS reply_created_at,
+               r.updated_at AS reply_updated_at, r.is_deleted AS reply_is_deleted,
+               ru.user_id AS reply_user_id, ru.nickname AS reply_nickname, ru.profile_image AS reply_profile_image
+        FROM (
+                 SELECT comment_id
+                 FROM Comments
+                 WHERE post_id = #{postId}
+                   AND parent_id IS NULL
+                 ORDER BY created_at DESC
+                 OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+             ) page_comments
+                 JOIN Comments c ON page_comments.comment_id = c.comment_id
+                 JOIN Users u ON c.user_id = u.user_id
+                 LEFT JOIN Comments r ON c.comment_id = r.parent_id
+                 LEFT JOIN Users ru ON r.user_id = ru.user_id
+        ORDER BY c.created_at DESC, r.created_at ASC
+    </select>
+
+    <!-- 댓글 통계 조회 -->
+    <select id="getCommentStats" resultType="map">
+        SELECT
+            c.comment_id,
+            COUNT(CASE WHEN cr.reaction_type = 'LIKE' THEN 1 END) AS like_count,
+            COUNT(CASE WHEN cr.reaction_type = 'DISLIKE' THEN 1 END) AS dislike_count,
+            CASE
+                WHEN COUNT(CASE WHEN cr.reaction_type = 'LIKE' THEN 1 END) >= 5 THEN 1
+                ELSE 0
+                END AS is_popular,
+            CASE
+                WHEN COUNT(CASE WHEN cr.reaction_type = 'DISLIKE' THEN 1 END) >= 10 THEN 1
+                ELSE 0
+                END AS is_blinded
+        FROM Comments c
+                 LEFT JOIN CommentReaction cr ON c.comment_id = cr.comment_id
+        WHERE c.post_id = #{postId}
+        GROUP BY c.comment_id
+    </select>
+
+    <!-- 사용자의 댓글 반응 조회 -->
+    <select id="getUserReactions" resultType="map">
+        SELECT
+        comment_id,
+        reaction_type
+        FROM CommentReaction
+        WHERE user_id = #{userId}
+        AND comment_id IN
+        <foreach item="commentId" collection="commentIds" open="(" separator="," close=")">
+            #{commentId}
+        </foreach>
+    </select>
+
+    <!-- ResultMap for comments with replies -->
+    <resultMap id="commentWithRepliesMap" type="com.test.foodtrip.domain.post.dto.CommentWithRepliesDTO">
+        <id property="id" column="comment_id"/>
+        <result property="content" column="content"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <association property="user" javaType="com.test.foodtrip.domain.post.dto.CommentUserDTO">
+            <id property="id" column="user_id"/>
+            <result property="nickname" column="nickname"/>
+            <result property="profileImage" column="profile_image"/>
+        </association>
+        <collection property="replies" ofType="com.test.foodtrip.domain.post.dto.CommentDTO">
+            <id property="id" column="reply_id"/>
+            <result property="content" column="reply_content"/>
+            <result property="createdAt" column="reply_created_at"/>
+            <result property="updatedAt" column="reply_updated_at"/>
+            <result property="isDeleted" column="reply_is_deleted"/>
+            <association property="user" javaType="com.test.foodtrip.domain.post.dto.CommentUserDTO">
+                <id property="id" column="reply_user_id"/>
+                <result property="nickname" column="reply_nickname"/>
+                <result property="profileImage" column="reply_profile_image"/>
+            </association>
+        </collection>
+    </resultMap>
+</mapper>

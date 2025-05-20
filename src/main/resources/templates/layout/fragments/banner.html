@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
 <body>
     <!-- 왼쪽 배너 영역 -->
-    <div class="left-banner" th:fragment="banner">
+    <div class="left-banner">
         <div class="banner-overlay"></div>
-        <img src="/api/placeholder/800/1200" alt="여행 친구들" class="banner-image">
+        <!-- src → th:src -->
+        <img th:src="@{/images/login/banner.jpeg}" alt="여행 친구들" class="banner-image">
         <div class="banner-text">
             <h1>함께라면<br>못 갈 곳은<br>없어</h1>
             <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
             <a href="#" class="banner-button">지금 시작하기</a>
         </div>
+        <div class="app-download">
+            <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
+            <div class="app-store-buttons">
+                <img th:src="@{/images/login/google-play.png}" alt="Google Play">
+                <img th:src="@{/images/login/app-store.png}" alt="App Store">
+            </div>
+        </div>
+        <img th:src="@{/images/login/qr-code.png}" alt="QR 코드" class="qr-code">
     </div>
 </body>
 
