@@ -2,10 +2,7 @@ package com.test.foodtrip.domain.post.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +13,9 @@ import java.util.List;
 @Table(name = "POST")
 @Getter
 @Setter
+@ToString
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
 
