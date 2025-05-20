@@ -590,11 +590,13 @@ body {
 }
 
 .modal-overlay.active {
+    display: flex;
     opacity: 1;
     visibility: visible;
 }
 
 .modal {
+    position: relative;
     background-color: var(--white);
     border-radius: var(--radius-lg);
     width: 500px;
@@ -606,7 +608,9 @@ body {
 }
 
 .modal-overlay.active .modal {
+    display: block;
     transform: translateY(0);
+    opacity: 1;
 }
 
 .modal-header {
