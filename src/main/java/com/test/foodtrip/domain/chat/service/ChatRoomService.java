@@ -57,8 +57,9 @@ public class ChatRoomService {
     //채팅방 전체 목록 조회
     public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
         //public List<ChatRoomListResponseDTO> getAllRooms() {
-        List<ChatRoom> chatRooms = chatRoomRepository.findAll();
-        System.out.println("채팅방 개수: " + chatRooms.size());
+        List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeleted("N");
+
+        System.out.println("채팅방 개수 (삭제 제외): " + chatRooms.size());
 
         return chatRooms.stream()
                 .map(room -> ChatRoomListResponseDTO.builder()

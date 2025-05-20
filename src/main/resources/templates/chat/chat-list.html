@@ -295,6 +295,31 @@
                 }
             });
 
+            // 채팅방 삭제 버튼 이벤트
+            document.getElementById('delete-chatroom').addEventListener('click', async () => {
+                if (!selectedRoomId) return;
+
+                if (!confirm("정말 이 채팅방을 삭제하시겠습니까?")) return;
+
+                try {
+                    const res = await fetch(`/api/chatrooms/${selectedRoomId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        throw new Error(errorText || "삭제 실패");
+                    }
+
+                    alert('삭제되었습니다.');
+                    window.location.reload();
+                } catch (err) {
+                    alert("삭제 실패: " + err.message);
+                }
+            });
+
+
+
             //해시태그 입력 이벤트 등록 (생성 + 수정 폼 모두 대응)
             // - 새 태그 생성 시 "×" 클릭으로 제거 가능
             // 해시태그 입력 필드에 이벤트 바인딩하는 함수 (생성/수정 모두 사용 가능)
