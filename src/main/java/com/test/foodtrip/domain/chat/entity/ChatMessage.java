@@ -44,10 +44,8 @@ public class ChatMessage {
     @Column(name = "file_type", length = 50)
     private String fileType;
 
-    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude")
     private Double longitude;
 
     @Column(name = "location_description", length = 255)
