@@ -20,5 +20,8 @@ public class ChatRoomDetailResponseDTO {
     private List<String> hashtags; // 해시태그 텍스트 목록
 
     private String myRole; // 예: "OWNER", "JOINED", "OUTSIDER"
+    private int likeCount;
+    private int participantCount;
+    private String ownerNickname;
 
 }

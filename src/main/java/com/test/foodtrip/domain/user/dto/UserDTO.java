@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 public class UserDTO {
 
+	private String user_id; 
     private String social_type;
     private String social_email;
     private String email;

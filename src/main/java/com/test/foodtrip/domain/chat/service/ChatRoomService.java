@@ -9,6 +9,7 @@ import com.test.foodtrip.domain.chat.entity.ChatroomNoticeHistory;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import com.test.foodtrip.domain.chat.entity.Hashtag;
 import com.test.foodtrip.domain.chat.repository.ChatRoomRepository;
+import com.test.foodtrip.domain.chat.repository.ChatroomLikeRepository;
 import com.test.foodtrip.domain.chat.repository.ChatroomNoticeRepository;
 import com.test.foodtrip.domain.chat.repository.ChatroomUserRepository;
 import com.test.foodtrip.domain.chat.repository.HashtagRepository;
@@ -38,6 +39,8 @@ public class ChatRoomService {
     private final ChatroomUserRepository chatroomUserRepository;
     private final ChatroomNoticeRepository chatroomNoticeRepository;
     private final ChatRoomHashtagRepository chatRoomHashtagRepository;
+    private final ChatroomLikeRepository chatroomLikeRepository;
+
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -56,29 +59,44 @@ public class ChatRoomService {
 
     //채팅방 전체 목록 조회
     public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
-        List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeleted("N");
-
-        System.out.println("채팅방 개수 (삭제 제외): " + chatRooms.size());
+    	
+    	//채팅방 시간대로 내림차순 정렬
+    	List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeletedOrderByCreatedAtDesc("N"); 
 
         return chatRooms.stream()
                 .map(room -> {
-                    // 각 방의 해시태그 조회
+                    // 1. 해시태그 조회
                     List<ChatRoomHashtag> hashtagLinks = chatRoomHashtagRepository.findByChatRoomId(room.getId());
                     List<String> hashtags = hashtagLinks.stream()
                             .map(link -> link.getHashtag().getTagText())
                             .collect(Collectors.toList());
 
+                    // 2. 좋아요 수 조회
+                    int likeCount = chatroomLikeRepository.countByChatRoom_Id(room.getId());
+
+                    // 3. 참여자 수 조회
+                    int participantCount = chatroomUserRepository.countByChatRoomId(room.getId());
+
+                    // 4. 방장 닉네임 조회
+                    String ownerNickname = chatroomUserRepository
+                            .findByChatRoomIdAndRole(room.getId(), "OWNER")
+                            .map(user -> user.getUser().getNickname())
+                            .orElse("알수없음");
+
+                    // 5. DTO로 반환
                     return ChatRoomListResponseDTO.builder()
                             .id(room.getId())
                             .title(room.getTitle())
                             .thumbnailImageUrl(room.getThumbnailImageUrl())
                             .createdAt(room.getCreatedAt())
-                            .hashtags(hashtags) // 실제 값으로 설정
+                            .hashtags(hashtags)
+                            .likeCount(likeCount)
+                            .participantCount(participantCount)
+                            .ownerNickname(ownerNickname)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
-
 
     //채팅방 생성 처리
     @Transactional
@@ -117,11 +135,11 @@ public class ChatRoomService {
             chatroomNoticeRepository.save(notice);
         }
 
-        User testUser = entityManager.getReference(User.class, 999L);
+        User currentUser = entityManager.getReference(User.class, currentUserId);
 
         ChatroomUser chatroomUser = ChatroomUser.builder()
                 .chatRoom(chatRoom)
-                .user(testUser)
+                .user(currentUser)
                 .role("OWNER")
                 .status("JOINED")
                 .joinedAt(LocalDateTime.now())
@@ -132,32 +150,38 @@ public class ChatRoomService {
         return chatRoom.getId();
     }
 
-    //채팅방 상세 조회
+ // 채팅방 상세 조회
     @Transactional(readOnly = true)
-    //public ChatRoomDetailResponseDTO getRoomDetail(Long id) {
     public ChatRoomDetailResponseDTO getRoomDetail(Long id, Long currentUserId) {
         ChatRoom chatRoom = chatRoomRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다. ID: " + id));
 
+        // 최신 공지사항 (nullable)
         ChatroomNoticeHistory latestNotice = chatroomNoticeRepository
                 .findTopByChatRoomOrderByCreatedAtDesc(chatRoom)
                 .orElse(null);
 
-
-        // 사용자의 역할 조회
+        // 현재 사용자의 참여 여부 및 역할 확인
         ChatroomUser myMembership = chatroomUserRepository
                 .findByChatRoomIdAndUserId(chatRoom.getId(), currentUserId)
                 .orElse(null);
 
-        String role = "OWNER";
-        if (myMembership != null) {
-            role = myMembership.getRole(); // "OWNER" 또는 "JOINED"
-        }
+        // ❗ 여기 수정됨: 기본값을 "OWNER" → null 로 변경
+        String role = (myMembership != null) ? myMembership.getRole() : null;
 
+        // 해시태그 추출
         List<ChatRoomHashtag> hashtagLinks = chatRoomHashtagRepository.findByChatRoomId(chatRoom.getId());
         List<String> hashtags = hashtagLinks.stream()
                 .map(link -> link.getHashtag().getTagText())
                 .collect(Collectors.toList());
+
+        // 추가 정보
+        int likeCount = chatroomLikeRepository.countByChatRoom_Id(id);
+        int participantCount = chatroomUserRepository.countByChatRoomId(id);
+        String ownerNickname = chatroomUserRepository
+                .findByChatRoomIdAndRole(id, "OWNER")
+                .map(user -> user.getUser().getNickname())
+                .orElse("알수없음");
 
         return ChatRoomDetailResponseDTO.builder()
                 .id(chatRoom.getId())
@@ -167,9 +191,14 @@ public class ChatRoomService {
                 .notice(latestNotice != null ? latestNotice.getContent() : null)
                 .description(latestNotice != null ? latestNotice.getDescription() : null)
                 .hashtags(hashtags)
-                .myRole(role) // 역할 포함
+                .myRole(role) // 💡 null이면 수정/삭제 버튼 안 보이게 처리
+                .likeCount(likeCount)
+                .participantCount(participantCount)
+                .ownerNickname(ownerNickname)
                 .build();
     }
+
+
 
 
     // 논리 삭제(DB상 실제 삭제가 아닌 사용자 접근제어 및 가림처리)

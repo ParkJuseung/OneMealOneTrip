@@ -1,543 +1,647 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/main}">
+	layout:decorate="~{layout/main}">
 
 <th:block layout:fragment="style">
-    <link rel="stylesheet" th:href="@{/css/chat.css}">
+	<link rel="stylesheet" th:href="@{/css/chat.css}">
 </th:block>
+
 <body>
-<th:block layout:fragment="content">
-    <!-- 채팅방 목록 영역 -->
-    <div class="chat-list-container">
-        <!-- 검색 및 필터 영역 -->
-        <div class="chat-controls">
-            <h3 class="chat-list-title">채팅방 목록</h3>
-            <div class="create-chat" id="create-chat-btn">
-                <i class="fas fa-plus"></i> 새 채팅방 만들기
-            </div>
-        </div>
-
-        <div class="search-box">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" class="search-input" placeholder="채팅방 검색...">
-        </div>
-
-        <div class="chat-filters">
-            <div class="chat-filter active">전체</div>
-            <div class="chat-filter">🔥인기</div>
-            <div class="chat-filter">나의 채팅방</div>
-        </div>
-
-        <!-- 채팅방 목록 -->
-        <div class="chat-list">
-            <div class="chat-room" th:each="room : ${chatRooms}" th:attr="data-id=${room.id}">
-
-                <img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/api/placeholder/60/60'}"
-                     alt="채팅방 이미지" class="chat-avatar"/>
-
-                <div class="chat-info">
-                    <div class="chat-header">
-                        <div class="chat-title" th:text="${room.title}">채팅방 제목</div>
-                        <div class="chat-time" th:text="${#temporals.format(room.createdAt, 'MM-dd HH:mm')}">시간</div>
-                    </div>
-
-                    <div class="chat-preview">
-                        <div class="chat-last-message">최근 메시지를 불러옵니다...</div> <!-- 이후 확장 -->
-                    </div>
-
-                    <!-- 서버에서 받은 해시태그 출력 -->
-                    <div class="chat-hashtags">
-                        <div class="chat-hashtag" th:each="tag : ${room.hashtags}" th:text="'#' + ${tag}">#해시태그</div>
-                    </div>
-
-                    <div class="chat-participants">
-                        <div class="chat-participant-count">+0</div> <!-- 참여자 수 표기 (추후 확장용) -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 채팅방 상세 모달 -->
-        <div class="modal-overlay" id="chat-detail-modal">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3 class="modal-title">채팅방 상세 정보</h3>
-                    <div class="modal-close" id="close-detail-modal">
-                        <i class="fas fa-times"></i>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <p id="detail-title"></p>
-                    <p id="detail-description"></p>
-                    <p id="detail-notice"></p>
-                    <div id="detail-hashtags"></div>
-                </div>
-                <div class="modal-footer">
-                    <button class="create-button" id="enter-chatroom">채팅방 입장하기</button>
-                    <button class="cancel-button" id="leave-chatroom" style="display:none;">채팅방 나가기</button>
-                    <button class="create-button" id="edit-chatroom" style="display:none;">채팅방 수정</button>
-                    <button class="cancel-button" id="delete-chatroom"
-                            style="display:none; background-color: #f44336; color: white;">채팅방 삭제
-                    </button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- 채팅방 생성 모달 -->
-        <div class="modal-overlay" id="create-chat-modal">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3 class="modal-title">새 채팅방 만들기</h3>
-                    <div class="modal-close" id="close-create-modal">
-                        <i class="fas fa-times"></i>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">채팅방 제목</label>
-                    <input type="text" class="form-input" id="chat-title" placeholder="제목을 입력하세요 (최대 30자)"
-                           maxlength="30">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">해시태그 (최대 5개)</label>
-                    <div class="hashtag-input">
-                        <div class="hashtag">#여행 <span class="remove-hashtag">×</span></div>
-                        <input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter...">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">공지사항 (선택)</label>
-                    <textarea class="form-textarea" id="chat-notice" placeholder="채팅방 공지사항을 입력하세요 (최대 100자)"
-                              maxlength="100"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">설명글 (선택)</label>
-                    <textarea class="form-textarea" id="chat-description" placeholder="채팅방에 대한 설명을 입력하세요 (최대 200자)"
-                              maxlength="200"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button class="cancel-button" id="cancel-create">취소</button>
-                    <button class="create-button" id="confirm-create">채팅방 만들기</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 채팅방 수정 모달 -->
-    <div class="modal-overlay" id="edit-chat-modal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">채팅방 수정</h3>
-                <div class="modal-close" id="close-edit-modal">
-                    <i class="fas fa-times"></i>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">채팅방 제목</label>
-                <input type="text" class="form-input" id="edit-chat-title" maxlength="30" />
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">해시태그 (최대 5개)</label>
-                <div class="hashtag-input" id="edit-hashtag-container">
-                    <!-- 기존 태그 채워짐 -->
-                    <input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter..." />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">공지사항</label>
-                <textarea class="form-textarea" id="edit-chat-notice" maxlength="100"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">설명글</label>
-                <textarea class="form-textarea" id="edit-chat-description" maxlength="200"></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <button class="cancel-button" id="cancel-edit">취소</button>
-                <button class="create-button" id="confirm-edit">저장</button>
-            </div>
-        </div>
-    </div>
-
-
-
-    <script>
-        window.currentUserId = 999; // 하드코딩 테스트용 ID
-    </script>
-
-
-    <script>
-
-        document.addEventListener('DOMContentLoaded', function () {
-            // 채팅방 생성 모달
-            const createChatBtn = document.getElementById('create-chat-btn');
-            const createChatModal = document.getElementById('create-chat-modal');
-            const closeCreateModal = document.getElementById('close-create-modal');
-            const cancelCreate = document.getElementById('cancel-create');
-            const confirmCreate = document.getElementById('confirm-create');
-            const emptyStateBtn = document.querySelector('.create-first-chat');
-
-            // 해시태그 입력
-            const hashtagInput = document.querySelector('.hashtag-input-field');
-            const hashtagContainer = document.querySelector('.hashtag-input');
-            const removeHashtags = document.querySelectorAll('.remove-hashtag');
-
-            // 채팅방 필터
-            const chatFilters = document.querySelectorAll('.chat-filter');
-
-            // 채팅방 목록
-            const chatRooms = document.querySelectorAll('.chat-room');
-
-            // 모달 열기/닫기 함수
-            function openModal(modal) {
-                modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeModal(modal) {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-
-            // 채팅방 생성 모달 열기
-            createChatBtn.addEventListener('click', function () {
-                openModal(createChatModal);
-            });
-
-            // 빈 상태에서 채팅방 생성 버튼
-            if (emptyStateBtn) {
-                emptyStateBtn.addEventListener('click', function () {
-                    openModal(createChatModal);
-                });
-            }
-
-            // 채팅방 생성 모달 닫기
-            closeCreateModal.addEventListener('click', function () {
-                closeModal(createChatModal);
-            });
-
-            cancelCreate.addEventListener('click', function () {
-                closeModal(createChatModal);
-            });
-
-            // 채팅방 생성 확인
-            confirmCreate.addEventListener('click', async function () {
-                const title = document.getElementById('chat-title').value;
-                const notice = document.getElementById('chat-notice').value;
-                const description = document.getElementById('chat-description').value;
-
-                // 해시태그 추출
-                const hashtagElements = document.querySelectorAll('.hashtag');
-                const hashtags = Array.from(hashtagElements).map(el => el.textContent.replace("×", "").trim().replace("#", ""));
-
-                if (!title) {
-                    alert('채팅방 제목을 입력해주세요.');
-                    return;
-                }
-
-                try {
-                    // 1. 채팅방 생성 요청
-                    const response = await fetch('/api/chatrooms', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({title, notice, description, hashtags})
-                    });
-
-                    const newRoomId = await response.json();
-
-                    // 2. 채팅방 상세 정보 가져오기
-                    const detailResponse = await fetch(`/api/chatrooms/${newRoomId}`);
-                    const room = await detailResponse.json();
-
-                    // 3. 목록에 채팅방 동적 추가
-                    const chatList = document.querySelector('.chat-list');
-                    const div = document.createElement('div');
-                    div.className = 'chat-room';
-                    div.setAttribute('data-id', room.id);
-                    div.innerHTML = `
-            <img src="${room.thumbnailImageUrl || '/api/placeholder/60/60'}" alt="채팅방 이미지" class="chat-avatar">
-            <div class="chat-info">
-                <div class="chat-header">
-                    <div class="chat-title">${room.title}</div>
-                    <div class="chat-time">${new Date(room.createdAt).toLocaleString('ko-KR')}</div>
-                </div>
-                <div class="chat-preview">
-                    <div class="chat-last-message">최근 메시지를 불러옵니다...</div>
-                </div>
-                <div class="chat-hashtags">
-                    ${room.hashtags.map(tag => `<div class="chat-hashtag">#${tag}</div>`).join("")}
-                </div>
-                <div class="chat-participants">
-                    <div class="chat-participant-count">+1</div>
-                </div>
-            </div>
-        `;
-
-                    div.addEventListener('click', () => {
-                        window.location.href = `chat-detail.html?id=${room.id}`;
-                    });
-
-                    chatList.prepend(div);
-
-                    // 모달 닫기 및 초기화
-                    closeModal(createChatModal);
-                    document.getElementById('chat-title').value = '';
-                    document.getElementById('chat-notice').value = '';
-                    document.getElementById('chat-description').value = '';
-                    document.querySelectorAll('.hashtag').forEach(el => el.remove());
-
-                } catch (error) {
-                    alert('채팅방 생성에 실패했습니다.');
-                    console.error(error);
-                }
-            });
-
-            // 채팅방 삭제 버튼 이벤트
-            document.getElementById('delete-chatroom').addEventListener('click', async () => {
-                if (!selectedRoomId) return;
-
-                if (!confirm("정말 이 채팅방을 삭제하시겠습니까?")) return;
-
-                try {
-                    const res = await fetch(`/api/chatrooms/${selectedRoomId}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (!res.ok) {
-                        const errorText = await res.text();
-                        throw new Error(errorText || "삭제 실패");
-                    }
-
-                    alert('삭제되었습니다.');
-                    window.location.reload();
-                } catch (err) {
-                    alert("삭제 실패: " + err.message);
-                }
-            });
-
-
-
-            //해시태그 입력 이벤트 등록 (생성 + 수정 폼 모두 대응)
-            // - 새 태그 생성 시 "×" 클릭으로 제거 가능
-            // 해시태그 입력 필드에 이벤트 바인딩하는 함수 (생성/수정 모두 사용 가능)
-            function bindHashtagInputs() {
-                document.querySelectorAll('.hashtag-input-field').forEach(input => {
-                    input.removeEventListener('keydown', handleHashtagKeydown);
-                    input.addEventListener('keydown', handleHashtagKeydown);
-                });
-            }
-
-            function handleHashtagKeydown(e) {
-                if (e.key === 'Enter' && this.value.trim()) {
-                    e.preventDefault();
-
-                    const container = this.closest('.hashtag-input');
-                    const currentTags = container.querySelectorAll('.hashtag').length;
-
-                    if (currentTags >= 5) {
-                        alert('해시태그는 최대 5개까지 추가할 수 있습니다.');
-                        return;
-                    }
-
-                    const newTagText = this.value.trim();
-
-                    // ✅ 중복 태그 방지
-                    const duplicate = [...container.querySelectorAll('.hashtag')].some(el =>
-                        el.textContent.replace("×", "").trim().replace("#", "") === newTagText
-                    );
-                    if (duplicate) {
-                        alert('이미 추가된 해시태그입니다.');
-                        this.value = '';
-                        return;
-                    }
-
-                    const tag = document.createElement('div');
-                    tag.className = 'hashtag';
-                    tag.innerHTML = `#${newTagText} <span class="remove-hashtag">×</span>`;
-                    tag.querySelector('.remove-hashtag').addEventListener('click', function () {
-                        tag.remove();
-                    });
-
-                    container.insertBefore(tag, this);
-                    this.value = '';
-                }
-            }
-            // 해시태그 이벤트 바인딩 실행 (생성 + 수정 폼 모두 대응)
-            bindHashtagInputs();
-
-            // 채팅방 필터 클릭 이벤트
-            chatFilters.forEach(filter => {
-                filter.addEventListener('click', function () {
-                    chatFilters.forEach(f => f.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // 실제로는 필터링 로직 추가
-                });
-            });
-
-            // 채팅방 클릭 이벤트 (채팅방 상세 페이지로 이동)
-            // 채팅방 상세정보 모달 요소 정의
-            const detailModal = document.getElementById('chat-detail-modal');
-            const closeDetailModal = document.getElementById('close-detail-modal');
-            const enterChatroomBtn = document.getElementById('enter-chatroom');
-            let selectedRoomId = null;
-
-// 각 채팅방 클릭 시 상세정보 모달 띄우기
-            chatRooms.forEach(room => {
-                room.addEventListener('click', async function () {
-                    const chatId = this.getAttribute('data-id');
-                    selectedRoomId = chatId;
-
-                    try {
-                        const res = await fetch(`/api/chatrooms/${chatId}`);
-                        const room = await res.json();
-
-                        // 채팅방 정보 세팅
-                        document.getElementById('detail-title').textContent = room.title;
-                        document.getElementById('detail-description').textContent = room.description || '-';
-                        document.getElementById('detail-notice').textContent = room.notice || '-';
-                        document.getElementById('detail-hashtags').innerHTML = room.hashtags.map(tag => `<span>#${tag}</span>`).join(' ');
-
-                        // ✅ 역할 기반 버튼 표시
-                        const role = room.myRole;
-
-                        if (role === 'OWNER') {
-                            document.getElementById('edit-chatroom').style.display = 'inline-block';
-                            document.getElementById('delete-chatroom').style.display = 'inline-block';
-                            document.getElementById('leave-chatroom').style.display = 'none';
-                        } else if (role === 'JOINED') {
-                            document.getElementById('edit-chatroom').style.display = 'none';
-                            document.getElementById('delete-chatroom').style.display = 'none';
-                            document.getElementById('leave-chatroom').style.display = 'inline-block';
-                        } else {
-                            document.getElementById('edit-chatroom').style.display = 'none';
-                            document.getElementById('delete-chatroom').style.display = 'none';
-                            document.getElementById('leave-chatroom').style.display = 'none';
-                        }
-
-                        // 모달 열기
-                        openModal(detailModal);
-                    } catch (err) {
-                        alert('채팅방 정보를 불러오는 데 실패했습니다.');
-                        console.error(err);
-                    }
-                });
-            });
-
-
-// 상세정보 모달 닫기
-            closeDetailModal.addEventListener('click', () => {
-                closeModal(detailModal);
-            });
-
-            // 입장 버튼 클릭 시 chatroom.html로 이동
-            enterChatroomBtn.addEventListener('click', () => {
-                if (selectedRoomId) {
-                    window.location.href = `chatroom.html?id=${selectedRoomId}`;
-                }
-            });
-
-            const editChatroomBtn = document.getElementById('edit-chatroom');
-
-            const editModal = document.getElementById('edit-chat-modal');
-            const closeEditModal = document.getElementById('close-edit-modal');
-            const cancelEditBtn = document.getElementById('cancel-edit');
-            const confirmEditBtn = document.getElementById('confirm-edit');
-
-            editChatroomBtn.addEventListener('click', async () => {
-                if (!selectedRoomId) return;
-
-                try {
-                    const res = await fetch(`/api/chatrooms/${selectedRoomId}`);
-                    const room = await res.json();
-
-                    // 기존 내용 채우기
-                    document.getElementById('edit-chat-title').value = room.title || '';
-                    document.getElementById('edit-chat-notice').value = room.notice || '';
-                    document.getElementById('edit-chat-description').value = room.description || '';
-
-                    // 해시태그
-                    const container = document.getElementById('edit-hashtag-container');
-                    container.querySelectorAll('.hashtag').forEach(el => el.remove());
-
-                    room.hashtags.forEach(tag => {
-                        const div = document.createElement('div');
-                        div.className = 'hashtag';
-                        div.innerHTML = `#${tag} <span class="remove-hashtag">×</span>`;
-                        div.querySelector('.remove-hashtag').addEventListener('click', function () {
-                            div.remove();
-                        });
-                        container.insertBefore(div, container.querySelector('.hashtag-input-field'));
-                    });
-
-                    openModal(editModal);
-                } catch (e) {
-                    alert('수정 정보를 불러오지 못했습니다.');
-                    console.error(e);
-                }
-            });
-
-            confirmEditBtn.addEventListener('click', async () => {
-                const title = document.getElementById('edit-chat-title').value;
-                const notice = document.getElementById('edit-chat-notice').value;
-                const description = document.getElementById('edit-chat-description').value;
-
-                const hashtagElements = document.querySelectorAll('#edit-hashtag-container .hashtag');
-                const hashtags = Array.from(hashtagElements).map(el => el.textContent.replace("×", "").trim().replace("#", ""));
-
-                if (!title) {
-                    alert('제목을 입력해주세요.');
-                    return;
-                }
-
-                try {
-                    const res = await fetch(`/api/chatrooms/${selectedRoomId}/edit-log`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title, notice, description, hashtags })
-                    });
-
-                    if (!res.ok) throw new Error('수정 실패');
-
-                    alert('채팅방 수정 완료!');
-                    closeModal(editModal);
-                    window.location.reload(); // 또는 목록 리프레시 로직
-                } catch (err) {
-                    alert('수정 실패: ' + err.message);
-                    console.error(err);
-                }
-            });
-
-            closeEditModal.addEventListener('click', () => closeModal(editModal));
-            cancelEditBtn.addEventListener('click', () => closeModal(editModal));
-
-            // 검색 기능
-            const searchInput = document.querySelector('.search-input');
-            searchInput.addEventListener('input', function () {
-                const searchTerm = this.value.toLowerCase();
-
-                chatRooms.forEach(room => {
-                    const title = room.querySelector('.chat-title').textContent.toLowerCase();
-                    const lastMessage = room.querySelector('.chat-last-message').textContent.toLowerCase();
-                    const hashtags = Array.from(room.querySelectorAll('.chat-hashtag')).map(tag => tag.textContent.toLowerCase());
-
-                    const matchTitle = title.includes(searchTerm);
-                    const matchMessage = lastMessage.includes(searchTerm);
-                    const matchHashtag = hashtags.some(tag => tag.includes(searchTerm));
-
-                    if (matchTitle || matchMessage || matchHashtag) {
-                        room.style.display = 'flex';
-                    } else {
-                        room.style.display = 'none';
-                    }
-                });
-            });
-        })
-    </script>
-</th:block>
+	<th:block layout:fragment="content">
+		<!-- 채팅방 목록 영역 -->
+		<div class="chat-list-container">
+			<!-- 검색 및 필터 영역 -->
+			<div class="chat-controls">
+				<h3 class="chat-list-title">채팅방 목록</h3>
+				<div class="create-chat" id="create-chat-btn">
+					<i class="fas fa-plus"></i> 새 채팅방 만들기
+				</div>
+			</div>
+
+			<div class="search-box">
+				<i class="fas fa-search search-icon"></i>
+				<input type="text" class="search-input" placeholder="채팅방 검색...">
+			</div>
+
+			<div class="chat-filters">
+				<div class="chat-filter active">전체</div>
+				<div class="chat-filter">🔥인기</div>
+				<div class="chat-filter">나의 채팅방</div>
+			</div>
+
+			<!-- 채팅방 목록 영역 - 수정된 버전 -->
+			<div class="chat-list">
+			    <div class="chat-room" th:each="room : ${chatRooms}" th:attr="data-id=${room.id}">
+			        
+			        <!-- 왼쪽: 썸네일 + 참여자 수 -->
+			        <div class="chat-left">
+			            <img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/api/placeholder/60/60'}"
+			                 alt="채팅방 이미지" class="chat-avatar"/>
+			            <div class="chat-participant-count">
+			                참여자: <span th:text="${room.participantCount}">0</span>명
+			            </div>
+			        </div>
+
+			        <!-- 중앙 내용 -->
+			        <div class="chat-center">
+			            <div class="chat-title" th:text="${room.title}">채팅방 제목</div>
+
+			            <div class="chat-hashtags">
+			                <div class="chat-hashtag" th:each="tag : ${room.hashtags}" th:text="'#' + ${tag}">#해시태그</div>
+			            </div>
+
+			            <div class="chat-owner">
+			                방장: <span th:text="${room.ownerNickname}"></span>
+			            </div>
+			        </div>
+
+			        <!-- 오른쪽: 시간 + 좋아요 -->
+			        <div class="chat-right">
+			            <div class="chat-time" th:text="${#temporals.format(room.createdAt, 'yy-MM-dd HH:mm')}">시간</div>
+			            <div class="chat-likes">
+			                ❤️ <span th:text="${room.likeCount}">0</span>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+
+
+			<!-- 채팅방 상세 모달 -->
+			<div class="modal-overlay" id="chat-detail-modal">
+				<div class="modal">
+					<div class="modal-header">
+						<h3 class="modal-title">채팅방 상세 정보</h3>
+						<div class="modal-close" id="close-detail-modal">
+							<i class="fas fa-times"></i>
+						</div>
+					</div>
+					<div class="modal-body">
+						<p id="detail-title"></p>
+						<p id="detail-description"></p>
+						<p id="detail-notice"></p>
+						<div id="detail-hashtags"></div>
+					</div>
+					<div class="modal-footer">
+						<button class="create-button" id="enter-chatroom">채팅방 입장하기</button>
+						<button class="cancel-button" id="leave-chatroom" style="display:none;">채팅방 나가기</button>
+						<button class="create-button" id="edit-chatroom" style="display:none;">채팅방 수정</button>
+						<button class="cancel-button" id="delete-chatroom"
+							style="display:none; background-color: #f44336; color: white;">채팅방 삭제
+						</button>
+					</div>
+				</div>
+			</div>
+
+
+			<!-- 채팅방 생성 모달 -->
+			<div class="modal-overlay" id="create-chat-modal">
+				<div class="modal">
+					<div class="modal-header">
+						<h3 class="modal-title">새 채팅방 만들기</h3>
+						<div class="modal-close" id="close-create-modal">
+							<i class="fas fa-times"></i>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="form-label">채팅방 제목</label>
+						<input type="text" class="form-input" id="chat-title" placeholder="제목을 입력하세요 (최대 30자)"
+							maxlength="30">
+					</div>
+					<div class="form-group">
+						<label class="form-label">해시태그 (최대 5개)</label>
+						<div class="hashtag-input">
+						    <input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter...">
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="form-label">공지사항 (선택)</label>
+						<textarea class="form-textarea" id="chat-notice" placeholder="채팅방 공지사항을 입력하세요 (최대 100자)"
+							maxlength="100"></textarea>
+					</div>
+					<div class="form-group">
+						<label class="form-label">설명글 (선택)</label>
+						<textarea class="form-textarea" id="chat-description" placeholder="채팅방에 대한 설명을 입력하세요 (최대 200자)"
+							maxlength="200"></textarea>
+					</div>
+					<div class="modal-footer">
+						<button class="cancel-button" id="cancel-create">취소</button>
+						<button class="create-button" id="confirm-create">채팅방 만들기</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 채팅방 수정 모달 -->
+		<div class="modal-overlay" id="edit-chat-modal">
+			<div class="modal">
+				<div class="modal-header">
+					<h3 class="modal-title">채팅방 수정</h3>
+					<div class="modal-close" id="close-edit-modal">
+						<i class="fas fa-times"></i>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">채팅방 제목</label>
+					<input type="text" class="form-input" id="edit-chat-title" maxlength="30" />
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">해시태그 (최대 5개)</label>
+					<div class="hashtag-input" id="edit-hashtag-container">
+						<!-- 기존 태그 채워짐 -->
+						<input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter..." />
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">공지사항</label>
+					<textarea class="form-textarea" id="edit-chat-notice" maxlength="100"></textarea>
+				</div>
+
+				<div class="form-group">
+					<label class="form-label">설명글</label>
+					<textarea class="form-textarea" id="edit-chat-description" maxlength="200"></textarea>
+				</div>
+
+				<div class="modal-footer">
+					<button class="cancel-button" id="cancel-edit">취소</button>
+					<button class="create-button" id="confirm-edit">저장</button>
+				</div>
+			</div>
+		</div>
+
+		<style>
+			.chat-room {
+			    display: flex;
+			    justify-content: space-between;
+			    align-items: stretch;
+			    background: white;
+			    padding: 16px;
+			    border-radius: 12px;
+			    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+			    margin-bottom: 12px;
+			    gap: 20px;
+			}
+
+			/* 왼쪽: 이미지 + 참여자 수 */
+			.chat-left {
+			    display: flex;
+			    flex-direction: column;
+			    align-items: center;
+			    width: 80px;
+			    flex-shrink: 0;
+			}
+
+			.chat-avatar {
+			    width: 60px;
+			    height: 60px;
+			    border-radius: 50%;
+			    object-fit: cover;
+			    margin-bottom: 8px;
+			}
+
+			.chat-participant-count {
+			    font-size: 0.8rem;
+			    padding: 4px 8px;
+			    border-radius: 12px;
+			    text-align: center;
+			    white-space: nowrap;      /* ✅ 줄바꿈 방지 */
+			    max-width: 100%;          /* ✅ 영역 초과 방지 */
+			    margin-top: 6px;
+			}
+			/* 중앙 내용 */
+			.chat-center {
+			    flex: 1;
+			    display: flex;
+			    flex-direction: column;
+			    justify-content: center;
+			    gap: 8px;
+			}
+
+			.chat-title {
+			    font-size: 1.1rem;
+			    font-weight: 600;
+			    background: #f7f7f7;
+			    padding: 6px 12px;
+			    border-radius: 10px;
+			    width: fit-content;
+			}
+
+			.chat-hashtags {
+			    display: flex;
+			    flex-wrap: wrap;
+			    gap: 6px;
+			}
+
+			.chat-hashtag {
+			    background: #d5eef7;
+			    color: #0077aa;
+			    padding: 4px 10px;
+			    border-radius: 16px;
+			    font-size: 0.8rem;
+			}
+
+			.chat-owner {
+			    font-size: 0.85rem;
+			    color: #555;
+			}
+
+			/* 오른쪽: 시간 위 / 좋아요 아래 */
+			.chat-right {
+			    display: flex;
+			    flex-direction: column;
+			    justify-content: space-between;
+			    align-items: flex-end;
+			    flex-shrink: 0;
+			    min-width: 80px;
+			}
+
+			.chat-time {
+			    font-size: 0.85rem;
+			    color: #888;
+			}
+
+			.chat-likes {
+			    font-size: 0.95rem;
+			    color: #e74c3c;
+			    font-weight: bold;
+			}
+
+		</style>
+
+
+		<script>
+
+			document.addEventListener('DOMContentLoaded', function () {
+				// 채팅방 생성 모달
+				const createChatBtn = document.getElementById('create-chat-btn');
+				const createChatModal = document.getElementById('create-chat-modal');
+				const closeCreateModal = document.getElementById('close-create-modal');
+				const cancelCreate = document.getElementById('cancel-create');
+				const confirmCreate = document.getElementById('confirm-create');
+				const emptyStateBtn = document.querySelector('.create-first-chat');
+
+				// 해시태그 입력
+				const hashtagInput = document.querySelector('.hashtag-input-field');
+				const hashtagContainer = document.querySelector('.hashtag-input');
+				const removeHashtags = document.querySelectorAll('.remove-hashtag');
+
+				// 채팅방 필터
+				const chatFilters = document.querySelectorAll('.chat-filter');
+
+				// 채팅방 목록
+				const chatRooms = document.querySelectorAll('.chat-room');
+
+				// 모달 열기/닫기 함수
+				function openModal(modal) {
+					modal.classList.add('active');
+					document.body.style.overflow = 'hidden';
+				}
+
+				function closeModal(modal) {
+					modal.classList.remove('active');
+					document.body.style.overflow = '';
+				}
+
+				// 채팅방 생성 모달 열기
+				createChatBtn.addEventListener('click', function () {
+					openModal(createChatModal);
+				});
+
+				// 빈 상태에서 채팅방 생성 버튼
+				if (emptyStateBtn) {
+					emptyStateBtn.addEventListener('click', function () {
+						openModal(createChatModal);
+					});
+				}
+
+				// 채팅방 생성 모달 닫기
+				closeCreateModal.addEventListener('click', function () {
+					closeModal(createChatModal);
+				});
+
+				cancelCreate.addEventListener('click', function () {
+					closeModal(createChatModal);
+				});
+
+				// 채팅방 생성 확인
+				confirmCreate.addEventListener('click', async function () {
+					const title = document.getElementById('chat-title').value;
+					const notice = document.getElementById('chat-notice').value;
+					const description = document.getElementById('chat-description').value;
+
+					// 해시태그 추출
+					const hashtagElements = document.querySelectorAll('.hashtag');
+					const hashtags = Array.from(hashtagElements).map(el => el.textContent.replace("×", "").trim().replace("#", ""));
+
+					if (!title) {
+						alert('채팅방 제목을 입력해주세요.');
+						return;
+					}
+
+					try {
+						// 1. 채팅방 생성 요청
+						const response = await fetch('/api/chatrooms', {
+							method: 'POST',
+							headers: {'Content-Type': 'application/json'},
+							body: JSON.stringify({title, notice, description, hashtags})
+						});
+
+						const newRoomId = await response.json();
+
+						// 2. 채팅방 상세 정보 가져오기
+						const detailResponse = await fetch(`/api/chatrooms/${newRoomId}`);
+						const room = await detailResponse.json();
+
+						// 3. 목록에 채팅방 동적 추가
+						const chatList = document.querySelector('.chat-list');
+						const div = document.createElement('div');
+						div.className = 'chat-room';
+						div.setAttribute('data-id', room.id);
+						div.innerHTML = `
+						  <div class="chat-left">
+						      <img src="${room.thumbnailImageUrl || '/api/placeholder/60/60'}" alt="채팅방 이미지" class="chat-avatar">
+						      <div class="chat-participant-count">
+						          참여자: ${room.participantCount}명
+						      </div>
+						  </div>
+						  <div class="chat-center">
+						      <div class="chat-title">${room.title}</div>
+						      <div class="chat-hashtags">
+						          ${room.hashtags.map(tag => `<div class="chat-hashtag">#${tag}</div>`).join("")}
+						      </div>
+						      <div class="chat-owner">방장: ${room.ownerNickname}</div>
+						  </div>
+						  <div class="chat-right">
+						      <div class="chat-time">${new Date(room.createdAt).toLocaleString('ko-KR')}</div>
+						      <div class="chat-likes">❤️ ${room.likeCount}</div>
+						  </div>
+						`;
+
+						div.addEventListener('click', () => {
+							window.location.href = `chat-detail.html?id=${room.id}`;
+						});
+
+						chatList.prepend(div);
+
+						// 모달 닫기 및 초기화
+						closeModal(createChatModal);
+						document.getElementById('chat-title').value = '';
+						document.getElementById('chat-notice').value = '';
+						document.getElementById('chat-description').value = '';
+						document.querySelectorAll('.hashtag').forEach(el => el.remove());
+
+					} catch (error) {
+						alert('채팅방 생성에 실패했습니다.');
+						console.error(error);
+					}
+				});
+
+				// 채팅방 삭제 버튼 이벤트
+				document.getElementById('delete-chatroom').addEventListener('click', async () => {
+					if (!selectedRoomId) return;
+
+					if (!confirm("정말 이 채팅방을 삭제하시겠습니까?")) return;
+
+					try {
+						const res = await fetch(`/api/chatrooms/${selectedRoomId}`, {
+							method: 'DELETE'
+						});
+
+						if (!res.ok) {
+							const errorText = await res.text();
+							throw new Error(errorText || "삭제 실패");
+						}
+
+						alert('삭제되었습니다.');
+						window.location.reload();
+					} catch (err) {
+						alert("삭제 실패: " + err.message);
+					}
+				});
+
+
+
+				//해시태그 입력 이벤트 등록 (생성 + 수정 폼 모두 대응)
+				// - 새 태그 생성 시 "×" 클릭으로 제거 가능
+				// 해시태그 입력 필드에 이벤트 바인딩하는 함수 (생성/수정 모두 사용 가능)
+				function bindHashtagInputs() {
+					document.querySelectorAll('.hashtag-input-field').forEach(input => {
+						input.removeEventListener('keydown', handleHashtagKeydown);
+						input.addEventListener('keydown', handleHashtagKeydown);
+					});
+				}
+
+				function handleHashtagKeydown(e) {
+					if (e.key === 'Enter' && this.value.trim()) {
+						e.preventDefault();
+
+						const container = this.closest('.hashtag-input');
+						const currentTags = container.querySelectorAll('.hashtag').length;
+
+						if (currentTags >= 5) {
+							alert('해시태그는 최대 5개까지 추가할 수 있습니다.');
+							return;
+						}
+
+						const newTagText = this.value.trim();
+
+						// ✅ 중복 태그 방지
+						const duplicate = [...container.querySelectorAll('.hashtag')].some(el =>
+							el.textContent.replace("×", "").trim().replace("#", "") === newTagText
+						);
+						if (duplicate) {
+							alert('이미 추가된 해시태그입니다.');
+							this.value = '';
+							return;
+						}
+
+						const tag = document.createElement('div');
+						tag.className = 'hashtag';
+						tag.innerHTML = `#${newTagText} <span class="remove-hashtag">×</span>`;
+						tag.querySelector('.remove-hashtag').addEventListener('click', function () {
+							tag.remove();
+						});
+
+						container.insertBefore(tag, this);
+						this.value = '';
+					}
+				}
+				// 해시태그 이벤트 바인딩 실행 (생성 + 수정 폼 모두 대응)
+				bindHashtagInputs();
+
+				// 채팅방 필터 클릭 이벤트
+				chatFilters.forEach(filter => {
+					filter.addEventListener('click', function () {
+						chatFilters.forEach(f => f.classList.remove('active'));
+						this.classList.add('active');
+
+						// 실제로는 필터링 로직 추가
+					});
+				});
+
+				// 채팅방 클릭 이벤트 (채팅방 상세 페이지로 이동)
+				// 채팅방 상세정보 모달 요소 정의
+				const detailModal = document.getElementById('chat-detail-modal');
+				const closeDetailModal = document.getElementById('close-detail-modal');
+				const enterChatroomBtn = document.getElementById('enter-chatroom');
+				let selectedRoomId = null;
+
+				// 각 채팅방 클릭 시 상세정보 모달 띄우기
+				chatRooms.forEach(room => {
+					room.addEventListener('click', async function () {
+						const chatId = this.getAttribute('data-id');
+						selectedRoomId = chatId;
+
+						try {
+							const res = await fetch(`/api/chatrooms/${chatId}`);
+							const room = await res.json();
+
+							// 채팅방 정보 세팅
+							document.getElementById('detail-title').textContent = room.title;
+							document.getElementById('detail-description').textContent = room.description || '-';
+							document.getElementById('detail-notice').textContent = room.notice || '-';
+							document.getElementById('detail-hashtags').innerHTML = room.hashtags.map(tag => `<span>#${tag}</span>`).join(' ');
+
+							// ✅ 역할 기반 버튼 표시
+							const role = room.myRole;
+
+							if (role === 'OWNER') {
+							    document.getElementById('edit-chatroom').style.display = 'inline-block';
+							    document.getElementById('delete-chatroom').style.display = 'inline-block';
+							    document.getElementById('leave-chatroom').style.display = 'none';
+							} else if (role === 'JOINED') {
+							    document.getElementById('edit-chatroom').style.display = 'none';
+							    document.getElementById('delete-chatroom').style.display = 'none';
+							    document.getElementById('leave-chatroom').style.display = 'inline-block';
+							} else {
+							    // 로그인했지만 참여 안한 유저 (또는 null)
+							    document.getElementById('edit-chatroom').style.display = 'none';
+							    document.getElementById('delete-chatroom').style.display = 'none';
+							    document.getElementById('leave-chatroom').style.display = 'none';
+							}
+
+							// 모달 열기
+							openModal(detailModal);
+						} catch (err) {
+							alert('채팅방 정보를 불러오는 데 실패했습니다.');
+							console.error(err);
+						}
+					});
+				});
+
+
+				// 상세정보 모달 닫기
+				closeDetailModal.addEventListener('click', () => {
+					closeModal(detailModal);
+				});
+
+				// 입장 버튼 클릭 시 chatroom.html로 이동
+				enterChatroomBtn.addEventListener('click', () => {
+					if (selectedRoomId) {
+						window.location.href = `chatroom.html?id=${selectedRoomId}`;
+					}
+				});
+
+				const editChatroomBtn = document.getElementById('edit-chatroom');
+
+				const editModal = document.getElementById('edit-chat-modal');
+				const closeEditModal = document.getElementById('close-edit-modal');
+				const cancelEditBtn = document.getElementById('cancel-edit');
+				const confirmEditBtn = document.getElementById('confirm-edit');
+
+				editChatroomBtn.addEventListener('click', async () => {
+					if (!selectedRoomId) return;
+
+					try {
+						const res = await fetch(`/api/chatrooms/${selectedRoomId}`);
+						const room = await res.json();
+
+						// 기존 내용 채우기
+						document.getElementById('edit-chat-title').value = room.title || '';
+						document.getElementById('edit-chat-notice').value = room.notice || '';
+						document.getElementById('edit-chat-description').value = room.description || '';
+
+						// 해시태그
+						const container = document.getElementById('edit-hashtag-container');
+						container.querySelectorAll('.hashtag').forEach(el => el.remove());
+
+						room.hashtags.forEach(tag => {
+							const div = document.createElement('div');
+							div.className = 'hashtag';
+							div.innerHTML = `#${tag} <span class="remove-hashtag">×</span>`;
+							div.querySelector('.remove-hashtag').addEventListener('click', function () {
+								div.remove();
+							});
+							container.insertBefore(div, container.querySelector('.hashtag-input-field'));
+						});
+
+						openModal(editModal);
+					} catch (e) {
+						alert('수정 정보를 불러오지 못했습니다.');
+						console.error(e);
+					}
+				});
+
+				confirmEditBtn.addEventListener('click', async () => {
+					const title = document.getElementById('edit-chat-title').value;
+					const notice = document.getElementById('edit-chat-notice').value;
+					const description = document.getElementById('edit-chat-description').value;
+
+					const hashtagElements = document.querySelectorAll('#edit-hashtag-container .hashtag');
+					const hashtags = Array.from(hashtagElements).map(el => el.textContent.replace("×", "").trim().replace("#", ""));
+
+					if (!title) {
+						alert('제목을 입력해주세요.');
+						return;
+					}
+
+					try {
+						const res = await fetch(`/api/chatrooms/${selectedRoomId}/edit-log`, {
+							method: 'POST',
+							headers: {'Content-Type': 'application/json'},
+							body: JSON.stringify({title, notice, description, hashtags})
+						});
+
+						if (!res.ok) throw new Error('수정 실패');
+
+						alert('채팅방 수정 완료!');
+						closeModal(editModal);
+						window.location.reload(); // 또는 목록 리프레시 로직
+					} catch (err) {
+						alert('수정 실패: ' + err.message);
+						console.error(err);
+					}
+				});
+
+				closeEditModal.addEventListener('click', () => closeModal(editModal));
+				cancelEditBtn.addEventListener('click', () => closeModal(editModal));
+
+				// 검색 기능
+				const searchInput = document.querySelector('.search-input');
+				searchInput.addEventListener('input', function () {
+					const searchTerm = this.value.toLowerCase();
+
+					chatRooms.forEach(room => {
+						const title = room.querySelector('.chat-title').textContent.toLowerCase();
+						const lastMessage = room.querySelector('.chat-last-message').textContent.toLowerCase();
+						const hashtags = Array.from(room.querySelectorAll('.chat-hashtag')).map(tag => tag.textContent.toLowerCase());
+
+						const matchTitle = title.includes(searchTerm);
+						const matchMessage = lastMessage.includes(searchTerm);
+						const matchHashtag = hashtags.some(tag => tag.includes(searchTerm));
+
+						if (matchTitle || matchMessage || matchHashtag) {
+							room.style.display = 'flex';
+						} else {
+							room.style.display = 'none';
+						}
+					});
+				});
+			})
+		</script>
+	</th:block>
 </body>
+
 </html>

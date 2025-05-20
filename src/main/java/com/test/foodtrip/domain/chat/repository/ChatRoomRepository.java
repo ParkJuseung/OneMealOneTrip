@@ -14,4 +14,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     List<ChatRoom> findAllNotDeleted();
 
     List<ChatRoom> findByIsDeleted(String isDeleted);
+
+	List<ChatRoom> findByIsDeletedOrderByCreatedAtDesc(String string);
 }

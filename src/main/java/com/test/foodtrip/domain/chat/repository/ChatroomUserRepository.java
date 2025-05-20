@@ -16,4 +16,9 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
     Optional<ChatroomUser> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 
     // 필요 시 유저별 참여 채팅방 조회 등 커스텀 메서드 추가 가능
+    // ChatroomUserRepository.java
+    int countByChatRoomId(Long chatRoomId);
+    
+    // ✅ 여기 추가
+    Optional<ChatroomUser> findByChatRoomIdAndRole(Long chatRoomId, String role);
 }

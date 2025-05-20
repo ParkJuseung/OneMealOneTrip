@@ -5,60 +5,72 @@ import com.test.foodtrip.domain.chat.dto.ChatRoomDetailResponseDTO;
 import com.test.foodtrip.domain.chat.dto.ChatRoomEditRequestDTO;
 import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
 import com.test.foodtrip.domain.chat.service.ChatRoomService;
+import com.test.foodtrip.domain.user.entity.User;
+import com.test.foodtrip.domain.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chatrooms")
 public class ChatRoomRestController {
 
     private final ChatRoomService chatRoomService;
+    private final UserRepository userRepository;
+
+    // ✅ 현재 로그인한 유저의 userId 가져오기
+    private Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        String email = oAuth2User.getAttribute("email");
+
+        User user = userRepository.findBySocialEmail(email)
+                .orElseThrow(() -> new RuntimeException("로그인된 유저 정보를 찾을 수 없습니다."));
+
+        return user.getId();
+    }
 
     // 전체 채팅방 목록 조회
     @GetMapping
     public List<ChatRoomListResponseDTO> getAllRooms() {
-        Long currentUserId = 999L; // ✅ 임시 사용자 ID 하드코딩
-        return chatRoomService.getAllRooms(currentUserId);
+        return chatRoomService.getAllRooms(getCurrentUserId());
     }
 
     // 채팅방 생성
     @PostMapping
     public Long createRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
-        Long currentUserId = 999L; // ✅ 임시 사용자 ID 하드코딩
-        return chatRoomService.createChatRoom(dto, currentUserId);
+        return chatRoomService.createChatRoom(dto, getCurrentUserId());
     }
 
     // 채팅방 상세 조회
     @GetMapping("/{id}")
-    public ChatRoomDetailResponseDTO getRoomDetail(@PathVariable Long id) {
-        Long currentUserId = 999L; // ✅ 임시 사용자 ID 하드코딩
-        return chatRoomService.getRoomDetail(id, currentUserId);
+    public ChatRoomDetailResponseDTO getRoomDetail(@PathVariable("id") Long id) {
+        return chatRoomService.getRoomDetail(id, getCurrentUserId());
     }
 
     // 채팅방 삭제(논리삭제)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteRoom(@PathVariable Long id) {
-        Long userId = 999L; // 테스트용 사용자
+    public ResponseEntity<?> deleteRoom(@PathVariable("id") Long id) {
         try {
-            chatRoomService.deleteRoom(id, userId);
+            chatRoomService.deleteRoom(id, getCurrentUserId());
             return ResponseEntity.ok().build();
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.status(403).body(e.getMessage());
         }
     }
 
-    // 채팅방 상세내용 수정(논리삭제)
+    // 채팅방 상세내용 수정
     @PostMapping("/{id}/edit-log")
-    public ResponseEntity<?> editChatroom(@PathVariable Long id,
+    public ResponseEntity<?> editChatroom(@PathVariable("id") Long id,
                                           @RequestBody ChatRoomEditRequestDTO dto) {
-        Long userId = 999L; // 하드코딩된 mock 사용자 ID
-        chatRoomService.editRoom(id, dto, userId);
+        chatRoomService.editRoom(id, dto, getCurrentUserId());
         return ResponseEntity.ok().build();
     }
-
 }
-
-
