@@ -45,8 +45,9 @@
                         <div class="chat-last-message">최근 메시지를 불러옵니다...</div> <!-- 이후 확장 -->
                     </div>
 
+                    <!-- 서버에서 받은 해시태그 출력 -->
                     <div class="chat-hashtags">
-                        <div class="chat-hashtag">#해시태그</div> <!-- 추후 확장용 -->
+                        <div class="chat-hashtag" th:each="tag : ${room.hashtags}" th:text="'#' + ${tag}">#해시태그</div>
                     </div>
 
                     <div class="chat-participants">

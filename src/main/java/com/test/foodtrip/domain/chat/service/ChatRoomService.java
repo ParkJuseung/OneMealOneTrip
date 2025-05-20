@@ -56,20 +56,29 @@ public class ChatRoomService {
 
     //채팅방 전체 목록 조회
     public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
-        //public List<ChatRoomListResponseDTO> getAllRooms() {
         List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeleted("N");
 
         System.out.println("채팅방 개수 (삭제 제외): " + chatRooms.size());
 
         return chatRooms.stream()
-                .map(room -> ChatRoomListResponseDTO.builder()
-                        .id(room.getId())
-                        .title(room.getTitle())
-                        .thumbnailImageUrl(room.getThumbnailImageUrl())
-                        .createdAt(room.getCreatedAt())
-                        .build())
+                .map(room -> {
+                    // 각 방의 해시태그 조회
+                    List<ChatRoomHashtag> hashtagLinks = chatRoomHashtagRepository.findByChatRoomId(room.getId());
+                    List<String> hashtags = hashtagLinks.stream()
+                            .map(link -> link.getHashtag().getTagText())
+                            .collect(Collectors.toList());
+
+                    return ChatRoomListResponseDTO.builder()
+                            .id(room.getId())
+                            .title(room.getTitle())
+                            .thumbnailImageUrl(room.getThumbnailImageUrl())
+                            .createdAt(room.getCreatedAt())
+                            .hashtags(hashtags) // 실제 값으로 설정
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
+
 
     //채팅방 생성 처리
     @Transactional

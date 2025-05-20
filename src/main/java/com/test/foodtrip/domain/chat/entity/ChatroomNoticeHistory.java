@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder // ← 추가!
 @Entity
-@Table(name = "CHATROOM_NOTICE_HISTORY")
+@Table(name = "CHATROOMNOTICEHISTORY")
 public class ChatroomNoticeHistory {
 
     @Id
