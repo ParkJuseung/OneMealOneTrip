@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.post.entity;
 
+import com.test.foodtrip.domain.post.entity.enums.ReactionType;
 import com.test.foodtrip.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,7 +11,12 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "COMMENTREACTION",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"comment_id", "user_id"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"comment_id", "user_id"}),
+        indexes = {
+                @Index(name = "idx_reaction_comment_id", columnList = "comment_id"),
+                @Index(name = "idx_reaction_user_id", columnList = "user_id"),
+                @Index(name = "idx_reaction_type", columnList = "reaction_type")
+        })
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CommentReaction {
@@ -39,11 +45,6 @@ public class CommentReaction {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 반응 타입 enum
-    public enum ReactionType {
-        LIKE, DISLIKE
-    }
-
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -59,5 +60,21 @@ public class CommentReaction {
         this.comment = comment;
         this.user = user;
         this.reactionType = reactionType;
+    }
+
+    // 팩토리 메서드 (정적 생성 메서드)
+    public static CommentReaction createLike(Comment comment, User user) {
+        return new CommentReaction(comment, user, ReactionType.LIKE);
+    }
+
+    public static CommentReaction createDislike(Comment comment, User user) {
+        return new CommentReaction(comment, user, ReactionType.DISLIKE);
+    }
+
+    // 반응 타입 변경 메서드
+    public void toggleReactionType() {
+        this.reactionType = (this.reactionType == ReactionType.LIKE)
+                ? ReactionType.DISLIKE
+                : ReactionType.LIKE;
     }
 }
