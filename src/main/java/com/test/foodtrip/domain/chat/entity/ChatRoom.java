@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "CHAT_ROOM")
+@Table(name = "CHATROOM")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatRoom {
@@ -52,7 +52,7 @@ public class ChatRoom {
 
     @ManyToMany
     @JoinTable(
-            name = "CHAT_ROOM_HASHTAG",
+            name = "CHATROOMHASHTAG",
             joinColumns = @JoinColumn(name = "chatroom_id"),
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
