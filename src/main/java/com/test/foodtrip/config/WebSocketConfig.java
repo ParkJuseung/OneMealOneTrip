@@ -16,6 +16,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     	//이 코드에서 "/ws/chat"이 엔드포인트. ( WebSocket 시작점)
     	//핸들러(WebSocketHandler) 웹소켓 메시지를 실제로 받고, 처리하고, 응답하는 클래스
         registry.addHandler(new ChatWebSocketHandler(), "/ws/chat")
-                .setAllowedOrigins("*"); // CORS 허용
+                .setAllowedOrigins("*") // CORS 허용
+        		.withSockJS(); // 👉 SockJS 사용
     }
 }
