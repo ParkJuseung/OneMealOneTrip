@@ -47,9 +47,50 @@ public class PostServiceImpl implements PostService{
     @Override
     public PostDTO read(Long id){
         Optional<Post> result = postRepository.findById(id);
-        return result.isPresent()? entityToDto(result.get()) : null;
+        if (result.isPresent()) {
+            Post post = result.get();
+            // 조회수 증가
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+            return entityToDto(post);
+        }
+        return null;
     }
 
+
+
+    // PostServiceImpl.java에 추가할 메서드들
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void modify(PostDTO dto) {
+        Optional<Post> result = postRepository.findById(dto.getId());
+        if (result.isPresent()) {
+            Post post = result.get();
+            post.setTitle(dto.getTitle());
+            post.setContent(dto.getContent());
+            post.setLatitude(dto.getLatitude());
+            post.setLongitude(dto.getLongitude());
+            post.setPlaceName(dto.getPlaceName());
+            postRepository.save(post);
+        }
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void remove(Long id) {
+        postRepository.deleteById(id);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void increaseViewCount(Long id) {
+        Optional<Post> result = postRepository.findById(id);
+        if (result.isPresent()) {
+            Post post = result.get();
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+        }
+    }
 
 
 
