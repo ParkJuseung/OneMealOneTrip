@@ -1,5 +1,8 @@
 package com.test.foodtrip.domain.chat.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import com.test.foodtrip.domain.chat.dto.ChatRoomCreateRequestDTO;
 import com.test.foodtrip.domain.chat.dto.ChatRoomEditRequestDTO;
 import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
@@ -111,6 +114,7 @@ public class ChatRoomService {
                 .build();
         chatRoom = chatRoomRepository.save(chatRoom);
         chatRoomRepository.flush();
+        System.out.println("✅ 저장된 ChatRoom ID: " + chatRoom.getId()); // 로그 추가
 
         // 3. 해시태그 처리 (null 체크 포함)
         List<String> tags = dto.getHashtags();
@@ -123,10 +127,11 @@ public class ChatRoomService {
                 .toList();
 
         for (Hashtag tag : hashtags) {
-            ChatRoomHashtag rel = ChatRoomHashtag.builder()
-                    .chatRoom(chatRoom)
-                    .hashtag(tag)
-                    .build();
+            System.out.println("💡 해시태그 ID: " + tag.getId() + ", 텍스트: " + tag.getTagText());
+
+            ChatRoomHashtag rel = ChatRoomHashtag.of(chatRoom, tag);
+            System.out.println("🔗 연결 시도: chatRoomId=" + chatRoom.getId() + ", hashtagId=" + tag.getId());
+
             chatRoomHashtagRepository.save(rel);
         }
 
@@ -248,10 +253,7 @@ public class ChatRoomService {
 
         // 3. 조인 테이블 직접 삽입
         for (Hashtag tag : newTags) {
-            ChatRoomHashtag rel = ChatRoomHashtag.builder()
-                    .chatRoom(chatRoom)
-                    .hashtag(tag)
-                    .build();
+            ChatRoomHashtag rel = ChatRoomHashtag.of(chatRoom, tag);
             chatRoomHashtagRepository.save(rel);
         }
 
