@@ -25,12 +25,7 @@ services:
       - ORACLE_PASSWORD=java1234
       - APP_USER=foodtrip
       - APP_USER_PASSWORD=java1234
-    volumes:
-      - myoracle:/opt/oracle/oradata
     restart: always
 
 networks:
   foodtrip:
-
-volumes:
-  myoracle:
