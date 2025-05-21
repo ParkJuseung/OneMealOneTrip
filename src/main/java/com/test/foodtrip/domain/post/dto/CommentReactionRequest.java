@@ -11,8 +11,7 @@ import jakarta.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CommentReactionRequest {
-    @NotNull(message = "사용자 ID는 필수입니다.")
-    private Long userId;
+    // userId 제거 - 세션에서 현재 로그인된 사용자를 가져오도록 변경
 
     @NotNull(message = "반응 타입은 필수입니다.")
     private ReactionType reactionType;

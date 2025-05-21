@@ -14,8 +14,7 @@ public class CommentCreateRequest {
     @NotNull(message = "게시글 ID는 필수입니다.")
     private Long postId;
 
-    @NotNull(message = "사용자 ID는 필수입니다.")
-    private Long userId;
+    // userId 제거 - 세션에서 현재 로그인된 사용자를 가져오도록 변경
 
     @NotBlank(message = "댓글 내용은 필수입니다.")
     private String content;
