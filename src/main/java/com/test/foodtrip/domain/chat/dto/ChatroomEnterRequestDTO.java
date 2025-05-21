@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
+//채팅방에 입장하려는 사용자가 서버에 보내는 요청 정보를 담는 객체
 public class ChatroomEnterRequestDTO {
 
 	   private Long roomId;               // 채팅방 ID
