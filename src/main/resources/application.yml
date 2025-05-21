@@ -1,14 +1,11 @@
-
 spring:
   config:
-    import: optional:classpath:application-secret.yml
-
-
+    import: optional:application-secret.yml
 
   # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521:xe
+    url: jdbc:oracle:thin:@localhost:1521:freepdb1
     username: foodtrip
     password: java1234
 
@@ -21,7 +18,6 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.OracleDialect
-
 
   # Thymeleaf ??
   thymeleaf:
