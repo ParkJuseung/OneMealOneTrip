@@ -9,11 +9,14 @@ import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,8 +47,8 @@ public class ChatRoomRestController {
     }
 
     // 채팅방 생성
-    @PostMapping
-    public Long createRoom(@RequestBody ChatRoomCreateRequestDTO dto) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Long createRoom(@ModelAttribute ChatRoomCreateRequestDTO dto) {
         return chatRoomService.createChatRoom(dto, getCurrentUserId());
     }
 
@@ -69,8 +72,21 @@ public class ChatRoomRestController {
     // 채팅방 상세내용 수정
     @PostMapping("/{id}/edit-log")
     public ResponseEntity<?> editChatroom(@PathVariable("id") Long id,
-                                          @RequestBody ChatRoomEditRequestDTO dto) {
-        chatRoomService.editRoom(id, dto, getCurrentUserId());
+                                          @RequestParam("title") String title,
+                                          @RequestParam(value = "notice", required = false) String notice,
+                                          @RequestParam(value = "description", required = false) String description,
+                                          @RequestParam(value = "hashtags", required = false) List<String> hashtags,
+                                          @RequestParam(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
+
+        ChatRoomEditRequestDTO dto = ChatRoomEditRequestDTO.builder()
+                .title(title)
+                .notice(notice)
+                .description(description)
+                .hashtags(hashtags != null ? hashtags : List.of())
+                .build();
+
+        chatRoomService.editRoom(id, dto, thumbnailImage, getCurrentUserId());
         return ResponseEntity.ok().build();
     }
+
 }

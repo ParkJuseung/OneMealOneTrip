@@ -15,16 +15,15 @@ import com.test.foodtrip.domain.chat.repository.ChatroomUserRepository;
 import com.test.foodtrip.domain.chat.repository.HashtagRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.chat.entity.ChatRoomHashtag;
-import com.test.foodtrip.domain.chat.entity.ChatRoomHashtagId;
 import com.test.foodtrip.domain.chat.repository.ChatRoomHashtagRepository;
 // import com.test.foodtrip.domain.user.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,6 +32,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
+
+    private final FileUploadService fileUploadService;
 
     private final ChatRoomRepository chatRoomRepository;
     private final HashtagRepository hashtagRepository;
@@ -47,15 +48,6 @@ public class ChatRoomService {
 
     // private final UserRepository userRepository; // !! 통합 시 주석 해제
 
-    private static final Object TEST_USER = new Object() {
-        public Long getId() {
-            return 999L;
-        }
-
-        public String getNickname() {
-            return "테스트유저";
-        }
-    };
 
     //채팅방 전체 목록 조회
     public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
@@ -101,19 +93,35 @@ public class ChatRoomService {
     //채팅방 생성 처리
     @Transactional
     public Long createChatRoom(ChatRoomCreateRequestDTO dto, Long currentUserId) {
-        //public Long createChatRoom(ChatRoomCreateRequestDTO dto) {
+
+        // 1. 썸네일 처리
+        String thumbnailUrl = null;
+        MultipartFile thumbnailFile = dto.getThumbnailImage();
+        if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+            if (!fileUploadService.isImageFile(thumbnailFile)) {
+                throw new IllegalArgumentException("jpg 또는 png 형식의 이미지 파일만 업로드 가능합니다.");
+            }
+            thumbnailUrl = fileUploadService.saveFile(thumbnailFile, "chatroom");
+        }
+
+        // 2. 채팅방 생성
         ChatRoom chatRoom = ChatRoom.builder()
                 .title(dto.getTitle())
-                .thumbnailImageUrl(dto.getThumbnailImageUrl())
+                .thumbnailImageUrl(thumbnailUrl)
                 .build();
         chatRoom = chatRoomRepository.save(chatRoom);
         chatRoomRepository.flush();
 
-        List<Hashtag> hashtags = dto.getHashtags().stream()
+        // 3. 해시태그 처리 (null 체크 포함)
+        List<String> tags = dto.getHashtags();
+        if (tags == null) tags = List.of(); // ✅ null 방지
+
+        List<Hashtag> hashtags = tags.stream()
                 .map(tag -> hashtagRepository.findByTagText(tag)
                         .orElseGet(() -> hashtagRepository.save(
                                 Hashtag.builder().tagText(tag).build())))
                 .toList();
+
         for (Hashtag tag : hashtags) {
             ChatRoomHashtag rel = ChatRoomHashtag.builder()
                     .chatRoom(chatRoom)
@@ -122,6 +130,7 @@ public class ChatRoomService {
             chatRoomHashtagRepository.save(rel);
         }
 
+        // 4. 공지사항/설명 히스토리 저장
         boolean hasNotice = dto.getNotice() != null && !dto.getNotice().isBlank();
         boolean hasDescription = dto.getDescription() != null && !dto.getDescription().isBlank();
 
@@ -135,6 +144,7 @@ public class ChatRoomService {
             chatroomNoticeRepository.save(notice);
         }
 
+        // 5. 참여자 정보 저장 (방장 등록)
         User currentUser = entityManager.getReference(User.class, currentUserId);
 
         ChatroomUser chatroomUser = ChatroomUser.builder()
@@ -149,7 +159,6 @@ public class ChatRoomService {
 
         return chatRoom.getId();
     }
-
  // 채팅방 상세 조회
     @Transactional(readOnly = true)
     public ChatRoomDetailResponseDTO getRoomDetail(Long id, Long currentUserId) {
@@ -220,7 +229,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void editRoom(Long roomId, ChatRoomEditRequestDTO dto, Long currentUserId) {
+    public void editRoom(Long roomId, ChatRoomEditRequestDTO dto, MultipartFile thumbnailImage, Long currentUserId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다. ID: " + roomId));
 
