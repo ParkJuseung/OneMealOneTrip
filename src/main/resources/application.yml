@@ -2,22 +2,24 @@ spring:
   config:
     import: optional:application-secret.yml
 
-  # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521:xe
-    username: foodtrip
-    password: java1234
+    url: ${SPRING_DATASOURCE_URL:jdbc:oracle:thin:@localhost:1521/xe}
+    username: ${SPRING_DATASOURCE_USERNAME:springboot}
+    password: ${SPRING_DATASOURCE_PASSWORD:java1234}
 
-  # JPA ??
-  jpa:
-    hibernate:
-      ddl-auto: update  # ?? ????? update, ?? ????? validate ??
-    show-sql: true
-    properties:
+    # JPA 설정
+    jpa:
+      database: oracle
+      generate-ddl: false
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.OracleDialect
+        ddl-auto: none
+        naming:
+          physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
 
   # Thymeleaf ??
   thymeleaf:
