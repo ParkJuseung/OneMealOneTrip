@@ -33,7 +33,7 @@
     </div>
 
     <!-- 게시글 상세 콘텐츠 -->
-    <div class="post-detail-container">
+    <div class="post-detail-container" id="post-detail" th:data-post-id="${dto.id}">
         <div class="post-detail-header-info">
             <div class="category-badge">동행</div>
             <div class="post-info">
@@ -45,41 +45,29 @@
         <div class="post-detail-content">
             <h1 class="post-detail-title">[[${dto.title}]]</h1>
             <div class="post-detail-tags">
-                <span class="post-tag">#프라하</span>
-                <span class="post-tag">#스카이다이빙</span>
-                <span class="post-tag">#20대</span>
-                <span class="post-tag">#동행</span>
-                <span class="post-tag">#체코</span>
+                <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
             </div>
             <p class="post-detail-description">
                 [[${dto.content}]]
             </p>
-            <div class="post-detail-images">
-                <div class="post-detail-image">
-                    <img src="/api/placeholder/300/200" alt="프라하 스카이다이빙 1">
-                </div>
-                <div class="post-detail-image">
-                    <img src="/api/placeholder/300/200" alt="프라하 스카이다이빙 2">
-                </div>
-                <div class="post-detail-image">
-                    <img src="/api/placeholder/300/200" alt="체스키 크룸로프 1">
-                </div>
-                <div class="post-detail-image">
-                    <img src="/api/placeholder/300/200" alt="체스키 크룸로프 2">
+
+            <!-- 이미지가 있는 경우만 표시 -->
+            <div class="post-detail-images" th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
+                <div class="post-detail-image" th:each="imageUrl : ${dto.imageUrls}">
+                    <img th:src="${imageUrl}" alt="게시글 이미지">
                 </div>
             </div>
 
-            <!-- 위치 정보 -->
-            <div class="location-info">
+            <!-- 위치 정보가 있는 경우만 표시 -->
+            <div class="location-info" th:if="${dto.placeName != null}">
                 <div class="location-header">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>위치 정보</span>
                 </div>
                 <div class="location-map">
-                    <img src="/api/placeholder/500/200" alt="프라하 지도">
+                    <img src="/api/placeholder/500/200" alt="지도">
                 </div>
-                <div class="location-address">
-                    체코 프라하, 스카이다이빙 센터 (Praha Skydiving Center)
+                <div class="location-address" th:text="${dto.placeName}">
                 </div>
             </div>
 
@@ -87,7 +75,7 @@
             <div class="post-detail-author">
                 <img src="/api/placeholder/50/50" alt="작성자 프로필" class="author-avatar">
                 <div class="author-info">
-                    <span class="author-name">20대 여행자</span>
+                    <span class="author-name">작성자</span>
                     <span class="author-bio">여행과 모험을 사랑하는 프리랜서 사진작가</span>
                 </div>
                 <button class="follow-button" id="followButton">팔로우</button>
@@ -98,7 +86,7 @@
     <!-- 댓글 섹션 -->
     <div class="comments-section">
         <div class="comments-header">
-            <div class="comments-title">댓글 <span class="comments-count">8</span></div>
+            <div class="comments-title">댓글 <span class="comments-count">0</span></div>
             <div class="comments-sort">
                 <span>최신순</span>
                 <i class="fas fa-chevron-down"></i>
@@ -116,107 +104,10 @@
 
         <!-- 댓글 목록 -->
         <div class="comments-list">
-            <!-- 댓글 1 -->
-            <div class="comment-item">
-                <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-author">유럽 여행러</span>
-                        <span class="comment-date">2시간 전</span>
-                    </div>
-                    <p class="comment-text">
-                        저도 프라하 여행 계획중인데, 스카이다이빙은 처음 들어봐요! 체스키 크룸로프는 꼭 가보세요. 정말 아름다운 곳이에요. 동행은 못하지만 좋은 여행 되시길 바랍니다!
-                    </p>
-                    <div class="comment-actions">
-                        <div class="comment-action">
-                            <i class="far fa-heart"></i>
-                            <span>5</span>
-                        </div>
-                        <div class="comment-action reply-btn">
-                            <i class="far fa-comment"></i>
-                            <span>답글</span>
-                        </div>
-                    </div>
-
-                    <!-- 대댓글 -->
-                    <div class="reply-list">
-                        <div class="comment-item">
-                            <img src="/api/placeholder/40/40" alt="대댓글 작성자" class="comment-avatar">
-                            <div class="comment-content">
-                                <div class="comment-header">
-                                    <span class="comment-author">20대 여행자</span>
-                                    <span class="comment-date">1시간 전</span>
-                                </div>
-                                <p class="comment-text">
-                                    체스키 크룸로프 추천 감사합니다! 혹시 프라하에서 꼭 가봐야 할 맛집 있으신가요?
-                                </p>
-                                <div class="comment-actions">
-                                    <div class="comment-action">
-                                        <i class="far fa-heart"></i>
-                                        <span>2</span>
-                                    </div>
-                                    <div class="comment-action reply-btn">
-                                        <i class="far fa-comment"></i>
-                                        <span>답글</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 댓글 2 -->
-            <div class="comment-item">
-                <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-author">모험가 김철수</span>
-                        <span class="comment-date">5시간 전</span>
-                    </div>
-                    <p class="comment-text">
-                        작년에 프라하에서 스카이다이빙 했었어요! 정말 멋진 경험이었습니다. 저도 같이 가면 좋겠지만 일정이 안 맞네요 ㅠㅠ 추천 팁을 드리자면, 미리 동영상 촬영 옵션도
-                        선택하세요. 그 순간의 표정이 정말 웃겨요 ㅋㅋ
-                    </p>
-                    <div class="comment-actions">
-                        <div class="comment-action">
-                            <i class="far fa-heart"></i>
-                            <span>12</span>
-                        </div>
-                        <div class="comment-action reply-btn">
-                            <i class="far fa-comment"></i>
-                            <span>답글</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 댓글 3 -->
-            <div class="comment-item">
-                <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-author">체코여행중</span>
-                        <span class="comment-date">1일 전</span>
-                    </div>
-                    <p class="comment-text">
-                        지금 체코 여행 중인데 관심 있어요! DM 드렸습니다 :)
-                    </p>
-                    <div class="comment-actions">
-                        <div class="comment-action">
-                            <i class="far fa-heart"></i>
-                            <span>3</span>
-                        </div>
-                        <div class="comment-action reply-btn">
-                            <i class="far fa-comment"></i>
-                            <span>답글</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- 댓글들이 여기에 동적으로 로드됩니다 -->
         </div>
 
-        <div class="show-more-comments">
+        <div class="show-more-comments" style="display: none;">
             댓글 더보기
         </div>
     </div>
@@ -225,397 +116,279 @@
     <div class="related-posts">
         <h3 class="related-posts-header">관련 게시글</h3>
         <div class="related-posts-list">
-            <!-- 관련 게시글 1 -->
-            <div class="related-post-card">
-                <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-                <div class="related-post-content">
-                    <h4 class="related-post-title">프라하 3박 4일 여행 일정 공유 & 동행 구해요</h4>
-                    <div class="related-post-info">
-                        <span>동행</span>
-                        <span>3일 전</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 관련 게시글 2 -->
-            <div class="related-post-card">
-                <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-                <div class="related-post-content">
-                    <h4 class="related-post-title">체코 여행 필수 코스 & 현지 꿀팁 총정리!</h4>
-                    <div class="related-post-info">
-                        <span>포스트</span>
-                        <span>1주일 전</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 관련 게시글 3 -->
-            <div class="related-post-card">
-                <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-                <div class="related-post-content">
-                    <h4 class="related-post-title">유럽 스카이다이빙 추천 장소 BEST 5</h4>
-                    <div class="related-post-info">
-                        <span>포스트</span>
-                        <span>2주일 전</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 관련 게시글 4 -->
-            <div class="related-post-card">
-                <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-                <div class="related-post-content">
-                    <h4 class="related-post-title">체스키 크룸로프 당일치기 여행 코스</h4>
-                    <div class="related-post-info">
-                        <span>포스트</span>
-                        <span>1달 전</span>
-                    </div>
-                </div>
-            </div>
+            <!-- 관련 게시글들이 여기에 표시됩니다 -->
         </div>
     </div>
 
-
-    <!-- 모달 (삭제 확인용) -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">게시글 삭제</div>
-                <div class="modal-close" id="closeModal"><i class="fas fa-times"></i></div>
-            </div>
-            <div class="modal-body">
-                <p>정말 이 게시글을 삭제하시겠습니까?</p>
-                <p>삭제한 게시글은 복구할 수 없습니다.</p>
-                <div class="confirmation-actions">
-                    <div class="cancel-button" id="cancelDelete">취소</div>
-                    <div class="confirm-button" id="confirmDelete">삭제</div>
-                </div>
-            </div>
-        </div>
+    <!-- 수정/삭제 버튼 (작성자인 경우만 표시) -->
+    <div class="post-actions" th:if="${session.currentUserId == dto.userId}">
+        <button class="edit-post-btn" th:onclick="|location.href='/post/edit/${dto.id}'|">수정</button>
+        <button class="delete-post-btn" onclick="deletePost()">삭제</button>
     </div>
 
-    <!-- 신고 모달 -->
-    <div class="modal" id="reportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">게시글 신고</div>
-                <div class="modal-close" id="closeReportModal"><i class="fas fa-times"></i></div>
-            </div>
-            <div class="modal-body">
-                <p>신고 사유를 선택해주세요.</p>
-                <div style="margin-top: 15px;">
-                    <div class="report-option"
-                         style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="reportReason" value="spam" style="margin-right: 10px;">
-                            <span>광고/스팸</span>
-                        </label>
-                    </div>
-                    <div class="report-option"
-                         style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="reportReason" value="abuse" style="margin-right: 10px;">
-                            <span>욕설/비방</span>
-                        </label>
-                    </div>
-                    <div class="report-option"
-                         style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="reportReason" value="inappropriate" style="margin-right: 10px;">
-                            <span>부적절한 내용</span>
-                        </label>
-                    </div>
-                    <div class="report-option"
-                         style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="radio" name="reportReason" value="other" style="margin-right: 10px;">
-                            <span>기타</span>
-                        </label>
-                    </div>
-                </div>
-                <textarea
-                        style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; resize: none; font-family: inherit;"
-                        rows="4" placeholder="추가 사유를 입력해주세요 (선택사항)"></textarea>
-                <div class="confirmation-actions">
-                    <div class="cancel-button" id="cancelReport">취소</div>
-                    <div class="confirm-button" id="confirmReport">신고</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- 토스트 메시지용 컨테이너 -->
+    <div id="toast" class="toast-message"></div>
 
+    <!-- 스크립트 -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script th:src="@{/js/comment.js}"></script>
+
     <script>
         $(document).ready(function () {
-            // 좋아요 기능
+            // 임시 댓글 매니저 - 캐시 문제 해결용
+            const commentManager = {
+                postId: [[${dto.id}]] || 1,
+
+                init() {
+                    console.log('댓글 매니저 초기화, PostID:', this.postId);
+                    this.loadComments();
+                    this.bindEvents();
+                },
+
+                bindEvents() {
+                    // 댓글 작성 버튼
+                    $('.comment-submit').off('click').on('click', () => {
+                        this.createComment();
+                    });
+
+                    // 엔터키로 댓글 작성
+                    $('.comment-input').off('keypress').on('keypress', (e) => {
+                        if (e.which === 13 && !e.shiftKey) {
+                            e.preventDefault();
+                            this.createComment();
+                        }
+                    });
+                },
+
+                async loadComments() {
+                    try {
+                        const response = await fetch(`/api/comments/post/${this.postId}?page=0&size=20`);
+                        const result = await response.json();
+
+                        console.log('API 응답:', result);
+
+                        if (result.success && result.data && result.data.dtoList) {
+                            console.log('댓글 데이터:', result.data.dtoList);
+                            this.renderComments(result.data.dtoList);
+                            this.updateCommentCount(result.data.totalCount || result.data.dtoList.length);
+                        }
+                    } catch (error) {
+                        console.error('댓글 로드 실패:', error);
+                    }
+                },
+
+                async createComment() {
+                    const content = $('.comment-input').val().trim();
+                    if (!content) {
+                        this.showToast('댓글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('댓글 작성 시도:', content);
+
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                userId: 1, // 임시 사용자 ID
+                                content: content,
+                                parentId: null
+                            })
+                        });
+
+                        const result = await response.json();
+                        console.log('댓글 작성 응답:', result);
+
+                        if (result.success) {
+                            $('.comment-input').val(''); // 입력창 비우기
+                            this.showToast('댓글이 등록되었습니다.', 'success');
+
+                            // 댓글 목록 다시 로드
+                            await this.loadComments();
+                        } else {
+                            this.showToast(result.message || '댓글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('댓글 작성 실패:', error);
+                        this.showToast('댓글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                renderComments(comments) {
+                    const container = $('.comments-list');
+                    container.empty(); // 기존 내용 제거
+
+                    if (comments.length === 0) {
+                        container.append('<p class="no-comments">아직 댓글이 없습니다.</p>');
+                        return;
+                    }
+
+                    comments.forEach(comment => {
+                        const html = `
+                            <div class="comment-item" data-comment-id="${comment.id}">
+                                <img src="${comment.userProfileImage || '/api/placeholder/40/40'}"
+                                     alt="${comment.userNickname}" class="comment-avatar">
+                                <div class="comment-content">
+                                    <div class="comment-header">
+                                        <span class="comment-author">${comment.userNickname}</span>
+                                        <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
+                                    </div>
+                                    <p class="comment-text">${comment.content}</p>
+                                    <div class="comment-actions">
+                                        <div class="comment-action comment-like-btn" data-comment-id="${comment.id}">
+                                            <i class="fas fa-heart"></i>
+                                            <span class="like-count">${comment.likeCount || 0}</span>
+                                        </div>
+                                        <div class="comment-action comment-dislike-btn" data-comment-id="${comment.id}">
+                                            <i class="fas fa-heart-broken"></i>
+                                            <span class="dislike-count">${comment.dislikeCount || 0}</span>
+                                        </div>
+                                        <div class="comment-action reply-btn">
+                                            <i class="far fa-comment"></i>
+                                            <span>답글</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        container.append(html);
+                    });
+
+                    console.log('댓글 렌더링 완료, 생성된 요소 수:', $('.comment-item').length);
+                },
+
+                updateCommentCount(count) {
+                    $('.comments-count').text(count);
+                },
+
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMins / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+
+                    if (diffMins < 1) return '방금 전';
+                    if (diffMins < 60) return `${diffMins}분 전`;
+                    if (diffHours < 24) return `${diffHours}시간 전`;
+                    if (diffDays < 7) return `${diffDays}일 전`;
+
+                    return date.toLocaleDateString('ko-KR');
+                },
+
+                showToast(message, type = 'info') {
+                    const colors = {
+                        success: '#28a745',
+                        error: '#dc3545',
+                        warning: '#ffc107',
+                        info: '#17a2b8'
+                    };
+
+                    const toast = $(`<div style="
+                        position: fixed; top: 20px; right: 20px;
+                        background: ${colors[type] || colors.info};
+                        color: ${type === 'warning' ? '#212529' : 'white'};
+                        padding: 15px 20px;
+                        border-radius: 6px;
+                        z-index: 9999;
+                        font-weight: 500;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    ">${message}</div>`);
+
+                    $('body').append(toast);
+
+                    setTimeout(() => toast.css('opacity', '1'), 10);
+                    setTimeout(() => {
+                        toast.css('opacity', '0');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+            };
+
+            // 댓글 매니저 시작
+            commentManager.init();
+
+            // 전역 변수로 등록 (기존 코드 호환성을 위해 createComment만 노출)
+            window.commentManager = {
+                createComment: (parentId = null) => {
+                    if (parentId) {
+                        console.log('대댓글 기능은 아직 구현 중입니다.');
+                    } else {
+                        commentManager.createComment();
+                    }
+                }
+            };
+
+            // 기존 게시글 상세 기능들...
+            $('#backButton').click(function () {
+                window.history.back();
+            });
+
             $('#likeButton').click(function () {
                 $(this).toggleClass('active');
                 if ($(this).hasClass('active')) {
                     $(this).find('i').removeClass('far').addClass('fas');
                     $(this).find('span').text('좋아요 취소');
-                    showToast('게시글을 좋아요 했습니다.');
+                    commentManager.showToast('게시글을 좋아요 했습니다.', 'success');
                 } else {
                     $(this).find('i').removeClass('fas').addClass('far');
                     $(this).find('span').text('좋아요');
-                    showToast('좋아요를 취소했습니다.');
+                    commentManager.showToast('좋아요를 취소했습니다.', 'info');
                 }
             });
 
-            // 북마크 기능
             $('#bookmarkButton').click(function () {
                 $(this).toggleClass('active');
                 if ($(this).hasClass('active')) {
                     $(this).find('i').removeClass('far').addClass('fas');
                     $(this).find('span').text('저장됨');
-                    showToast('게시글을 저장했습니다.');
+                    commentManager.showToast('게시글을 저장했습니다.', 'success');
                 } else {
                     $(this).find('i').removeClass('fas').addClass('far');
                     $(this).find('span').text('저장');
-                    showToast('저장을 취소했습니다.');
+                    commentManager.showToast('저장을 취소했습니다.', 'info');
                 }
             });
 
-            // 팔로우 기능
             $('#followButton').click(function () {
                 $(this).toggleClass('following');
                 if ($(this).hasClass('following')) {
                     $(this).text('팔로잉');
-                    showToast('작성자를 팔로우 했습니다.');
+                    commentManager.showToast('작성자를 팔로우 했습니다.', 'success');
                 } else {
                     $(this).text('팔로우');
-                    showToast('팔로우를 취소했습니다.');
+                    commentManager.showToast('팔로우를 취소했습니다.', 'info');
                 }
             });
-
-            // 댓글 좋아요 기능
-            $('.comment-action i.fa-heart').click(function () {
-                var $this = $(this);
-                var $span = $this.next('span');
-                var count = parseInt($span.text());
-
-                if ($this.hasClass('far')) {
-                    $this.removeClass('far').addClass('fas');
-                    $span.text(count + 1);
-                    $this.css('color', '#e91e63');
-                } else {
-                    $this.removeClass('fas').addClass('far');
-                    $span.text(count - 1);
-                    $this.css('color', '');
-                }
-            });
-
-            // 모달 관련 기능
-            function openModal(modalId) {
-                $('#' + modalId).addClass('active');
-                $('body').css('overflow', 'hidden');
-            }
-
-            function closeModal(modalId) {
-                $('#' + modalId).removeClass('active');
-                $('body').css('overflow', '');
-            }
-
-            // 삭제 모달
-            $('.delete-post').click(function () {
-                openModal('deleteModal');
-            });
-
-            $('#closeModal, #cancelDelete').click(function () {
-                closeModal('deleteModal');
-            });
-
-            $('#confirmDelete').click(function () {
-                // 삭제 처리 로직
-                showToast('게시글이 삭제되었습니다.');
-                closeModal('deleteModal');
-                // 아래는 실제 구현 시에는 서버 요청 후 리다이렉트
-                setTimeout(function () {
-                    // window.location.href = '/community';
-                }, 1500);
-            });
-
-            // 신고 모달
-            $('.report-post').click(function () {
-                openModal('reportModal');
-            });
-
-            $('#closeReportModal, #cancelReport').click(function () {
-                closeModal('reportModal');
-            });
-
-            $('#confirmReport').click(function () {
-                // 신고 처리 로직
-                showToast('신고가 접수되었습니다.');
-                closeModal('reportModal');
-            });
-
-            // 토스트 메시지 표시
-            function showToast(message) {
-                var toast = $('#toast');
-                toast.text(message);
-                toast.addClass('show');
-
-                setTimeout(function () {
-                    toast.removeClass('show');
-                }, 3000);
-            }
-
-            // 뒤로가기 기능
-            $('#backButton').click(function () {
-                window.history.back();
-            });
-
-            // 댓글 등록
-            $('.comment-submit').click(function () {
-                var commentText = $('.comment-input').val().trim();
-                if (commentText) {
-                    // 댓글 추가 로직 (실제로는 서버로 전송)
-                    const currentDate = new Date();
-                    const hours = currentDate.getHours();
-                    const minutes = currentDate.getMinutes();
-                    const timeString = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-
-                    const newComment = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">김여행</span>
-                <span class="comment-date">방금 전</span>
-              </div>
-              <p class="comment-text">${commentText}</p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>0</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-                    $('.comments-list').prepend(newComment);
-                    $('.comment-input').val('');
-
-                    // 댓글 수 업데이트
-                    var commentsCount = parseInt($('.comments-count').text());
-                    $('.comments-count').text(commentsCount + 1);
-
-                    showToast('댓글이 등록되었습니다.');
-
-                    // 새로 추가된 댓글에 이벤트 바인딩
-                    $('.comments-list .comment-item:first .comment-action i.fa-heart').click(function () {
-                        var $this = $(this);
-                        var $span = $this.next('span');
-                        var count = parseInt($span.text());
-
-                        if ($this.hasClass('far')) {
-                            $this.removeClass('far').addClass('fas');
-                            $span.text(count + 1);
-                            $this.css('color', '#e91e63');
-                        } else {
-                            $this.removeClass('fas').addClass('far');
-                            $span.text(count - 1);
-                            $this.css('color', '');
-                        }
-                    });
-                } else {
-                    showToast('댓글 내용을 입력해주세요.');
-                }
-            });
-
-            // 댓글 더보기
-            $('.show-more-comments').click(function () {
-                // 추가 댓글 로딩 (실제로는 서버에서 더 가져옴)
-                $(this).text('로딩 중...');
-
-                setTimeout(function () {
-                    const additionalComments = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">여행초보</span>
-                <span class="comment-date">1일 전</span>
-              </div>
-              <p class="comment-text">
-                스카이다이빙 정말 가고 싶네요! 혹시 가격이 어떻게 되나요?
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>2</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out; animation-delay: 0.1s;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">프라하마스터</span>
-                <span class="comment-date">2일 전</span>
-              </div>
-              <p class="comment-text">
-                프라하에서 꼭 방문해야 할 음식점 추천드려요! Lokal이라는 맥주집과 Sisters라는 체코 전통 빵집이 정말 맛있어요. 체스키 크룸로프 가는 길에는 체스키 부데요비체에 있는 부트바르도 추천!
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>8</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-                    $('.comments-list').append(additionalComments);
-                    $('.show-more-comments').text('더 이상 댓글이 없습니다').css('pointer-events', 'none');
-
-                    // 새로 추가된 댓글에 이벤트 바인딩
-                    $('.comments-list .comment-item:last-child .comment-action i.fa-heart, .comments-list .comment-item:nth-last-child(2) .comment-action i.fa-heart').click(function () {
-                        var $this = $(this);
-                        var $span = $this.next('span');
-                        var count = parseInt($span.text());
-
-                        if ($this.hasClass('far')) {
-                            $this.removeClass('far').addClass('fas');
-                            $span.text(count + 1);
-                            $this.css('color', '#e91e63');
-                        } else {
-                            $this.removeClass('fas').addClass('far');
-                            $span.text(count - 1);
-                            $this.css('color', '');
-                        }
-                    });
-                }, 1000);
-            });
-
-            // 레포트 옵션 스타일링
-            $('.report-option').hover(
-                function () {
-                    $(this).css('background-color', 'var(--primary-light)');
-                },
-                function () {
-                    if (!$(this).find('input').prop('checked')) {
-                        $(this).css('background-colxor', '');
-                    }
-                }
-            );
         });
+
+        function deletePost() {
+            if (confirm('정말 이 게시글을 삭제하시겠습니까?')) {
+                fetch(`/api/posts/${[[${dto.id}]]}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('게시글이 삭제되었습니다.');
+                            window.location.href = '/post';
+                        } else {
+                            alert('게시글 삭제에 실패했습니다.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('게시글 삭제 중 오류가 발생했습니다.');
+                    });
+            }
+        }
     </script>
 </th:block>
 </body>

@@ -20,8 +20,7 @@
     <!-- 왼쪽 배너 영역 -->
     <div th:replace="~{layout/fragments/banner :: banner}"></div>
 
-    <!-- 네비게이션 바 -->
-    <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>
+
 
     <!-- 오른쪽 콘텐츠 영역 -->
     <div class="right-content">
@@ -99,7 +98,8 @@
                 </div>
             </div>
         </div>
-
+        <!-- 네비게이션 바 -->
+        <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>
         <!-- 알림 토스트 -->
         <div class="toast" id="toast">알림 메시지</div>
     </div>
@@ -107,276 +107,76 @@
 
 <script th:src="@{/js/nav-toggle.js}"></script>
 <script>
-    /*$(document).ready(function () {
-        // 좋아요 기능
-        $('#likeButton').click(function () {
-            $(this).toggleClass('active');
-            if ($(this).hasClass('active')) {
-                $(this).find('i').removeClass('far').addClass('fas');
-                $(this).find('span').text('좋아요 취소');
-                showToast('게시글을 좋아요 했습니다.');
-            } else {
-                $(this).find('i').removeClass('fas').addClass('far');
-                $(this).find('span').text('좋아요');
-                showToast('좋아요를 취소했습니다.');
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. 필요한 요소 찾기
+        const addButtonContainer = document.querySelector('.nav-item');
+        const addButton = addButtonContainer.querySelector('.add-button');
+
+        // 2. 오버레이 요소 생성
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        document.body.appendChild(overlay);
+
+        // 3. 토글 메뉴 컨테이너 생성
+        const toggleMenu = document.createElement('div');
+        toggleMenu.className = 'toggle-menu';
+
+        // 4. 메뉴 아이템 생성
+        const menuItem1 = document.createElement('div');
+        menuItem1.className = 'menu-item';
+        menuItem1.innerHTML = '<i class="fas fa-camera"></i>';
+
+        const menuItem2 = document.createElement('div');
+        menuItem2.className = 'menu-item';
+        menuItem2.innerHTML = '<i class="fas fa-edit"></i>';
+        menuItem2.addEventListener('click', () => {
+            location.href = '/post/create';
         });
 
-        // 북마크 기능
-        $('#bookmarkButton').click(function () {
-            $(this).toggleClass('active');
-            if ($(this).hasClass('active')) {
-                $(this).find('i').removeClass('far').addClass('fas');
-                $(this).find('span').text('저장됨');
-                showToast('게시글을 저장했습니다.');
+        // 5. 메뉴 아이템 추가
+        toggleMenu.appendChild(menuItem1);
+        toggleMenu.appendChild(menuItem2);
+
+        // 6. 토글 메뉴를 .add-button 앞에 추가 (DOM에서 형제 요소로)
+        addButtonContainer.insertBefore(toggleMenu, addButton);
+
+        // 8. 토글 기능 구현
+        let isOpen = false;
+
+        function toggleMenuState() {
+            isOpen = !isOpen;
+
+            if (isOpen) {
+                addButton.classList.add('active');
+                toggleMenu.classList.add('active');
+                overlay.classList.add('active');
             } else {
-                $(this).find('i').removeClass('fas').addClass('far');
-                $(this).find('span').text('저장');
-                showToast('저장을 취소했습니다.');
+                addButton.classList.remove('active');
+                toggleMenu.classList.remove('active');
+                overlay.classList.remove('active');
             }
-        });
-
-        // 팔로우 기능
-        $('#followButton').click(function () {
-            $(this).toggleClass('following');
-            if ($(this).hasClass('following')) {
-                $(this).text('팔로잉');
-                showToast('작성자를 팔로우 했습니다.');
-            } else {
-                $(this).text('팔로우');
-                showToast('팔로우를 취소했습니다.');
-            }
-        });
-
-        // 댓글 좋아요 기능
-        $('.comment-action i.fa-heart').click(function () {
-            var $this = $(this);
-            var $span = $this.next('span');
-            var count = parseInt($span.text());
-
-            if ($this.hasClass('far')) {
-                $this.removeClass('far').addClass('fas');
-                $span.text(count + 1);
-                $this.css('color', '#e91e63');
-            } else {
-                $this.removeClass('fas').addClass('far');
-                $span.text(count - 1);
-                $this.css('color', '');
-            }
-        });
-
-        // 모달 관련 기능
-        function openModal(modalId) {
-            $('#' + modalId).addClass('active');
-            $('body').css('overflow', 'hidden');
         }
 
-        function closeModal(modalId) {
-            $('#' + modalId).removeClass('active');
-            $('body').css('overflow', '');
-        }
+        // 9. 이벤트 리스너 등록
+        addButton.addEventListener('click', toggleMenuState);
 
-        // 삭제 모달
-        $('.delete-post').click(function () {
-            openModal('deleteModal');
+        overlay.addEventListener('click', () => {
+            if (isOpen) toggleMenuState();
         });
 
-        $('#closeModal, #cancelDelete').click(function () {
-            closeModal('deleteModal');
+        // 10. 메뉴 아이템 이벤트 처리
+        menuItem1.addEventListener('click', () => {
+            console.log('카메라 메뉴 클릭됨');
+            toggleMenuState();
+            // 여기에 카메라 기능 구현
         });
 
-        $('#confirmDelete').click(function () {
-            // 삭제 처리 로직
-            showToast('게시글이 삭제되었습니다.');
-            closeModal('deleteModal');
-            // 아래는 실제 구현 시에는 서버 요청 후 리다이렉트
-            setTimeout(function () {
-                // window.location.href = '/community';
-            }, 1500);
+        menuItem2.addEventListener('click', () => {
+            console.log('편집 메뉴 클릭됨');
+            toggleMenuState();
+            // 여기에 편집 기능 구현 (페이지 이동은 위에서 처리)
         });
-
-        // 신고 모달
-        $('.report-post').click(function () {
-            openModal('reportModal');
-        });
-
-        $('#closeReportModal, #cancelReport').click(function () {
-            closeModal('reportModal');
-        });
-
-        $('#confirmReport').click(function () {
-            // 신고 처리 로직
-            showToast('신고가 접수되었습니다.');
-            closeModal('reportModal');
-        });
-
-        // 토스트 메시지 표시
-        function showToast(message) {
-            var toast = $('#toast');
-            toast.text(message);
-            toast.addClass('show');
-
-            setTimeout(function () {
-                toast.removeClass('show');
-            }, 3000);
-        }
-
-        // 뒤로가기 기능
-        $('#backButton').click(function () {
-            window.history.back();
-        });
-
-        // 댓글 등록
-        $('.comment-submit').click(function () {
-            var commentText = $('.comment-input').val().trim();
-            if (commentText) {
-                // 댓글 추가 로직 (실제로는 서버로 전송)
-                const currentDate = new Date();
-                const hours = currentDate.getHours();
-                const minutes = currentDate.getMinutes();
-                const timeString = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-
-                const newComment = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">김여행</span>
-                <span class="comment-date">방금 전</span>
-              </div>
-              <p class="comment-text">${commentText}</p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>0</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-                $('.comments-list').prepend(newComment);
-                $('.comment-input').val('');
-
-                // 댓글 수 업데이트
-                var commentsCount = parseInt($('.comments-count').text());
-                $('.comments-count').text(commentsCount + 1);
-
-                showToast('댓글이 등록되었습니다.');
-
-                // 새로 추가된 댓글에 이벤트 바인딩
-                $('.comments-list .comment-item:first .comment-action i.fa-heart').click(function () {
-                    var $this = $(this);
-                    var $span = $this.next('span');
-                    var count = parseInt($span.text());
-
-                    if ($this.hasClass('far')) {
-                        $this.removeClass('far').addClass('fas');
-                        $span.text(count + 1);
-                        $this.css('color', '#e91e63');
-                    } else {
-                        $this.removeClass('fas').addClass('far');
-                        $span.text(count - 1);
-                        $this.css('color', '');
-                    }
-                });
-            } else {
-                showToast('댓글 내용을 입력해주세요.');
-            }
-        });
-
-        // 댓글 더보기
-        $('.show-more-comments').click(function () {
-            // 추가 댓글 로딩 (실제로는 서버에서 더 가져옴)
-            $(this).text('로딩 중...');
-
-            setTimeout(function () {
-                const additionalComments = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">여행초보</span>
-                <span class="comment-date">1일 전</span>
-              </div>
-              <p class="comment-text">
-                스카이다이빙 정말 가고 싶네요! 혹시 가격이 어떻게 되나요?
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>2</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out; animation-delay: 0.1s;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">프라하마스터</span>
-                <span class="comment-date">2일 전</span>
-              </div>
-              <p class="comment-text">
-                프라하에서 꼭 방문해야 할 음식점 추천드려요! Lokal이라는 맥주집과 Sisters라는 체코 전통 빵집이 정말 맛있어요. 체스키 크룸로프 가는 길에는 체스키 부데요비체에 있는 부트바르도 추천!
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>8</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-                $('.comments-list').append(additionalComments);
-                $('.show-more-comments').text('더 이상 댓글이 없습니다').css('pointer-events', 'none');
-
-                // 새로 추가된 댓글에 이벤트 바인딩
-                $('.comments-list .comment-item:last-child .comment-action i.fa-heart, .comments-list .comment-item:nth-last-child(2) .comment-action i.fa-heart').click(function () {
-                    var $this = $(this);
-                    var $span = $this.next('span');
-                    var count = parseInt($span.text());
-
-                    if ($this.hasClass('far')) {
-                        $this.removeClass('far').addClass('fas');
-                        $span.text(count + 1);
-                        $this.css('color', '#e91e63');
-                    } else {
-                        $this.removeClass('fas').addClass('far');
-                        $span.text(count - 1);
-                        $this.css('color', '');
-                    }
-                });
-            }, 1000);
-        });
-
-        // 레포트 옵션 스타일링
-        $('.report-option').hover(
-            function () {
-                $(this).css('background-color', 'var(--primary-light)');
-            },
-            function () {
-                if (!$(this).find('input').prop('checked')) {
-                    $(this).css('background-color', '');
-                }
-            }
-        );
-    });*/
+    });
 </script>
 </body>
 </html>

@@ -6,8 +6,10 @@ import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.entity.PostTag;
 import com.test.foodtrip.domain.user.entity.User;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PostService {
     Long create(PostDTO dto);
@@ -74,5 +76,9 @@ public interface PostService {
                 .commentCount(post.getComments().size())
                 .build();
     }
+
+    void modify(PostDTO dto);
+    void remove(Long id);
+    void increaseViewCount(Long id);
 
 }
