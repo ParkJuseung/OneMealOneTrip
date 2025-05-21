@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRIPSODA - 게시글 상세 페이지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <th:block layout:fragment="style"></th:block>
+</head>
+<body>
+<div class="container">
+    <!-- 왼쪽 배너 영역 -->
+    <div th:replace="~{layout/fragments/banner :: banner}"></div>
+
+    <!-- 네비게이션 바 -->
+    <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>
+
+    <!-- 오른쪽 콘텐츠 영역 -->
+    <div class="right-content">
+        <!-- 헤더 -->
+        <header th:replace="~{layout/fragments/header :: header}"></header>
+
+        <!-- 콘텐츠 -->
+        <div layout:fragment="content"></div>
+
+        <!-- 모달 (삭제 확인용) -->
+        <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">게시글 삭제</div>
+                    <div class="modal-close" id="closeModal"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="modal-body">
+                    <p>정말 이 게시글을 삭제하시겠습니까?</p>
+                    <p>삭제한 게시글은 복구할 수 없습니다.</p>
+                    <div class="confirmation-actions">
+                        <div class="cancel-button" id="cancelDelete">취소</div>
+                        <div class="confirm-button" id="confirmDelete">삭제</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신고 모달 -->
+        <div class="modal" id="reportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">게시글 신고</div>
+                    <div class="modal-close" id="closeReportModal"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="modal-body">
+                    <p>신고 사유를 선택해주세요.</p>
+                    <div style="margin-top: 15px;">
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="spam" style="margin-right: 10px;">
+                                <span>광고/스팸</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="abuse" style="margin-right: 10px;">
+                                <span>욕설/비방</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="inappropriate"
+                                       style="margin-right: 10px;">
+                                <span>부적절한 내용</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="other" style="margin-right: 10px;">
+                                <span>기타</span>
+                            </label>
+                        </div>
+                    </div>
+                    <textarea
+                            style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; resize: none; font-family: inherit;"
+                            rows="4" placeholder="추가 사유를 입력해주세요 (선택사항)"></textarea>
+                    <div class="confirmation-actions">
+                        <div class="cancel-button" id="cancelReport">취소</div>
+                        <div class="confirm-button" id="confirmReport">신고</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 알림 토스트 -->
+        <div class="toast" id="toast">알림 메시지</div>
+    </div>
+</div>
+
+<script th:src="@{/js/nav-toggle.js}"></script>
+<script>
+    /*$(document).ready(function () {
+        // 좋아요 기능
+        $('#likeButton').click(function () {
+            $(this).toggleClass('active');
+            if ($(this).hasClass('active')) {
+                $(this).find('i').removeClass('far').addClass('fas');
+                $(this).find('span').text('좋아요 취소');
+                showToast('게시글을 좋아요 했습니다.');
+            } else {
+                $(this).find('i').removeClass('fas').addClass('far');
+                $(this).find('span').text('좋아요');
+                showToast('좋아요를 취소했습니다.');
+            }
+        });
+
+        // 북마크 기능
+        $('#bookmarkButton').click(function () {
+            $(this).toggleClass('active');
+            if ($(this).hasClass('active')) {
+                $(this).find('i').removeClass('far').addClass('fas');
+                $(this).find('span').text('저장됨');
+                showToast('게시글을 저장했습니다.');
+            } else {
+                $(this).find('i').removeClass('fas').addClass('far');
+                $(this).find('span').text('저장');
+                showToast('저장을 취소했습니다.');
+            }
+        });
+
+        // 팔로우 기능
+        $('#followButton').click(function () {
+            $(this).toggleClass('following');
+            if ($(this).hasClass('following')) {
+                $(this).text('팔로잉');
+                showToast('작성자를 팔로우 했습니다.');
+            } else {
+                $(this).text('팔로우');
+                showToast('팔로우를 취소했습니다.');
+            }
+        });
+
+        // 댓글 좋아요 기능
+        $('.comment-action i.fa-heart').click(function () {
+            var $this = $(this);
+            var $span = $this.next('span');
+            var count = parseInt($span.text());
+
+            if ($this.hasClass('far')) {
+                $this.removeClass('far').addClass('fas');
+                $span.text(count + 1);
+                $this.css('color', '#e91e63');
+            } else {
+                $this.removeClass('fas').addClass('far');
+                $span.text(count - 1);
+                $this.css('color', '');
+            }
+        });
+
+        // 모달 관련 기능
+        function openModal(modalId) {
+            $('#' + modalId).addClass('active');
+            $('body').css('overflow', 'hidden');
+        }
+
+        function closeModal(modalId) {
+            $('#' + modalId).removeClass('active');
+            $('body').css('overflow', '');
+        }
+
+        // 삭제 모달
+        $('.delete-post').click(function () {
+            openModal('deleteModal');
+        });
+
+        $('#closeModal, #cancelDelete').click(function () {
+            closeModal('deleteModal');
+        });
+
+        $('#confirmDelete').click(function () {
+            // 삭제 처리 로직
+            showToast('게시글이 삭제되었습니다.');
+            closeModal('deleteModal');
+            // 아래는 실제 구현 시에는 서버 요청 후 리다이렉트
+            setTimeout(function () {
+                // window.location.href = '/community';
+            }, 1500);
+        });
+
+        // 신고 모달
+        $('.report-post').click(function () {
+            openModal('reportModal');
+        });
+
+        $('#closeReportModal, #cancelReport').click(function () {
+            closeModal('reportModal');
+        });
+
+        $('#confirmReport').click(function () {
+            // 신고 처리 로직
+            showToast('신고가 접수되었습니다.');
+            closeModal('reportModal');
+        });
+
+        // 토스트 메시지 표시
+        function showToast(message) {
+            var toast = $('#toast');
+            toast.text(message);
+            toast.addClass('show');
+
+            setTimeout(function () {
+                toast.removeClass('show');
+            }, 3000);
+        }
+
+        // 뒤로가기 기능
+        $('#backButton').click(function () {
+            window.history.back();
+        });
+
+        // 댓글 등록
+        $('.comment-submit').click(function () {
+            var commentText = $('.comment-input').val().trim();
+            if (commentText) {
+                // 댓글 추가 로직 (실제로는 서버로 전송)
+                const currentDate = new Date();
+                const hours = currentDate.getHours();
+                const minutes = currentDate.getMinutes();
+                const timeString = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+
+                const newComment = `
+          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
+            <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">김여행</span>
+                <span class="comment-date">방금 전</span>
+              </div>
+              <p class="comment-text">${commentText}</p>
+              <div class="comment-actions">
+                <div class="comment-action">
+                  <i class="far fa-heart"></i>
+                  <span>0</span>
+                </div>
+                <div class="comment-action reply-btn">
+                  <i class="far fa-comment"></i>
+                  <span>답글</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+                $('.comments-list').prepend(newComment);
+                $('.comment-input').val('');
+
+                // 댓글 수 업데이트
+                var commentsCount = parseInt($('.comments-count').text());
+                $('.comments-count').text(commentsCount + 1);
+
+                showToast('댓글이 등록되었습니다.');
+
+                // 새로 추가된 댓글에 이벤트 바인딩
+                $('.comments-list .comment-item:first .comment-action i.fa-heart').click(function () {
+                    var $this = $(this);
+                    var $span = $this.next('span');
+                    var count = parseInt($span.text());
+
+                    if ($this.hasClass('far')) {
+                        $this.removeClass('far').addClass('fas');
+                        $span.text(count + 1);
+                        $this.css('color', '#e91e63');
+                    } else {
+                        $this.removeClass('fas').addClass('far');
+                        $span.text(count - 1);
+                        $this.css('color', '');
+                    }
+                });
+            } else {
+                showToast('댓글 내용을 입력해주세요.');
+            }
+        });
+
+        // 댓글 더보기
+        $('.show-more-comments').click(function () {
+            // 추가 댓글 로딩 (실제로는 서버에서 더 가져옴)
+            $(this).text('로딩 중...');
+
+            setTimeout(function () {
+                const additionalComments = `
+          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
+            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">여행초보</span>
+                <span class="comment-date">1일 전</span>
+              </div>
+              <p class="comment-text">
+                스카이다이빙 정말 가고 싶네요! 혹시 가격이 어떻게 되나요?
+              </p>
+              <div class="comment-actions">
+                <div class="comment-action">
+                  <i class="far fa-heart"></i>
+                  <span>2</span>
+                </div>
+                <div class="comment-action reply-btn">
+                  <i class="far fa-comment"></i>
+                  <span>답글</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="comment-item" style="animation: fadeIn 0.5s ease-out; animation-delay: 0.1s;">
+            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
+            <div class="comment-content">
+              <div class="comment-header">
+                <span class="comment-author">프라하마스터</span>
+                <span class="comment-date">2일 전</span>
+              </div>
+              <p class="comment-text">
+                프라하에서 꼭 방문해야 할 음식점 추천드려요! Lokal이라는 맥주집과 Sisters라는 체코 전통 빵집이 정말 맛있어요. 체스키 크룸로프 가는 길에는 체스키 부데요비체에 있는 부트바르도 추천!
+              </p>
+              <div class="comment-actions">
+                <div class="comment-action">
+                  <i class="far fa-heart"></i>
+                  <span>8</span>
+                </div>
+                <div class="comment-action reply-btn">
+                  <i class="far fa-comment"></i>
+                  <span>답글</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+                $('.comments-list').append(additionalComments);
+                $('.show-more-comments').text('더 이상 댓글이 없습니다').css('pointer-events', 'none');
+
+                // 새로 추가된 댓글에 이벤트 바인딩
+                $('.comments-list .comment-item:last-child .comment-action i.fa-heart, .comments-list .comment-item:nth-last-child(2) .comment-action i.fa-heart').click(function () {
+                    var $this = $(this);
+                    var $span = $this.next('span');
+                    var count = parseInt($span.text());
+
+                    if ($this.hasClass('far')) {
+                        $this.removeClass('far').addClass('fas');
+                        $span.text(count + 1);
+                        $this.css('color', '#e91e63');
+                    } else {
+                        $this.removeClass('fas').addClass('far');
+                        $span.text(count - 1);
+                        $this.css('color', '');
+                    }
+                });
+            }, 1000);
+        });
+
+        // 레포트 옵션 스타일링
+        $('.report-option').hover(
+            function () {
+                $(this).css('background-color', 'var(--primary-light)');
+            },
+            function () {
+                if (!$(this).find('input').prop('checked')) {
+                    $(this).css('background-color', '');
+                }
+            }
+        );
+    });*/
+</script>
+</body>
+</html>
