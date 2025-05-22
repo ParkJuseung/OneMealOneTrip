@@ -63,4 +63,18 @@ public class ChatroomUser {
         this.statusUpdatedAt = LocalDateTime.now();
         this.lastReadMessageId = lastMessageId;
     }
+    
+    // 채팅방 삭제 및 채팅방 나갈경우 status = LEFT로 수정함.
+    public void leave() {
+        this.status = "LEFT";
+        this.leftAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
+
+    // 채팅방에서 사용자 강퇴 할 경우 KICKED 로 상태 바꿈.
+    public void kick() {
+        this.status = "KICKED";
+        this.leftAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
 }

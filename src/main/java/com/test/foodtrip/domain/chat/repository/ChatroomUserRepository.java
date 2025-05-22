@@ -3,6 +3,7 @@ package com.test.foodtrip.domain.chat.repository;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 //채팅방 참여자(사용자) 정보를 관리하는 Repository
@@ -23,5 +24,8 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
     Optional<ChatroomUser> findByChatRoomIdAndRole(Long chatRoomId, String role);
 
     Optional<ChatroomUser> findByChatRoom_IdAndUser_Id(Long chatRoomId, Long userId);
+
+    // 채팅방 삭제할경우 전체 사용자를 찾아서 상태를 LEFT로 바뀌게함.
+	List<ChatroomUser> findByChatRoom_Id(Long chatRoomId);
 
 }
