@@ -7,7 +7,201 @@
 <th:block layout:fragment="style">
     <link rel="stylesheet" th:href="@{/css/post-detail.css}">
     <style>
-        /* 댓글 수정/삭제 버튼 스타일 */
+        /* 기본 댓글 스타일 */
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 10px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 대댓글 스타일 - 핵심 수정 부분 */
+        .reply-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0 12px 52px; /* 왼쪽 여백으로 들여쓰기 */
+            margin-left: 0; /* 기존 margin-left 제거 */
+            border-left: none; /* 기존 border-left 제거 */
+            position: relative;
+            background-color: #f8f9fa; /* 구분을 위한 배경색 */
+            border-radius: 8px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* 대댓글 표시 아이콘 */
+        .reply-item::before {
+            content: '↳';
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            color: #666;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* 대댓글의 아바타 크기 조정 */
+        .reply-item .comment-avatar {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* 댓글 헤더 */
+        .comment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .comment-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .comment-date {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 댓글 내용 */
+        .comment-text-container {
+            margin-bottom: 10px;
+        }
+
+        .comment-text {
+            line-height: 1.5;
+            color: #333;
+            font-size: 14px;
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        /* 댓글 액션 버튼들 */
+        .comment-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .comment-action {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #666;
+            font-size: 12px;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            background: none;
+        }
+
+        .comment-action:hover {
+            color: #333;
+            background-color: #f0f0f0;
+        }
+
+        .comment-action.active {
+            color: #e91e63;
+        }
+
+        .comment-action i {
+            font-size: 14px;
+        }
+
+        /* 대댓글 입력 컨테이너 */
+        .reply-input-container {
+            margin-top: 10px;
+            margin-left: 52px; /* 댓글과 동일한 들여쓰기 */
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .reply-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .reply-input {
+            flex: 1;
+            min-height: 60px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        .reply-submit, .reply-cancel {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .reply-submit {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .reply-submit:hover {
+            background-color: #0056b3;
+        }
+
+        .reply-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .reply-cancel:hover {
+            background-color: #545b62;
+        }
+
+        /* 답글 목록 컨테이너 */
+        .replies-container {
+            margin-top: 8px;
+        }
+
+        /* 수정/삭제 버튼 */
         .comment-edit-delete {
             display: flex;
             gap: 8px;
@@ -35,7 +229,7 @@
             color: #d32f2f;
         }
 
-        /* 댓글 수정 폼 스타일 */
+        /* 댓글 수정 폼 */
         .comment-edit-form {
             margin-top: 10px;
             display: none;
@@ -88,265 +282,72 @@
 
         /* 삭제된 댓글 스타일 */
         .comment-deleted {
-            color: #999;
-            font-style: italic;
+            opacity: 0.7;
             background-color: #f9f9f9;
         }
 
-        .comment-deleted .comment-content {
-            opacity: 0.6;
+        .comment-deleted .comment-text {
+            color: #999;
+            font-style: italic;
         }
 
         /* 블라인드 처리된 댓글 스타일 */
         .comment-blinded {
             background-color: #f5f5f5;
+            opacity: 0.8;
+        }
+
+        .comment-blinded .comment-text {
             color: #999;
             font-style: italic;
         }
 
-        .comment-blinded .comment-content {
-            opacity: 0.7;
-        }
-
-        /* 좋아요/싫어요 버튼 활성화 상태 */
-        .comment-action.active {
-            color: #e91e63;
-        }
-
-        .comment-action.active i {
-            color: #e91e63;
-        }
-
-        .comment-like-btn.active i {
-            color: #e91e63;
-        }
-
-        .comment-dislike-btn.active i {
-            color: #ff5722;
-        }
-
-        .comment-action {
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .comment-action:hover {
-            color: #666;
-        }
-
-        /* 더보기 버튼 스타일 */
-        .show-more-comments {
-            width: 100%;
-            padding: 12px;
-            margin: 20px 0;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            color: #495057;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            font-size: 14px;
-            display: none;
-        }
-
-        .show-more-comments:hover:not(:disabled) {
-            background-color: #e9ecef;
-            border-color: #adb5bd;
-        }
-
-        .show-more-comments:disabled {
-            background-color: #f8f9fa;
-            color: #6c757d;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        /* 신고 버튼 스타일 */
-        .report-btn {
-            color: #dc3545 !important;
-        }
-
-        .report-btn:hover {
-            color: #c82333 !important;
-        }
-
-        .comment-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .comment-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .comment-header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* 게시글 수정/삭제 버튼 스타일 */
-        .post-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin: 20px 0;
-            padding: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .edit-post-btn, .delete-post-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s;
-        }
-
-        .edit-post-btn {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .edit-post-btn:hover {
-            background-color: #0056b3;
-            transform: translateY(-1px);
-        }
-
-        .delete-post-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .delete-post-btn:hover {
-            background-color: #c82333;
-            transform: translateY(-1px);
-        }
-
-        /* 반응형 디자인 */
-        @media (max-width: 600px) {
-            .post-actions {
-                flex-direction: column;
-            }
-
-            .edit-post-btn, .delete-post-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            #editPostModal > div {
-                width: 95% !important;
-                margin: 10px !important;
-                padding: 20px !important;
-            }
-        }
-
-        /* 게시글 제목과 액션 버튼 영역 - 기존 style 섹션에 추가하세요 */
-        .post-title-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            gap: 20px;
-        }
-
-        .post-detail-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            line-height: 1.4;
-            color: var(--text-color);
-            flex: 1;
-            margin: 0; /* 기존 margin-bottom 제거 */
-        }
-
-        /* 인라인 액션 버튼 컨테이너 */
-        .post-actions-inline {
-            display: flex;
-            gap: 8px;
-            flex-shrink: 0;
-            margin-top: 2px; /* 제목과 약간의 수직 정렬 */
-        }
-
-        /* 개별 액션 버튼 */
-        .action-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            background: transparent;
-        }
-
-        /* 수정 버튼 */
-        .edit-btn {
-            color: #4CAF50;
-            background-color: rgba(76, 175, 80, 0.1);
-        }
-
-        .edit-btn:hover {
-            background-color: rgba(76, 175, 80, 0.2);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-        }
-
-        /* 삭제 버튼 */
-        .delete-btn {
-            color: #f44336;
-            background-color: rgba(244, 67, 54, 0.1);
-        }
-
-        .delete-btn:hover {
-            background-color: rgba(244, 67, 54, 0.2);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
-        }
-
-        /* 기존 post-actions 숨김 */
-        .post-actions {
-            display: none;
-        }
-
         /* 반응형 디자인 */
         @media (max-width: 768px) {
-            .post-title-section {
-                flex-direction: column;
+            .reply-item {
+                padding-left: 40px;
+            }
+
+            .reply-input-container {
+                margin-left: 40px;
+            }
+
+            .reply-item::before {
+                left: 16px;
+            }
+
+            .comment-actions {
                 gap: 12px;
             }
 
-            .post-actions-inline {
-                align-self: flex-end;
-                margin-top: 0;
-            }
-
-            .action-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
+            .comment-action {
+                font-size: 11px;
+                padding: 3px 6px;
             }
         }
 
         @media (max-width: 480px) {
-            .post-detail-title {
-                font-size: 1.3rem;
+            .reply-item {
+                padding-left: 32px;
             }
 
-            .post-title-section {
-                gap: 8px;
+            .reply-input-container {
+                margin-left: 32px;
+            }
+
+            .reply-item::before {
+                left: 12px;
+                font-size: 14px;
+            }
+
+            .comment-avatar {
+                width: 36px;
+                height: 36px;
+            }
+
+            .reply-item .comment-avatar {
+                width: 28px;
+                height: 28px;
             }
         }
     </style>
@@ -464,12 +465,119 @@
 
         <!-- 댓글 목록 -->
         <div class="comments-list">
-            <!-- 댓글들이 여기에 동적으로 로드됩니다 -->
-        </div>
+            <!-- 댓글 구조 예시 -->
+            <!--
+            <div class="comment-item" data-comment-id="1">
+                <img src="/api/placeholder/40/40" alt="사용자" class="comment-avatar">
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <div class="comment-header-left">
+                            <span class="comment-author">사용자명</span>
+                            <span class="comment-date">1시간 전</span>
+                        </div>
+                        <div class="comment-header-right">
+                            <div class="comment-edit-delete">
+                                <button class="comment-edit-btn">
+                                    <i class="fas fa-edit"></i> 수정
+                                </button>
+                                <button class="comment-delete-btn">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-        <button class="show-more-comments" id="showMoreBtn">
-            댓글 더보기
-        </button>
+                    <div class="comment-text-container">
+                        <p class="comment-text">댓글 내용입니다.</p>
+                        <div class="comment-edit-form">
+                            <textarea class="comment-edit-textarea">댓글 내용입니다.</textarea>
+                            <div class="comment-edit-actions">
+                                <button class="comment-save-btn">저장</button>
+                                <button class="comment-cancel-btn">취소</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comment-actions">
+                        <div class="comment-action comment-like-btn">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count">5</span>
+                        </div>
+                        <div class="comment-action comment-dislike-btn">
+                            <i class="fas fa-heart-broken"></i>
+                            <span class="dislike-count">0</span>
+                        </div>
+                        <div class="comment-action reply-btn">
+                            <i class="far fa-comment"></i>
+                            <span>답글</span>
+                        </div>
+                    </div>
+                </div>
+
+            대댓글 입력 컨테이너
+            <div class="reply-input-container" id="reply-input-1">
+                <div class="reply-input-wrapper">
+                    <img src="/api/placeholder/30/30" alt="내 프로필" class="comment-avatar" style="width: 30px; height: 30px;">
+                    <textarea class="reply-input" placeholder="답글을 입력하세요..." rows="2"></textarea>
+                    <button class="reply-submit">등록</button>
+                    <button class="reply-cancel">취소</button>
+                </div>
+            </div>
+
+            대댓글 목록 컨테이너
+            <div class="replies-container" id="replies-1">
+                대댓글 예시
+                <div class="reply-item" data-comment-id="2">
+                    <img src="/api/placeholder/32/32" alt="사용자" class="comment-avatar">
+                    <div class="comment-content">
+                        <div class="comment-header">
+                            <div class="comment-header-left">
+                                <span class="comment-author">답글 작성자</span>
+                                <span class="comment-date">30분 전</span>
+                            </div>
+                            <div class="comment-header-right">
+                                <div class="comment-edit-delete">
+                                    <button class="comment-edit-btn">
+                                        <i class="fas fa-edit"></i> 수정
+                                    </button>
+                                    <button class="comment-delete-btn">
+                                        <i class="fas fa-trash"></i> 삭제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comment-text-container">
+                            <p class="comment-text">대댓글 내용입니다.</p>
+                            <div class="comment-edit-form">
+                                <textarea class="comment-edit-textarea">대댓글 내용입니다.</textarea>
+                                <div class="comment-edit-actions">
+                                    <button class="comment-save-btn">저장</button>
+                                    <button class="comment-cancel-btn">취소</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comment-actions">
+                            <div class="comment-action comment-like-btn">
+                                <i class="fas fa-heart"></i>
+                                <span class="like-count">2</span>
+                            </div>
+                            <div class="comment-action comment-dislike-btn">
+                                <i class="fas fa-heart-broken"></i>
+                                <span class="dislike-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+
+    <button class="show-more-comments" id="showMoreBtn">
+        댓글 더보기
+    </button>
     </div>
 
     <!-- 관련 게시글 -->
@@ -690,8 +798,8 @@
                     }
                 },
 
-                // 댓글 렌더링
-                renderComments(comments) {
+                // 댓글 렌더링 함수 수정
+                async renderComments(comments) {
                     console.log('🎨 댓글 렌더링 시작, 댓글 수:', comments.length);
                     const container = $('.comments-list');
                     container.empty();
@@ -701,23 +809,31 @@
                         return;
                     }
 
-                    comments.forEach(comment => {
+                    // 각 댓글을 렌더링하고 대댓글도 함께 로드
+                    for (const comment of comments) {
                         const commentHtml = this.createCommentHTML(comment);
                         container.append(commentHtml);
-                    });
+
+                        // 각 댓글의 대댓글 로드
+                        await this.loadReplies(comment.id);
+                    }
 
                     console.log('✅ 댓글 렌더링 완료');
                 },
 
-                // 댓글 추가 (페이징용)
-                appendComments(comments) {
+                // 댓글 추가 함수도 수정 (페이징용)
+                async appendComments(comments) {
                     console.log('➕ 댓글 추가 시작, 추가할 댓글 수:', comments.length);
                     const container = $('.comments-list');
 
-                    comments.forEach(comment => {
+                    // 각 댓글을 추가하고 대댓글도 함께 로드
+                    for (const comment of comments) {
                         const commentHtml = this.createCommentHTML(comment);
                         container.append(commentHtml);
-                    });
+
+                        // 각 댓글의 대댓글 로드
+                        await this.loadReplies(comment.id);
+                    }
 
                     console.log('✅ 댓글 추가 완료');
                 },
@@ -729,94 +845,294 @@
                     const isBlinded = (comment.dislikeCount || 0) >= 10;
 
                     let html = `
-                    <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
-                        <img src="${comment.userProfileImage || '/api/placeholder/40/40'}"
-                             alt="${comment.userNickname}" class="comment-avatar">
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <div class="comment-header-left">
-                                    <span class="comment-author">${comment.userNickname}</span>
-                                    <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
-                                </div>
-                                <div class="comment-header-right">
-                `;
+    <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
+        <img src="${comment.userProfileImage || '/api/placeholder/40/40'}"
+             alt="${comment.userNickname}" class="comment-avatar">
+        <div class="comment-content">
+            <div class="comment-header">
+                <div class="comment-header-left">
+                    <span class="comment-author">${comment.userNickname}</span>
+                    <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
+                </div>
+                <div class="comment-header-right">
+    `;
 
                     // 수정/삭제 버튼 (작성자이고 삭제되지 않고 블라인드되지 않은 경우에만 표시)
                     if (isOwner && !isDeleted && !isBlinded) {
                         html += `
-                        <div class="comment-edit-delete">
-                            <button class="comment-edit-btn" onclick="commentManager.startEditComment(${comment.id})">
-                                <i class="fas fa-edit"></i> 수정
-                            </button>
-                            <button class="comment-delete-btn" onclick="commentManager.deleteComment(${comment.id})">
-                                <i class="fas fa-trash"></i> 삭제
-                            </button>
-                        </div>
-                    `;
+        <div class="comment-edit-delete">
+            <button class="comment-edit-btn" onclick="commentManager.startEditComment(${comment.id})">
+                <i class="fas fa-edit"></i> 수정
+            </button>
+            <button class="comment-delete-btn" onclick="commentManager.deleteComment(${comment.id})">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        </div>
+    `;
                     }
 
                     html += `
-                                </div>
-                            </div>
-                            <div class="comment-text-container">
-                                <p class="comment-text" data-original-content="${comment.content}">
-                                    ${isDeleted ? '삭제된 댓글입니다.' :
+                </div>
+            </div>
+            <div class="comment-text-container">
+                <p class="comment-text" data-original-content="${comment.content}">
+                    ${isDeleted ? '삭제된 댓글입니다.' :
                         (isBlinded ? '블라인드 처리된 댓글입니다.' : comment.content)}
-                                </p>
-                                <!-- 수정 폼 (숨김 상태) -->
-                                <div class="comment-edit-form">
-                                    <textarea class="comment-edit-textarea">${comment.content}</textarea>
-                                    <div class="comment-edit-actions">
-                                        <button class="comment-save-btn" onclick="commentManager.saveEditComment(${comment.id})">저장</button>
-                                        <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${comment.id})">취소</button>
-                                    </div>
-                                </div>
-                            </div>
-                `;
+                </p>
+                <!-- 수정 폼 (숨김 상태) -->
+                <div class="comment-edit-form">
+                    <textarea class="comment-edit-textarea">${comment.content}</textarea>
+                    <div class="comment-edit-actions">
+                        <button class="comment-save-btn" onclick="commentManager.saveEditComment(${comment.id})">저장</button>
+                        <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${comment.id})">취소</button>
+                    </div>
+                </div>
+            </div>
+    `;
 
-                    // 좋아요/싫어요 버튼 (삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    // 좋아요/싫어요/답글 버튼 (삭제되지 않고 블라인드되지 않은 경우에만 표시)
                     if (!isDeleted && !isBlinded) {
                         html += `
-                            <div class="comment-actions">
-                                <div class="comment-action comment-like-btn ${comment.isLikedByCurrentUser ? 'active' : ''}"
-                                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'LIKE')">
-                                    <i class="fas fa-heart"></i>
-                                    <span class="like-count">${comment.likeCount || 0}</span>
-                                </div>
-                                <div class="comment-action comment-dislike-btn ${comment.isDislikedByCurrentUser ? 'active' : ''}"
-                                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'DISLIKE')">
-                                    <i class="fas fa-heart-broken"></i>
-                                    <span class="dislike-count">${comment.dislikeCount || 0}</span>
-                                </div>
-                                <div class="comment-action reply-btn">
-                                    <i class="far fa-comment"></i>
-                                    <span>답글</span>
-                                </div>
-                            </div>
-                    `;
+            <div class="comment-actions">
+                <div class="comment-action comment-like-btn ${comment.isLikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'LIKE')">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">${comment.likeCount || 0}</span>
+                </div>
+                <div class="comment-action comment-dislike-btn ${comment.isDislikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'DISLIKE')">
+                    <i class="fas fa-heart-broken"></i>
+                    <span class="dislike-count">${comment.dislikeCount || 0}</span>
+                </div>
+                <div class="comment-action reply-btn" onclick="commentManager.showReplyInput(${comment.id})">
+                    <i class="far fa-comment"></i>
+                    <span>답글</span>
+                </div>
+            </div>
+    `;
                     }
 
                     // 블라인드된 댓글에는 신고 버튼만 표시
                     if (isBlinded && !isDeleted) {
                         html += `
-                            <div class="comment-actions">
-                                <div class="comment-action report-btn" onclick="commentManager.reportComment(${comment.id})">
-                                    <i class="fas fa-flag"></i>
-                                    <span>신고</span>
-                                </div>
-                            </div>
-                    `;
+            <div class="comment-actions">
+                <div class="comment-action report-btn" onclick="commentManager.reportComment(${comment.id})">
+                    <i class="fas fa-flag"></i>
+                    <span>신고</span>
+                </div>
+            </div>
+    `;
                     }
 
                     html += `
-                        </div>
-                    </div>
-                `;
+        </div>
+    </div>
+
+    <!-- 대댓글 입력 컨테이너 -->
+    <div class="reply-input-container" id="reply-input-${comment.id}">
+        <div class="reply-input-wrapper">
+            <img src="/api/placeholder/30/30" alt="내 프로필" class="comment-avatar" style="width: 30px; height: 30px;">
+            <textarea class="reply-input" placeholder="답글을 입력하세요..." rows="2"></textarea>
+            <button class="reply-submit" onclick="commentManager.createReply(${comment.id})">등록</button>
+            <button class="reply-cancel" onclick="commentManager.hideReplyInput(${comment.id})">취소</button>
+        </div>
+    </div>
+
+    <!-- 대댓글 목록 컨테이너 -->
+    <div class="replies-container" id="replies-${comment.id}">
+        <!-- 대댓글들이 여기에 로드됩니다 -->
+    </div>
+    `;
 
                     return html;
                 },
 
-                // 댓글 작성
+                // 대댓글 입력창 표시
+                showReplyInput(commentId) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    // 다른 모든 대댓글 입력창 숨기기
+                    $('.reply-input-container').hide();
+
+                    // 선택된 댓글의 대댓글 입력창 표시
+                    $(`#reply-input-${commentId}`).show();
+                    $(`#reply-input-${commentId} .reply-input`).focus();
+                },
+
+                // 대댓글 입력창 숨기기
+                hideReplyInput(commentId) {
+                    $(`#reply-input-${commentId}`).hide();
+                    $(`#reply-input-${commentId} .reply-input`).val('');
+                },
+
+                // 대댓글 작성
+                // 대댓글 작성 후 새로고침 함수 수정
+                async createReply(parentCommentId) {
+                    const replyContent = $(`#reply-input-${parentCommentId} .reply-input`).val().trim();
+
+                    if (!replyContent) {
+                        this.showToast('답글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('💬 대댓글 작성 시도:', replyContent);
+
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                userId: this.currentUserId,
+                                content: replyContent,
+                                parentId: parentCommentId
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.hideReplyInput(parentCommentId);
+                            this.showToast('답글이 등록되었습니다.', 'success');
+
+                            // 해당 댓글의 대댓글 목록만 새로고침
+                            await this.loadReplies(parentCommentId);
+
+                            // 전체 댓글 수 업데이트
+                            await this.loadTotalCommentCount();
+                        } else {
+                            this.showToast(result.message || '답글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 대댓글 작성 실패:', error);
+                        this.showToast('답글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 대댓글 목록 로드 함수 수정 (에러 처리 강화)
+                async loadReplies(parentCommentId) {
+                    try {
+                        console.log('📥 대댓글 로딩 시작:', parentCommentId);
+
+                        const response = await fetch(`/api/comments/${parentCommentId}/replies`);
+                        const result = await response.json();
+
+                        if (result.success && result.data && result.data.length > 0) {
+                            console.log('✅ 대댓글 데이터:', result.data);
+                            this.renderReplies(parentCommentId, result.data);
+                        } else {
+                            console.log('ℹ️ 대댓글 없음:', parentCommentId);
+                            // 대댓글이 없는 경우는 정상 상황이므로 에러로 처리하지 않음
+                        }
+                    } catch (error) {
+                        console.error('💥 대댓글 로드 에러:', error);
+                        // 대댓글 로드 실패해도 메인 댓글은 정상 표시되도록 함
+                    }
+                },
+
+                // 대댓글 렌더링
+                renderReplies(parentCommentId, replies) {
+                    const repliesContainer = $(`#replies-${parentCommentId}`);
+                    repliesContainer.empty();
+
+                    if (replies.length === 0) {
+                        return;
+                    }
+
+                    replies.forEach(reply => {
+                        const replyHtml = this.createReplyHTML(reply);
+                        repliesContainer.append(replyHtml);
+                    });
+                },
+
+                // 대댓글 HTML 생성
+                createReplyHTML(reply) {
+                    const isOwner = this.currentUserId && this.currentUserId == reply.userId;
+                    const isDeleted = reply.isDeleted === 'Y';
+                    const isBlinded = (reply.dislikeCount || 0) >= 10;
+
+                    let html = `
+    <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
+        <img src="${reply.userProfileImage || '/api/placeholder/32/32'}"
+             alt="${reply.userNickname}" class="comment-avatar">
+        <div class="comment-content">
+            <div class="comment-header">
+                <div class="comment-header-left">
+                    <span class="comment-author">${reply.userNickname}</span>
+                    <span class="comment-date">${this.formatDate(reply.createdAt)}</span>
+                </div>
+                <div class="comment-header-right">
+    `;
+
+                    // 수정/삭제 버튼 (작성자이고 삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (isOwner && !isDeleted && !isBlinded) {
+                        html += `
+        <div class="comment-edit-delete">
+            <button class="comment-edit-btn" onclick="commentManager.startEditComment(${reply.id})">
+                <i class="fas fa-edit"></i> 수정
+            </button>
+            <button class="comment-delete-btn" onclick="commentManager.deleteComment(${reply.id})">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        </div>
+    `;
+                    }
+
+                    html += `
+                </div>
+            </div>
+            <div class="comment-text-container">
+                <p class="comment-text" data-original-content="${reply.content}">
+                    ${isDeleted ? '삭제된 댓글입니다.' :
+                        (isBlinded ? '블라인드 처리된 댓글입니다.' : reply.content)}
+                </p>
+                <!-- 수정 폼 (숨김 상태) -->
+                <div class="comment-edit-form">
+                    <textarea class="comment-edit-textarea">${reply.content}</textarea>
+                    <div class="comment-edit-actions">
+                        <button class="comment-save-btn" onclick="commentManager.saveEditComment(${reply.id})">저장</button>
+                        <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${reply.id})">취소</button>
+                    </div>
+                </div>
+            </div>
+    `;
+
+                    // 좋아요/싫어요 버튼 (삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (!isDeleted && !isBlinded) {
+                        html += `
+            <div class="comment-actions">
+                <div class="comment-action comment-like-btn ${reply.isLikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${reply.id}" onclick="commentManager.toggleReaction(${reply.id}, 'LIKE')">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">${reply.likeCount || 0}</span>
+                </div>
+                <div class="comment-action comment-dislike-btn ${reply.isDislikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${reply.id}" onclick="commentManager.toggleReaction(${reply.id}, 'DISLIKE')">
+                    <i class="fas fa-heart-broken"></i>
+                    <span class="dislike-count">${reply.dislikeCount || 0}</span>
+                </div>
+            </div>
+    `;
+                    }
+
+                    html += `
+        </div>
+    </div>
+    `;
+
+                    return html;
+                },
+
                 async createComment() {
                     const content = $('.comment-input').val().trim();
                     if (!content) {
@@ -868,7 +1184,7 @@
                 // 댓글 수정 시작
                 startEditComment(commentId) {
                     console.log('✏️ 댓글 수정 시작:', commentId);
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"]`);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
                     const textElement = commentItem.find('.comment-text');
                     const editForm = commentItem.find('.comment-edit-form');
                     const editDeleteButtons = commentItem.find('.comment-edit-delete');
@@ -882,7 +1198,7 @@
                 // 댓글 수정 취소
                 cancelEditComment(commentId) {
                     console.log('❌ 댓글 수정 취소:', commentId);
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"]`);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
                     const textElement = commentItem.find('.comment-text');
                     const editForm = commentItem.find('.comment-edit-form');
                     const editDeleteButtons = commentItem.find('.comment-edit-delete');
@@ -897,7 +1213,7 @@
 
                 // 댓글 수정 저장
                 async saveEditComment(commentId) {
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"]`);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
                     const newContent = commentItem.find('.comment-edit-textarea').val().trim();
 
                     if (!newContent) {
@@ -923,7 +1239,7 @@
                         if (result.success) {
                             this.showToast('댓글이 수정되었습니다.', 'success');
 
-                            // 전체 다시 로드
+                            // 전체 다시 로드 (대댓글도 함께)
                             this.currentPage = 0;
                             this.loadedComments = 0;
                             await this.loadComments();
@@ -954,7 +1270,7 @@
                         if (result.success) {
                             this.showToast('댓글이 삭제되었습니다.', 'success');
 
-                            // 전체 다시 로드
+                            // 전체 다시 로드 (대댓글도 함께)
                             this.currentPage = 0;
                             this.loadedComments = 0;
                             await this.loadTotalCommentCount();
@@ -1010,7 +1326,7 @@
 
                 // 반응 UI 업데이트
                 updateReactionUI(commentId, reactionData, reactionType) {
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"]`);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
 
                     // 좋아요 버튼 업데이트
                     const likeBtn = commentItem.find('.comment-like-btn');
@@ -1142,75 +1458,9 @@
             // 수정된 포스트 수정 기능 - modify 페이지로 이동
             window.editPost = function() {
                 const postId = [[${dto.id}]];
-
                 // modify 페이지로 이동
                 window.location.href = `/post/modify/${postId}`;
             };
-            //
-            // // 수정 모달 닫기
-            // window.closeEditModal = function () {
-            //     $('#editPostModal').remove();
-            // };
-            //
-            // // 포스트 수정 저장
-            // window.savePostEdit = function () {
-            //     const postId = [[${dto.id}]];
-            //     const title = $('#editTitle').val().trim();
-            //     const content = $('#editContent').val().trim();
-            //     const tagsText = $('#editTags').val().trim();
-            //
-            //     // 유효성 검사
-            //     if (!title) {
-            //         commentManager.showToast('제목을 입력해주세요.', 'warning');
-            //         $('#editTitle').focus();
-            //         return;
-            //     }
-            //
-            //     if (!content) {
-            //         commentManager.showToast('내용을 입력해주세요.', 'warning');
-            //         $('#editContent').focus();
-            //         return;
-            //     }
-            //
-            //     // 태그 처리 (쉼표로 구분된 문자열을 배열로 변환)
-            //     const tags = tagsText ? tagsText.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
-            //
-            //     console.log('Saving post:', {title, content, tags}); // 디버깅용
-            //
-            //     // API 호출
-            //     fetch(`/api/posts/${postId}`, {
-            //         method: 'PUT',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //         },
-            //         body: JSON.stringify({
-            //             title: title,
-            //             content: content,
-            //             tags: tags
-            //         })
-            //     })
-            //         .then(response => response.json())
-            //         .then(data => {
-            //             console.log('API response:', data); // 디버깅용
-            //
-            //             if (data.success) {
-            //                 commentManager.showToast('게시글이 수정되었습니다.', 'success');
-            //                 closeEditModal();
-            //
-            //                 // 페이지 새로고침으로 수정된 내용 반영
-            //                 setTimeout(() => {
-            //                     window.location.reload();
-            //                 }, 1000);
-            //             } else {
-            //                 commentManager.showToast(data.message || '게시글 수정에 실패했습니다.', 'error');
-            //             }
-            //         })
-            //         .catch(error => {
-            //             console.error('❌ 게시글 수정 실패:', error);
-            //             commentManager.showToast('게시글 수정 중 오류가 발생했습니다.', 'error');
-            //         });
-            // };
-
 
             // 포스트 삭제 기능 (기존 함수를 window 객체에 등록)
             window.deletePost = function () {
@@ -1286,14 +1536,16 @@
         // ESC 키로 모달 닫기
         $(document).on('keydown', function (e) {
             if (e.keyCode === 27) { // ESC 키
-                closeEditModal();
+                $('.reply-input-container').hide();
             }
         });
 
-        // 모달 배경 클릭으로 닫기
-        $(document).on('click', '#editPostModal', function (e) {
-            if (e.target.id === 'editPostModal') {
-                closeEditModal();
+        // 엔터키로 답글 작성
+        $(document).on('keypress', '.reply-input', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                const parentId = $(this).closest('.reply-input-container').attr('id').replace('reply-input-', '');
+                commentManager.createReply(parseInt(parentId));
             }
         });
     </script>
