@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -416,9 +416,11 @@
       margin-left: 8px;
     }
 
-    /* 마이페이지 중간 영역 */
+    /* 마이페이지 중간 영역 - 핵심 수정 부분 */
     .profile-content {
-      margin-bottom: 80px; /* 하단 여백 */
+      margin-bottom: 80px; /* 하단 여백만 유지 */
+      display: block; /* 명시적으로 표시 */
+      visibility: visible; /* 명시적으로 보이게 설정 */
     }
 
     .content-section {
@@ -428,6 +430,10 @@
       border: 1px solid var(--border-color);
       padding: 20px;
       margin-bottom: 25px;
+      /* 핵심: 모든 섹션이 기본적으로 보이도록 설정 */
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .section-header {
@@ -1080,6 +1086,59 @@
         height: 120px;
       }
     }
+
+    /* 나의소개 작성하기 버튼 래퍼 */
+    .intro-empty-action {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    /* 래퍼 내부 프로필 버튼 위치 해제 */
+    .intro-empty-action .profile-button {
+      position: static !important;
+      top: auto !important;
+      right: auto !important;
+      float: none !important;
+      display: inline-block;
+    }
+
+    /* 나의 소개 섹션의 수정/삭제 버튼 가로 배치 */
+    #intro-section .section-actions {
+      display: flex;            /* Flexbox 적용 */
+      justify-content: flex-end;/* 오른쪽 정렬 (원하는 대로 변경 가능) */
+      align-items: center;      /* 세로 중앙 정렬 */
+      gap: 8px;                 /* 버튼 사이 간격 */
+    }
+
+    /* 기존에 해제해 둔 프로필 버튼 절대위치 속성 유지 */
+    #intro-section .section-actions .profile-button {
+      position: static !important;
+      top: auto !important;
+      right: auto !important;
+      float: none !important;
+    }
+
+    /* hidden 클래스 정의 - 조건부로만 사용하도록 수정 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* 글자수 카운터 스타일 추가 */
+    .char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 5px;
+    }
+
+    /* 빈 상태 텍스트 스타일 */
+    .no-intro-text {
+      color: var(--text-light);
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+    }
+
   </style>
 </head>
 <body>
@@ -1130,9 +1189,9 @@
       <div class="profile-header">
         <img src="/api/placeholder/100/100" alt="프로필 이미지" class="profile-image">
         <div class="profile-info">
-          <h2 class="profile-name">김여행 <span class="badge-label">일반</span></h2>
-          <div class="profile-email">user@example.com</div>
-          <div class="profile-greeting">"여행은 언제나 설레는 새로운 경험입니다. 함께 모험해요!"</div>
+          <h2 class="profile-name">김여행 <span class="badge-label">VIP</span></h2>
+          <div class="profile-email">kimtravel@example.com</div>
+          <div class="profile-greeting">안녕하세요! 여행을 사랑하는 김여행입니다. 함께 멋진 여행을 만들어가요! ✈️</div>
         </div>
       </div>
       <button class="profile-button" id="edit-profile-button">
@@ -1158,22 +1217,66 @@
       </div>
     </div>
 
-    <!-- 프로필 콘텐츠 중간 영역 -->
+    <!-- 프로필 콘텐츠 중간 영역 - 여기서 요소들이 보이도록 수정 -->
     <div class="profile-content">
       <!-- 자기소개 섹션 -->
-      <div class="content-section">
+      <div class="content-section" id="intro-section">
         <div class="section-header">
           <h3 class="section-title">나의 소개</h3>
+          <!-- 데모용으로 조건부 표시 제거 -->
+          <div class="section-actions">
+            <button id="intro-edit-btn" class="profile-button">수정</button>
+            <button id="intro-delete-btn" class="profile-button">삭제</button>
+          </div>
         </div>
-        <div class="introduce-content">
-          여행을 사랑하는 30대 직장인입니다. 주로 아시아 지역을 여행하며, 현지 맛집과 숨은 명소를 찾아다니는 것을 좋아합니다. 최근에는 사진 촬영에도 관심이 생겨 여행지에서의 순간들을 담고 있어요.
+
+        <!-- 읽기 모드: 소개글이 있을 때 표시 (데모용으로 기본 표시) -->
+        <div id="intro-view">
+          <p class="introduce-content">안녕하세요! 여행을 통해 새로운 문화를 경험하고 소중한 추억을 만드는 것을 좋아합니다. 특히 현지 음식을 맛보고 역사적인 장소를 탐방하는 것에 큰 흥미를 가지고 있습니다.</p>
+          <div class="tag-list">
+            <span class="interest-tag">#여행</span>
+            <span class="interest-tag">#맛집탐방</span>
+            <span class="interest-tag">#역사</span>
+            <span class="interest-tag">#사진</span>
+            <span class="interest-tag">#문화체험</span>
+          </div>
         </div>
-        <div class="tag-list">
-          <div class="interest-tag">#아시아여행</div>
-          <div class="interest-tag">#맛집탐방</div>
-          <div class="interest-tag">#사진촬영</div>
-          <div class="interest-tag">#자유여행</div>
-          <div class="interest-tag">#호캉스</div>
+
+        <!-- 읽기 모드: 소개글이 없을 때 보여줄 부분 (데모용으로 숨김) -->
+        <div id="intro-view-empty" class="hidden">
+          <p class="no-intro-text">아직 작성된 소개글이 없습니다.</p>
+          <div class="intro-empty-action">
+            <button id="intro-create-btn" class="profile-button">
+              나의 소개 작성하기
+            </button>
+          </div>
+        </div>
+
+        <!-- 편집 모드 (쓰기/수정 폼) -->
+        <div id="intro-edit" class="hidden">
+          <div class="form-group">
+            <label class="form-label" for="intro-content">나의 소개</label>
+            <textarea id="intro-content"
+                      class="form-textarea"
+                      maxlength="500"
+                      placeholder="자신을 소개하는 글을 입력하세요 (최대 500자)"></textarea>
+            <div class="char-count" id="intro-char-count">0 / 500</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="intro-tag-input">관심사 태그</label>
+            <input type="text"
+                   id="intro-tag-input"
+                   class="form-input"
+                   placeholder="태그를 입력하고 Enter" />
+            <div class="tag-list" id="intro-new-tags"></div>
+            <small class="text-light">최대 10개, 한 태그당 최대 20자</small>
+          </div>
+
+          <div class="form-buttons">
+            <button type="button" id="intro-save-btn" class="submit-button">저장</button>
+            <button type="button" id="intro-cancel-btn" class="cancel-button">취소</button>
+          </div>
         </div>
       </div>
 
@@ -1381,27 +1484,50 @@
     </div>
     <form id="profile-edit-form">
       <div class="form-group">
-        <label class="form-label">닉네임</label>
-        <input type="text" class="form-input" value="김여행" required>
+        <label class="form-label">프로필 이미지 URL</label>
+        <input type="text" name="profileImage" class="form-input" value="/api/placeholder/100/100">
       </div>
+
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input type="text" name="name" class="form-input" value="김여행" readonly>
+      </div>
+
       <div class="form-group">
         <label class="form-label">이메일</label>
-        <input type="email" class="form-input" value="user@example.com" readonly>
+        <input type="email" name="socialEmail" class="form-input" value="kimtravel@example.com" readonly>
         <small style="color: var(--text-light);">이메일은 수정할 수 없습니다.</small>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">닉네임</label>
+        <input type="text" name="nickname" class="form-input" value="김여행" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">성별</label>
+        <select name="gender" class="form-input">
+          <option value="MALE">남성</option>
+          <option value="FEMALE" selected>여성</option>
+          <option value="OTHER">기타</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">생년월일</label>
+        <input type="date" name="birthDate" class="form-input" value="1990-01-01">
+      </div>
+
       <div class="form-group">
         <label class="form-label">연락처 (선택)</label>
-        <input type="tel" class="form-input" value="010-1234-5678">
+        <input type="tel" name="phone" class="form-input" value="010-1234-5678">
       </div>
-      <div class="form-group">
-        <label class="form-label">주소 (선택)</label>
-        <input type="text" class="form-input" value="서울시 강남구">
-      </div>
+
       <div class="form-group">
         <label class="form-label">인사말 (선택)</label>
-        <textarea class="form-textarea">"여행은 언제나 설레는 새로운 경험입니다. 함께 모험해요!"</textarea>
-        <div style="text-align: right; font-size: 0.85rem; color: var(--text-light);"><span id="greeting-count">47</span>/100</div>
+        <textarea name="greeting" class="form-textarea">안녕하세요! 여행을 사랑하는 김여행입니다. 함께 멋진 여행을 만들어가요! ✈️</textarea>
       </div>
+
       <div class="form-buttons">
         <button type="button" class="cancel-button" id="cancel-button">취소</button>
         <button type="submit" class="submit-button">저장하기</button>
@@ -1414,60 +1540,49 @@
   document.addEventListener('DOMContentLoaded', function() {
     // 뒤로가기 버튼
     const backButton = document.getElementById('back-button');
-    backButton.addEventListener('click', function() {
-      window.history.back();
-    });
+    if (backButton) {
+      backButton.addEventListener('click', function() {
+        window.history.back();
+      });
+    }
 
-    // 프로필 편집 모달
+    // 프로필 편집 모달 관련
     const editProfileButton = document.getElementById('edit-profile-button');
     const profileEditModal = document.getElementById('profile-edit-modal');
     const modalClose = document.getElementById('modal-close');
     const cancelButton = document.getElementById('cancel-button');
 
-    // 모달 열기
-    editProfileButton.addEventListener('click', function() {
-      profileEditModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    });
-
-    // 모달 닫기
     function closeModal() {
       profileEditModal.classList.remove('active');
       document.body.style.overflow = '';
     }
 
-    modalClose.addEventListener('click', closeModal);
-    cancelButton.addEventListener('click', closeModal);
+    if (editProfileButton && profileEditModal) {
+      editProfileButton.addEventListener('click', function() {
+        profileEditModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+      modalClose.addEventListener('click', closeModal);
+      cancelButton.addEventListener('click', closeModal);
+      profileEditModal.addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+      });
+    }
 
-    // 모달 외부 클릭 시 닫기
-    profileEditModal.addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeModal();
-      }
-    });
-
-    // 인사말 글자수 세기
-    const greetingTextarea = document.querySelector('.form-textarea');
-    const greetingCount = document.getElementById('greeting-count');
-
-    greetingTextarea.addEventListener('input', function() {
-      greetingCount.textContent = this.value.length;
-    });
-
-    // 프로필 폼 제출
+    // 프로필 수정 폼 제출 (데모용)
     const profileEditForm = document.getElementById('profile-edit-form');
-    profileEditForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      // 실제로는 서버에 데이터 전송
-      alert('프로필이 성공적으로 수정되었습니다!');
-      closeModal();
-    });
+    if (profileEditForm) {
+      profileEditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('프로필이 성공적으로 수정되었습니다! (데모 모드)');
+        closeModal();
+      });
+    }
 
     // 버킷리스트 토글
     const bucketCheckboxes = document.querySelectorAll('.bucket-checkbox');
     bucketCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', function() {
-        // 실제로는 서버에 상태 저장
         console.log(`버킷리스트 항목 "${this.nextElementSibling.textContent}" 상태 변경: ${this.checked}`);
       });
     });
@@ -1475,25 +1590,22 @@
     // 방명록 등록
     const leaveMessageButton = document.querySelector('.leave-message button');
     const leaveMessageTextarea = document.querySelector('.leave-message textarea');
+    if (leaveMessageButton && leaveMessageTextarea) {
+      leaveMessageButton.addEventListener('click', function() {
+        const messageText = leaveMessageTextarea.value.trim();
+        if (messageText) {
+          alert('방명록이 등록되었습니다!');
+          leaveMessageTextarea.value = '';
 
-    leaveMessageButton.addEventListener('click', function() {
-      const messageText = leaveMessageTextarea.value.trim();
-      if (messageText) {
-        // 실제로는 서버에 데이터 전송
-        alert('방명록이 등록되었습니다!');
-        leaveMessageTextarea.value = '';
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const formattedDate = `${year}.${month}.${day}`;
 
-        // 현재 날짜 포맷팅
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const formattedDate = `${year}.${month}.${day}`;
-
-        // 새 방명록 추가 (실제로는 서버에서 데이터 받아와 렌더링)
-        const newGuestbook = document.createElement('div');
-        newGuestbook.className = 'guestbook-item';
-        newGuestbook.innerHTML = `
+          const newGuestbook = document.createElement('div');
+          newGuestbook.className = 'guestbook-item';
+          newGuestbook.innerHTML = `
           <img src="/api/placeholder/40/40" alt="방명록 작성자" class="guestbook-avatar">
           <div class="guestbook-content">
             <div class="guestbook-author">김여행</div>
@@ -1501,12 +1613,162 @@
             <div class="guestbook-date">${formattedDate}</div>
           </div>
         `;
+          const guestbookSection = document.querySelector('.guestbook-section');
+          if (guestbookSection) {
+            guestbookSection.insertBefore(newGuestbook, document.querySelector('.leave-message'));
+          }
+        }
+      });
+    }
 
-        // 방명록 목록에 새 방명록 추가
-        const guestbookSection = document.querySelector('.guestbook-section');
-        guestbookSection.insertBefore(newGuestbook, document.querySelector('.leave-message'));
-      }
-    });
+    // 나의 소개 관련 기능
+    const createBtn = document.getElementById('intro-create-btn');
+    const editBtn = document.getElementById('intro-edit-btn');
+    const deleteBtn = document.getElementById('intro-delete-btn');
+    const viewEmpty = document.getElementById('intro-view-empty');
+    const viewMode = document.getElementById('intro-view');
+    const editMode = document.getElementById('intro-edit');
+    const cancelBtn = document.getElementById('intro-cancel-btn');
+    const saveBtn = document.getElementById('intro-save-btn');
+    const textarea = document.getElementById('intro-content');
+    const charCount = document.getElementById('intro-char-count');
+    const tagInput = document.getElementById('intro-tag-input');
+    const tagList = document.getElementById('intro-new-tags');
+
+    let tags = [];
+
+    // 수정 버튼 클릭
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        viewMode.classList.add('hidden');
+        editMode.classList.remove('hidden');
+
+        // 기존 데이터로 폼 채우기
+        const currentContent = document.querySelector('#intro-view .introduce-content').textContent;
+        textarea.value = currentContent;
+        charCount.textContent = `${currentContent.length} / 500`;
+
+        // 기존 태그들 가져오기
+        tags = [];
+        tagList.innerHTML = '';
+        const existingTags = document.querySelectorAll('#intro-view .interest-tag');
+        existingTags.forEach(tag => {
+          const tagText = tag.textContent.replace('#', '');
+          tags.push(tagText);
+          const span = document.createElement('span');
+          span.className = 'interest-tag';
+          span.textContent = `#${tagText}`;
+          span.addEventListener('click', () => {
+            tags = tags.filter(x => x !== tagText);
+            tagList.removeChild(span);
+          });
+          tagList.appendChild(span);
+        });
+      });
+    }
+
+    // 삭제 버튼 클릭
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        if (confirm('정말로 나의 소개를 삭제하시겠습니까?')) {
+          viewMode.classList.add('hidden');
+          viewEmpty.classList.remove('hidden');
+          alert('나의 소개가 삭제되었습니다.');
+        }
+      });
+    }
+
+    // 작성하기 버튼 클릭
+    if (createBtn) {
+      createBtn.addEventListener('click', () => {
+        viewEmpty.classList.add('hidden');
+        editMode.classList.remove('hidden');
+        textarea.value = '';
+        tags = [];
+        tagList.innerHTML = '';
+        charCount.textContent = '0 / 500';
+      });
+    }
+
+    // 취소 버튼 클릭
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        editMode.classList.add('hidden');
+        if (viewMode.querySelector('.introduce-content').textContent.trim()) {
+          viewMode.classList.remove('hidden');
+        } else {
+          viewEmpty.classList.remove('hidden');
+        }
+      });
+    }
+
+    // 글자수 카운터
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        const len = textarea.value.length;
+        charCount.textContent = `${len} / 500`;
+      });
+    }
+
+    // 태그 입력
+    if (tagInput) {
+      tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const raw = tagInput.value.trim();
+          if (!raw) return;
+
+          raw.split(',')
+                  .map(t => t.trim())
+                  .filter(t => t.length > 0)
+                  .forEach(t => {
+                    if (tags.includes(t)) return;
+                    if (tags.length >= 10) return;
+                    if (t.length > 20) return;
+
+                    tags.push(t);
+                    const span = document.createElement('span');
+                    span.className = 'interest-tag';
+                    span.textContent = `#${t}`;
+                    span.addEventListener('click', () => {
+                      tags = tags.filter(x => x !== t);
+                      tagList.removeChild(span);
+                    });
+                    tagList.appendChild(span);
+                  });
+
+          tagInput.value = '';
+        }
+      });
+    }
+
+    // 저장 버튼 클릭
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const content = textarea.value.trim();
+        if (!content) {
+          alert('소개글을 입력해주세요.');
+          return;
+        }
+
+        // 데모용 저장 처리
+        document.querySelector('#intro-view .introduce-content').textContent = content;
+
+        // 태그 업데이트
+        const tagContainer = document.querySelector('#intro-view .tag-list');
+        tagContainer.innerHTML = '';
+        tags.forEach(tag => {
+          const span = document.createElement('span');
+          span.className = 'interest-tag';
+          span.textContent = `#${tag}`;
+          tagContainer.appendChild(span);
+        });
+
+        editMode.classList.add('hidden');
+        viewMode.classList.remove('hidden');
+        alert('나의 소개가 저장되었습니다!');
+      });
+    }
   });
 </script>
 </body>

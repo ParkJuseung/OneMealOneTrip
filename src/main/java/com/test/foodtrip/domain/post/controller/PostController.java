@@ -147,4 +147,6 @@ public class PostController {
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
+
+
 }
