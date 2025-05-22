@@ -46,6 +46,22 @@ public class ChatRoomRestController {
         return chatRoomService.getAllRooms(getCurrentUserId());
     }
 
+    //인기 채팅방 목록 조회
+    @GetMapping("/popular")
+    public List<ChatRoomListResponseDTO> getPopularRooms(@RequestParam int offset, @RequestParam int limit) {
+        return chatRoomService.getPopularRooms(offset, limit);
+    }
+
+    //내가 참여중인 채팅방 목록 조회
+    @GetMapping("/mine")
+    public List<ChatRoomListResponseDTO> getMyRooms(
+            @RequestParam int offset,
+            @RequestParam int limit) {
+
+        Long userId = getCurrentUserId();
+        return chatRoomService.getMyRooms(userId, offset, limit);
+    }
+
     // 채팅방 생성
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Long createRoom(@ModelAttribute ChatRoomCreateRequestDTO dto) {

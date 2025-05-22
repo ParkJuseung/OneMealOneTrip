@@ -28,4 +28,5 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
 
     List<ChatroomUser> findTop5ByRoleAndUserNicknameContainingIgnoreCaseOrderByUserNicknameAsc(String role, String nicknamePart);
 
+    List<ChatroomUser> findByUserIdAndStatus(Long userId, String joined);
 }
