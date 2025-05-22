@@ -1,9 +1,6 @@
 package com.test.foodtrip.domain.chat.controller;
 
-import com.test.foodtrip.domain.chat.dto.ChatRoomCreateRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomDetailResponseDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomEditRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
+import com.test.foodtrip.domain.chat.dto.*;
 import com.test.foodtrip.domain.chat.service.ChatRoomService;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
@@ -42,24 +39,30 @@ public class ChatRoomRestController {
 
     // 전체 채팅방 목록 조회
     @GetMapping
-    public List<ChatRoomListResponseDTO> getAllRooms() {
-        return chatRoomService.getAllRooms(getCurrentUserId());
+    public ChatRoomListPageResponseDTO getAllRooms(
+            @RequestParam int offset,
+            @RequestParam int limit
+    ) {
+        return chatRoomService.getAllRoomsWithPagination(offset, limit, getCurrentUserId());
     }
 
     //인기 채팅방 목록 조회
     @GetMapping("/popular")
-    public List<ChatRoomListResponseDTO> getPopularRooms(@RequestParam int offset, @RequestParam int limit) {
-        return chatRoomService.getPopularRooms(offset, limit);
+    public ChatRoomListPageResponseDTO getPopularRooms(
+            @RequestParam int offset,
+            @RequestParam int limit
+    ) {
+        return chatRoomService.getPopularRoomsWithPagination(offset, limit);
     }
 
     //내가 참여중인 채팅방 목록 조회
     @GetMapping("/mine")
-    public List<ChatRoomListResponseDTO> getMyRooms(
+    public ChatRoomListPageResponseDTO getMyRooms(
             @RequestParam int offset,
-            @RequestParam int limit) {
-
+            @RequestParam int limit
+    ) {
         Long userId = getCurrentUserId();
-        return chatRoomService.getMyRooms(userId, offset, limit);
+        return chatRoomService.getMyRoomsWithPagination(userId, offset, limit);
     }
 
     // 채팅방 생성

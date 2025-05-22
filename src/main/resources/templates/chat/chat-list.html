@@ -69,7 +69,6 @@
 			</div>
 
 			<!-- 더보기 버튼 -->
-			<div class="chat-list"></div>
 			<div class="load-more-container">
 				<button id="load-more-btn" class="load-more-btn" style="display: none;">더보기</button>
 			</div>
@@ -197,7 +196,7 @@
 			// 채팅방 정렬 탭
 			let currentTab = '전체';
 			let offset = 0;
-			const limit = 20;
+			const limit = 10;
 
 			//채팅방 아이디
 			let selectedRoomId = null;
@@ -704,21 +703,28 @@
 			})
 
 
+			const loadMoreBtn = document.getElementById('load-more-btn');
+
+			if (loadMoreBtn) {
+				loadMoreBtn.addEventListener('click', () => {
+					offset += limit;
+					loadChatRooms();
+				});
+			}
+
 			// 채팅방 목록 로딩 함수
 			async function loadChatRooms() {
-				let endpoint = '/api/chatrooms';
+				const path = currentTab === 'popular'
+						? '/popular'
+						: currentTab === 'mine'
+								? '/mine'
+								: '';
 
-				if (currentTab === 'popular') {
-					endpoint += `/popular?offset=${offset}&limit=${limit}`;
-				} else if (currentTab === 'mine') {
-					endpoint += `/mine?offset=${offset}&limit=${limit}`;
-				} else {
-					endpoint += `?offset=${offset}&limit=${limit}`;
-				}
+				const endpoint = `/api/chatrooms${path}?offset=${offset}&limit=${limit}`;
 
 				try {
 					const response = await fetch(endpoint);
-					const rooms = await response.json();
+					const { rooms, hasMore } = await response.json();
 
 					console.log("📦 응답 데이터:", rooms);
 
@@ -727,34 +733,28 @@
 					}
 
 					if (rooms.length === 0 && offset > 0) {
-						alert('더 이상 불러올 채팅방이 없습니다. 또는 삭제된 채팅방일 수 있습니다.');
+						console.log('더 이상 불러올 채팅방이 없습니다.');
 						return;
 					}
 
 					renderChatRooms(rooms);
 
-					if (rooms.length === limit) {
-						if (!document.getElementById('load-more-btn')) {
-							const btn = document.createElement('button');
-							btn.textContent = '더보기';
-							btn.id = 'load-more-btn';
-							btn.className = 'load-more-btn';
-							btn.addEventListener('click', () => {
-								offset += limit;
-								loadChatRooms();
-							});
-							document.querySelector('.chat-list-container').appendChild(btn);
-						}
-					} else {
-						const existing = document.getElementById('load-more-btn');
-						if (existing) existing.remove();
-					}
+					const loadMoreBtn = document.getElementById('load-more-btn');
 
+					if (loadMoreBtn) {
+						// 조건 개선: offset === 0 인 상태에서 10개 미만일 경우 숨김
+						if (rooms.length < limit && offset === 0) {
+							loadMoreBtn.style.display = 'none';
+						} else {
+							loadMoreBtn.style.display = (rooms.length === limit) ? 'block' : 'none';
+						}
+					}
 				} catch (err) {
 					alert('채팅방 목록 불러오기 실패');
 					console.error(err);
 				}
 			}
+
 
 			function renderChatRooms(rooms) {
 				const chatList = document.querySelector('.chat-list');

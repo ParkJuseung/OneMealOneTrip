@@ -1,12 +1,9 @@
 package com.test.foodtrip.domain.chat.service;
 
+import com.test.foodtrip.domain.chat.dto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
-import com.test.foodtrip.domain.chat.dto.ChatRoomCreateRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomEditRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomDetailResponseDTO;
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomNoticeHistory;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
@@ -54,7 +51,7 @@ public class ChatRoomService {
 
 
     //채팅방 전체 목록 조회
-    public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
+   /* public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
 
         //채팅방 시간대로 내림차순 정렬
         List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeletedOrderByCreatedAtDesc("N");
@@ -137,7 +134,7 @@ public class ChatRoomService {
                 .toList();
 
         return mapRoomsToDTOs(merged);
-    }
+    }*/
 
     private List<ChatRoomListResponseDTO> mapRoomsToDTOs(List<ChatRoom> rooms) {
         return rooms.stream()
@@ -363,5 +360,38 @@ public class ChatRoomService {
         chatRoom.markAsDeleted(); // isDeleted = 'Y'
         chatRoomRepository.save(chatRoom);
     }
+
+
+    // 전체 채팅방
+    public ChatRoomListPageResponseDTO getAllRoomsWithPagination(int offset, int limit, Long userId) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findAllRooms(offset, limit, userId);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    // 인기 채팅방
+    public ChatRoomListPageResponseDTO getPopularRoomsWithPagination(int offset, int limit) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findPopularRooms(offset, limit);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    // 나의 채팅방
+    public ChatRoomListPageResponseDTO getMyRoomsWithPagination(Long userId, int offset, int limit) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findMyRooms(userId, offset, limit);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+
 
 }

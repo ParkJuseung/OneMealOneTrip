@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.chat.repository;
 
+import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import org.codehaus.groovy.runtime.StreamGroovyMethods;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import java.util.List;
 
 // 채팅방 정보를 조회하거나 저장하는 Repository
 // 기본 CRUD 외에 채팅방 리스트 출력에 주로 사용
-public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long>, ChatRoomRepositoryCustom {
 
     @Query("SELECT c FROM ChatRoom c WHERE c.isDeleted = 'N'")
     List<ChatRoom> findAllNotDeleted();
