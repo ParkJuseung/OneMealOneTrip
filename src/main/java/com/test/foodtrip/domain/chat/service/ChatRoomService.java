@@ -14,6 +14,7 @@ import com.test.foodtrip.domain.chat.repository.ChatroomNoticeRepository;
 import com.test.foodtrip.domain.chat.repository.ChatroomUserRepository;
 import com.test.foodtrip.domain.chat.repository.HashtagRepository;
 import com.test.foodtrip.domain.user.entity.User;
+import com.test.foodtrip.domain.user.repository.UserRepository;
 import com.test.foodtrip.domain.chat.entity.ChatRoomHashtag;
 import com.test.foodtrip.domain.chat.repository.ChatRoomHashtagRepository;
 // import com.test.foodtrip.domain.user.repository.UserRepository;
@@ -41,6 +42,7 @@ public class ChatRoomService {
     private final ChatroomNoticeRepository chatroomNoticeRepository;
     private final ChatRoomHashtagRepository chatRoomHashtagRepository;
     private final ChatroomLikeRepository chatroomLikeRepository;
+    private final UserRepository userRepository;
 
 
     @PersistenceContext
@@ -93,7 +95,10 @@ public class ChatRoomService {
     //채팅방 생성 처리
     @Transactional
     public Long createChatRoom(ChatRoomCreateRequestDTO dto, Long currentUserId) {
-
+    	 //  userId를 바탕으로 User 객체 조회
+    	User user = userRepository.findById(currentUserId)
+    		    .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+        
         // 1. 썸네일 처리
         String thumbnailUrl = null;
         MultipartFile thumbnailFile = dto.getThumbnailImage();
@@ -107,6 +112,7 @@ public class ChatRoomService {
         // 2. 채팅방 생성
         ChatRoom chatRoom = ChatRoom.builder()
                 .title(dto.getTitle())
+                .user(user)
                 .thumbnailImageUrl(thumbnailUrl)
                 .build();
         chatRoom = chatRoomRepository.save(chatRoom);

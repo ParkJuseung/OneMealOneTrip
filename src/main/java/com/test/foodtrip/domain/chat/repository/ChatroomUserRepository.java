@@ -21,4 +21,7 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
     
     // ✅ 여기 추가
     Optional<ChatroomUser> findByChatRoomIdAndRole(Long chatRoomId, String role);
+
+    Optional<ChatroomUser> findByChatRoom_IdAndUser_Id(Long chatRoomId, Long userId);
+
 }

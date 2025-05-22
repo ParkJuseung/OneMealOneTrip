@@ -2,6 +2,8 @@ package com.test.foodtrip.domain.chat.repository;
 
 import com.test.foodtrip.domain.chat.entity.ChatMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -11,4 +13,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     // 특정 채팅방에 속한 메시지 조회 (최신순)
     List<ChatMessage> findByChatRoomIdOrderByCreatedAtAsc(Long chatRoomId);
+
+    // 사용자가 마지막으로 읽은 메시지 처리
+    @Query("SELECT MAX(m.id) FROM ChatMessage m WHERE m.chatRoom.id = :chatRoomId")
+    Long findLastMessageIdByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 }

@@ -620,12 +620,29 @@
 				});
 
 				// 입장 버튼 클릭 시 chatroom.html로 이동
-				enterChatroomBtn.addEventListener('click', () => {
-					if (selectedRoomId) {
-						window.location.href = `chatroom.html?id=${selectedRoomId}`;
-					}
-				});
+				enterChatroomBtn.addEventListener('click', async () => {
+				    if (selectedRoomId) {
+				        try {
+				            // ✅ DB에 참여자 insert 요청
+				            const response = await fetch(`/chatroom/${selectedRoomId}/join`, {
+				                method: 'POST'
+				            });
 
+				            if (response.ok) {
+				                // ✅ 모달 닫기
+				                closeModal(document.getElementById('chat-detail-modal'));
+
+				                // ✅ 채팅방 페이지 새 창 열기
+				                window.open(`/chatroom?id=${selectedRoomId}`, '_blank', 'width=600,height=700,scrollbars=yes');
+				            } else {
+				                alert('입장 실패: 서버 응답 오류');
+				            }
+				        } catch (err) {
+				            console.error('입장 중 에러:', err);
+				            alert('입장 실패: 네트워크 오류');
+				        }
+				    }
+				});
 				const editChatroomBtn = document.getElementById('edit-chatroom');
 
 				const editModal = document.getElementById('edit-chat-modal');

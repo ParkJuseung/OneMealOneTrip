@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.test.foodtrip.domain.user.entity.User;
+
 @Entity
 @Table(name = "CHATROOM")
 @Getter
@@ -59,6 +61,11 @@ public class ChatRoom {
     @Builder.Default
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatRoomHashtag> chatRoomHashtags = new ArrayList<>();
+    
+    // 채팅방 유저에 대한 log 처리용 채팅방 역할 컬럼을 나누기 위해서
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User user; // 방장 
 
 
     @PrePersist

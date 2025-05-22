@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "ChatroomUser")
+@Table(name = "chatroomuser")
 public class ChatroomUser {
 
     @Id
@@ -29,6 +29,7 @@ public class ChatroomUser {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder.Default
     @Column(name = "role", nullable = false, length = 10)
     private String role = "MEMBER";
 
@@ -53,5 +54,13 @@ public class ChatroomUser {
     @PrePersist
     public void prePersist() {
         this.joinedAt = LocalDateTime.now();
+    }
+    
+    // 사용자가 채팅방에 나갔다가 다시 들어왔을때
+    public void rejoin(Long lastMessageId) {
+        this.status = "JOINED";
+        this.joinedAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
+        this.lastReadMessageId = lastMessageId;
     }
 }
