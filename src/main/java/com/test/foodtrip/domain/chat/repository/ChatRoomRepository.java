@@ -1,8 +1,10 @@
 package com.test.foodtrip.domain.chat.repository;
 
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
+import org.codehaus.groovy.runtime.StreamGroovyMethods;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -16,4 +18,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     List<ChatRoom> findByIsDeleted(String isDeleted);
 
 	List<ChatRoom> findByIsDeletedOrderByCreatedAtDesc(String string);
+
+    @Query("SELECT r FROM ChatRoom r WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY r.title ASC")
+    List<ChatRoom> findTop5ByTitleContainingIgnoreCaseOrderByTitleAsc(@Param("keyword") String keyword);
+
 }

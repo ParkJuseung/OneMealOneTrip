@@ -20,7 +20,9 @@
 
 			<div class="search-box">
 				<i class="fas fa-search search-icon"></i>
-				<input type="text" class="search-input" placeholder="채팅방 검색...">
+				<input type="text" class="search-input" placeholder="채팅방 검색..." id="chat-search-input">
+
+				<ul id="suggestion-list" class="suggestion-list"></ul>
 			</div>
 
 			<div class="chat-filters">
@@ -285,8 +287,99 @@
 			}
 		</style>
 
-
 		<script>
+			//검색 자동완성 추천 기능
+			document.addEventListener('DOMContentLoaded', function () {
+				const input = document.getElementById('chat-search-input');
+				const suggestionList = document.getElementById('suggestion-list');
+				let debounceTimer;
+
+
+				let selectedIndex = -1;
+				input.addEventListener('keydown', function (e) {
+					const items = suggestionList.querySelectorAll('li');
+					if (items.length === 0) return;
+
+					if (e.key === 'ArrowDown') {
+						e.preventDefault();
+						selectedIndex = (selectedIndex + 1) % items.length;
+						updateActiveItem(items);
+					} else if (e.key === 'ArrowUp') {
+						e.preventDefault();
+						selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+						updateActiveItem(items);
+					} else if (e.key === 'Enter') {
+						if (selectedIndex >= 0 && selectedIndex < items.length) {
+							e.preventDefault();
+							items[selectedIndex].click();
+						}
+					}
+				});
+
+				function updateActiveItem(items) {
+					items.forEach((item, index) => {
+						if (index === selectedIndex) {
+							item.classList.add('active');
+							item.scrollIntoView({ block: 'nearest' });
+						} else {
+							item.classList.remove('active');
+						}
+					});
+				}
+
+
+				input.addEventListener('input', function () {
+					const keyword = this.value.trim();
+
+					// debounce 처리 (300ms)
+					clearTimeout(debounceTimer);
+					debounceTimer = setTimeout(() => {
+						if (keyword.length > 0) {
+							fetch(`/api/suggestions?keyword=${encodeURIComponent(keyword)}`)
+									.then(response => response.json())
+									.then(suggestions => {
+										showSuggestions(suggestions);
+									});
+						} else {
+							suggestionList.innerHTML = '';
+						}
+					}, 300);
+				});
+
+				// 채팅방 검색 유형 스타일 구분
+				function showSuggestions(suggestions) {
+					suggestionList.innerHTML = '';
+					selectedIndex = -1;
+
+					suggestions.forEach(item => {
+						const li = document.createElement('li');
+						li.textContent = item;
+
+						// 유형별 구분된 스타일 클래스 부여
+						if (item.startsWith('#')) {
+							li.classList.add('hashtag-suggestion');
+						} else if (item.startsWith('@')) {
+							li.classList.add('owner-suggestion');
+						}
+
+						li.addEventListener('click', function () {
+							input.value = item.startsWith('#') || item.startsWith('@') ? item.slice(1) : item;
+							suggestionList.innerHTML = '';
+							input.dispatchEvent(new Event('input'));
+						});
+						suggestionList.appendChild(li);
+					});
+				}
+
+
+				// 외부 클릭 시 자동완성 리스트 닫기
+				document.addEventListener('click', function (e) {
+					if (!input.contains(e.target) && !suggestionList.contains(e.target)) {
+						suggestionList.innerHTML = '';
+					}
+				});
+			});
+
 
 			document.addEventListener('DOMContentLoaded', function () {
 				// 채팅방 생성 모달
@@ -586,7 +679,7 @@
 							document.getElementById('detail-notice').textContent = room.notice || '-';
 							document.getElementById('detail-hashtags').innerHTML = room.hashtags.map(tag => `<span>#${tag}</span>`).join(' ');
 
-							// ✅ 역할 기반 버튼 표시
+							// 역할 기반 버튼 표시
 							const role = room.myRole;
 
 							if (role === 'OWNER') {
@@ -723,14 +816,14 @@
 
 					chatRooms.forEach(room => {
 						const title = room.querySelector('.chat-title').textContent.toLowerCase();
-						const lastMessage = room.querySelector('.chat-last-message').textContent.toLowerCase();
 						const hashtags = Array.from(room.querySelectorAll('.chat-hashtag')).map(tag => tag.textContent.toLowerCase());
+						const owner = room.querySelector('.chat-owner span')?.textContent.toLowerCase() || '';
 
 						const matchTitle = title.includes(searchTerm);
-						const matchMessage = lastMessage.includes(searchTerm);
 						const matchHashtag = hashtags.some(tag => tag.includes(searchTerm));
+						const matchOwner = owner.includes(searchTerm); // ✅ 추가
 
-						if (matchTitle || matchMessage || matchHashtag) {
+						if (matchTitle || matchHashtag || matchOwner) {
 							room.style.display = 'flex';
 						} else {
 							room.style.display = 'none';

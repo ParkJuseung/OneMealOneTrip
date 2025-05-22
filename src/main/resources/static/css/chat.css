@@ -908,3 +908,46 @@ body {
         flex: 0 0 calc(50% - 5px);
     }
 }
+
+/* 검색 추천 리스트 스타일*/
+.search-box {
+    position: relative !important;
+}
+
+#suggestion-list {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+#suggestion-list li {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    list-style: none !important;
+}
+
+/* 해시태그 스타일 (붉은색) */
+.suggestion-list li.hashtag-suggestion {
+    color: #d63031;
+}
+
+/* 방장 닉네임 스타일 (파란색) */
+.suggestion-list li.owner-suggestion {
+    color: #0984e3;
+}
+
+#suggestion-list li:hover,
+#suggestion-list li.active {
+    background-color: #eef7ff;
+}

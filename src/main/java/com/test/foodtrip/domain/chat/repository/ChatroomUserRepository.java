@@ -1,8 +1,12 @@
 package com.test.foodtrip.domain.chat.repository;
 
+import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 //채팅방 참여자(사용자) 정보를 관리하는 Repository
@@ -21,4 +25,7 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
     
     // ✅ 여기 추가
     Optional<ChatroomUser> findByChatRoomIdAndRole(Long chatRoomId, String role);
+
+    List<ChatroomUser> findTop5ByRoleAndUserNicknameContainingIgnoreCaseOrderByUserNicknameAsc(String role, String nicknamePart);
+
 }
