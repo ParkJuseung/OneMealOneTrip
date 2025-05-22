@@ -1,0 +1,43 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName UP-TO-DATE
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.5)
+
+2025-05-17T15:02:55.141+09:00  INFO 1548 --- [  restartedMain] com.test.foodtrip.FoodTripApplication    : Starting FoodTripApplication using Java 17.0.15 with PID 1548 (/Users/joinje/Documents/GitHub/OneMealOneTrip/build/classes/java/main started by joinje in /Users/joinje/Documents/GitHub/OneMealOneTrip)
+2025-05-17T15:02:55.142+09:00 DEBUG 1548 --- [  restartedMain] com.test.foodtrip.FoodTripApplication    : Running with Spring Boot v3.4.5, Spring v6.2.6
+2025-05-17T15:02:55.143+09:00  INFO 1548 --- [  restartedMain] com.test.foodtrip.FoodTripApplication    : No active profile set, falling back to 1 default profile: "default"
+2025-05-17T15:02:55.273+09:00  INFO 1548 --- [  restartedMain] o.s.b.devtools.restart.ChangeableUrls    : The Class-Path manifest attribute in /Users/joinje/.gradle/caches/modules-2/files-2.1/com.oracle.database.jdbc/ojdbc11/23.5.0.24.07/6e07003d57be5e280ef0492209e20fa27edec5b6/ojdbc11-23.5.0.24.07.jar referenced one or more files that do not exist: file:/Users/joinje/.gradle/caches/modules-2/files-2.1/com.oracle.database.jdbc/ojdbc11/23.5.0.24.07/6e07003d57be5e280ef0492209e20fa27edec5b6/oraclepki.jar
+2025-05-17T15:02:55.273+09:00  INFO 1548 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-05-17T15:02:55.273+09:00  INFO 1548 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-05-17T15:02:55.590+09:00  WARN 1548 --- [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.support.BeanDefinitionOverrideException: Invalid bean definition with name 'filterChain' defined in class path resource [com/test/foodtrip/config/SecurityConfig.class]: Cannot register bean definition [Root bean: class=null; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=securityConfig; factoryMethodName=filterChain; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/test/foodtrip/config/SecurityConfig.class]] for bean 'filterChain' since there is already [Root bean: class=null; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; fallback=false; factoryBeanName=OAuth2Config; factoryMethodName=filterChain; initMethodNames=null; destroyMethodNames=[(inferred)]; defined in class path resource [com/test/foodtrip/config/OAuth2Config.class]] bound.
+2025-05-17T15:02:55.595+09:00  INFO 1548 --- [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-05-17T15:02:55.606+09:00 ERROR 1548 --- [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The bean 'filterChain', defined in class path resource [com/test/foodtrip/config/SecurityConfig.class], could not be registered. A bean with that name has already been defined in class path resource [com/test/foodtrip/config/OAuth2Config.class] and overriding is disabled.
+
+Action:
+
+Consider renaming one of the beans or enabling overriding by setting spring.main.allow-bean-definition-overriding=true
+
+
+BUILD SUCCESSFUL in 1s
+4 actionable tasks: 1 executed, 3 up-to-date
