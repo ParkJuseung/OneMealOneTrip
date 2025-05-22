@@ -1,0 +1,5 @@
+ALTER SESSION SET CONTAINER=XEPDB1;
+
+ALTER SESSION SET CURRENT_SCHEMA=foodtrip;
+
+create sequence setTest;
