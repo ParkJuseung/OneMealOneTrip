@@ -233,19 +233,6 @@
             transform: translateY(-1px);
         }
 
-        /* 수정 모달 스타일 강화 */
-        #editPostModal input:focus,
-        #editPostModal textarea:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-
-        #editPostModal button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        }
-
         /* 반응형 디자인 */
         @media (max-width: 600px) {
             .post-actions {
@@ -261,6 +248,105 @@
                 width: 95% !important;
                 margin: 10px !important;
                 padding: 20px !important;
+            }
+        }
+
+        /* 게시글 제목과 액션 버튼 영역 - 기존 style 섹션에 추가하세요 */
+        .post-title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+
+        .post-detail-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: var(--text-color);
+            flex: 1;
+            margin: 0; /* 기존 margin-bottom 제거 */
+        }
+
+        /* 인라인 액션 버튼 컨테이너 */
+        .post-actions-inline {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            margin-top: 2px; /* 제목과 약간의 수직 정렬 */
+        }
+
+        /* 개별 액션 버튼 */
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        /* 수정 버튼 */
+        .edit-btn {
+            color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+
+        .edit-btn:hover {
+            background-color: rgba(76, 175, 80, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        /* 삭제 버튼 */
+        .delete-btn {
+            color: #f44336;
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(244, 67, 54, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+        }
+
+        /* 기존 post-actions 숨김 */
+        .post-actions {
+            display: none;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .post-title-section {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .post-actions-inline {
+                align-self: flex-end;
+                margin-top: 0;
+            }
+
+            .action-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .post-detail-title {
+                font-size: 1.3rem;
+            }
+
+            .post-title-section {
+                gap: 8px;
             }
         }
     </style>
@@ -301,10 +387,26 @@
             </div>
         </div>
         <div class="post-detail-content">
-            <h1 class="post-detail-title">[[${dto.title}]]</h1>
+            <!-- 개선된 제목 섹션 (제목과 액션 버튼을 같은 행에 배치) -->
+            <div class="post-title-section">
+                <h1 class="post-detail-title">[[${dto.title}]]</h1>
+                <!-- 작성자인 경우에만 수정/삭제 버튼 표시 -->
+                <div class="post-actions-inline" th:if="${session.user_id == dto.userId}">
+                    <button class="action-btn edit-btn" onclick="editPost()" title="게시글 수정">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deletePost()" title="게시글 삭제">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 태그 섹션 -->
             <div class="post-detail-tags">
                 <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
             </div>
+
+            <!-- 게시글 본문 -->
             <p class="post-detail-description">
                 [[${dto.content}]]
             </p>
