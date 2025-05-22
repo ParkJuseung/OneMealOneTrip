@@ -70,7 +70,15 @@
 
 			<!-- 더보기 버튼 -->
 			<div class="load-more-container">
-				<button id="load-more-btn" class="load-more-btn" style="display: none;">더보기</button>
+				<button id="load-more-btn" class="load-more-btn">
+					더보기
+				</button>
+				<div id="loading-spinner" class="loading-spinner" style="display: none;">
+					<img src="/images/loadingspinner/spinner.svg" alt="로딩 중" />
+				</div>
+				<div id="end-message" class="end-message" style="display: none;">
+					마지막 채팅방입니다.
+				</div>
 			</div>
 
 
@@ -704,16 +712,42 @@
 
 
 			const loadMoreBtn = document.getElementById('load-more-btn');
+			const spinner = document.getElementById('loading-spinner');
+			const endMessage = document.getElementById('end-message');
 
 			if (loadMoreBtn) {
-				loadMoreBtn.addEventListener('click', () => {
+				loadMoreBtn.addEventListener('click', async () => {
+					loadMoreBtn.style.display = 'none';
+					spinner.style.display = 'block';
+					endMessage.style.display = 'none';
+
 					offset += limit;
-					loadChatRooms();
+
+					try {
+						const [data] = await Promise.all([
+							loadChatRoomsData(offset, limit),
+							new Promise(resolve => setTimeout(resolve, 500)) // 최소 로딩 보장
+						]);
+
+						renderChatRooms(data.rooms);
+
+						if (data.rooms.length < limit) {
+							spinner.style.display = 'none';
+							endMessage.style.display = 'block'; // 더 이상 없음
+						} else {
+							spinner.style.display = 'none';
+							loadMoreBtn.style.display = 'inline-block'; // 더보기 복원
+						}
+					} catch (error) {
+						console.error("채팅방 로딩 실패", error);
+						spinner.style.display = 'none';
+						loadMoreBtn.style.display = 'inline-block';
+					}
 				});
 			}
 
 			// 채팅방 목록 로딩 함수
-			async function loadChatRooms() {
+			async function loadChatRoomsData(offset, limit) {
 				const path = currentTab === 'popular'
 						? '/popular'
 						: currentTab === 'mine'
@@ -721,12 +755,12 @@
 								: '';
 
 				const endpoint = `/api/chatrooms${path}?offset=${offset}&limit=${limit}`;
-
+				const response = await fetch(endpoint);
+				return await response.json(); // { rooms, hasMore }
+			}
+			async function loadChatRooms() {
 				try {
-					const response = await fetch(endpoint);
-					const { rooms, hasMore } = await response.json();
-
-					console.log("📦 응답 데이터:", rooms);
+					const { rooms, hasMore } = await loadChatRoomsData(offset, limit);
 
 					if (offset === 0) {
 						document.querySelector('.chat-list').innerHTML = '';
@@ -740,20 +774,21 @@
 					renderChatRooms(rooms);
 
 					const loadMoreBtn = document.getElementById('load-more-btn');
-
 					if (loadMoreBtn) {
-						// 조건 개선: offset === 0 인 상태에서 10개 미만일 경우 숨김
-						if (rooms.length < limit && offset === 0) {
+						if (rooms.length < limit) {
 							loadMoreBtn.style.display = 'none';
+							endMessage.style.display = 'block';
 						} else {
-							loadMoreBtn.style.display = (rooms.length === limit) ? 'block' : 'none';
+							loadMoreBtn.style.display = 'block';
+							endMessage.style.display = 'none';
 						}
 					}
 				} catch (err) {
-					alert('채팅방 목록 불러오기 실패');
+					alert("채팅방을 불러오는 데 실패했습니다.");
 					console.error(err);
 				}
 			}
+
 
 
 			function renderChatRooms(rooms) {
