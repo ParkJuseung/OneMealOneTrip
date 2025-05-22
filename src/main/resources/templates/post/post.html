@@ -1,3 +1,5 @@
+<!--post.html-->
+
 <!DOCTYPE html>
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
@@ -6,7 +8,70 @@
 
 <th:block layout:fragment="style">
     <link rel="stylesheet" th:href="@{/css/post.css}">
+    <style>
+        /* 페이지네이션 스타일 */
+        .pagination-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pagination a, .pagination span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            padding: 0 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .pagination a:hover {
+            background-color: #f5f5f5;
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .pagination .current {
+            background-color: #007bff;
+            border-color: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+
+        .pagination .disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .pagination .disabled:hover {
+            background-color: #f8f9fa;
+            border-color: #ddd;
+            color: #ccc;
+        }
+
+        .page-info {
+            margin-left: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
 </th:block>
+
 <body>
 <th:block layout:fragment="content">
     <!-- 검색 영역 -->
@@ -73,7 +138,7 @@
 
     <!-- 게시글 목록 -->
     <div class="post-list">
-        <!-- 게시글 1 -->
+        <!-- 게시글 반복 -->
         <div class="post-card" th:each="dto : ${result.dtoList}">
             <div class="post-header">
                 <span class="category-badge">동행</span>
@@ -85,11 +150,10 @@
             <div class="post-content">
                 <h3 class="post-title">[[${dto.title}]]</h3>
                 <div class="post-tags">
-                    <span class="post-tag">#프라하</span>
-                    <span class="post-tag">#스카이다이빙</span>
-                    <span class="post-tag">#20대</span>
+                    <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
                 </div>
-                <img src="/api/placeholder/130/90" alt="여행 사진" class="post-image">
+                <img src="/api/placeholder/130/90" alt="여행 사진" class="post-image"
+                     th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
                 <p class="post-text">[[${dto.content}]]</p>
                 <div class="post-meta">
                     <div class="post-author">
@@ -101,6 +165,49 @@
                 <a th:href="@{'/post/' + ${dto.id}}" class="view-btn">자세히 보기</a>
             </div>
         </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="pagination-container" th:if="${result.totalPage > 1}">
+        <div class="pagination">
+            <!-- 이전 페이지 그룹 -->
+            <a th:if="${result.prev}"
+               th:href="@{/post(page=${result.start - 1})}"
+               class="page-prev">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <span th:if="${!result.prev}" class="page-prev disabled">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+
+            <!-- 페이지 번호들 -->
+            <th:block th:each="page : ${result.pageList}">
+                <span th:if="${page == result.page}" class="current" th:text="${page}"></span>
+                <a th:if="${page != result.page}"
+                   th:href="@{/post(page=${page})}"
+                   th:text="${page}"></a>
+            </th:block>
+
+            <!-- 다음 페이지 그룹 -->
+            <a th:if="${result.next}"
+               th:href="@{/post(page=${result.end + 1})}"
+               class="page-next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <span th:if="${!result.next}" class="page-next disabled">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+        </div>
+
+        <!-- 페이지 정보 표시 -->
+        <div class="page-info">
+            [[${result.page}]] / [[${result.totalPage}]] 페이지
+        </div>
+    </div>
+
+    <!-- 데이터가 없는 경우 -->
+    <div th:if="${result.dtoList.isEmpty()}" class="no-data">
+        <p>게시글이 없습니다.</p>
     </div>
 
     <script>

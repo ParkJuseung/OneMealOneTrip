@@ -10,16 +10,26 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@IdClass(ChatRoomHashtagId.class)
 public class ChatRoomHashtag {
 
-    @Id
+    @EmbeddedId
+    private ChatRoomHashtagId id;
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("chatRoomId")
     @JoinColumn(name = "chatroom_id")
     private ChatRoom chatRoom;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("hashtagId")
     @JoinColumn(name = "hashtag_id")
     private Hashtag hashtag;
+
+    public static ChatRoomHashtag of(ChatRoom chatRoom, Hashtag hashtag) {
+        return ChatRoomHashtag.builder()
+                .id(new ChatRoomHashtagId(chatRoom.getId(), hashtag.getId()))
+                .chatRoom(chatRoom)
+                .hashtag(hashtag)
+                .build();
+    }
 }

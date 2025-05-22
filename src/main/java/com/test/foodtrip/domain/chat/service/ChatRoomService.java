@@ -1,9 +1,9 @@
 package com.test.foodtrip.domain.chat.service;
 
-import com.test.foodtrip.domain.chat.dto.ChatRoomCreateRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomEditRequestDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
-import com.test.foodtrip.domain.chat.dto.ChatRoomDetailResponseDTO;
+import com.test.foodtrip.domain.chat.dto.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomNoticeHistory;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -52,10 +53,10 @@ public class ChatRoomService {
 
 
     //채팅방 전체 목록 조회
-    public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
-    	
-    	//채팅방 시간대로 내림차순 정렬
-    	List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeletedOrderByCreatedAtDesc("N"); 
+   /* public List<ChatRoomListResponseDTO> getAllRooms(Long currentUserId) {
+
+        //채팅방 시간대로 내림차순 정렬
+        List<ChatRoom> chatRooms = chatRoomRepository.findByIsDeletedOrderByCreatedAtDesc("N");
 
         return chatRooms.stream()
                 .map(room -> {
@@ -92,6 +93,81 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    //채팅방 인기순 목록 조회
+    @Transactional(readOnly = true)
+    public List<ChatRoomListResponseDTO> getPopularRooms(int offset, int limit) {
+        List<ChatRoom> rooms = chatRoomRepository.findByIsDeleted("N");
+
+        // 좋아요 수 기준으로 정렬, 같으면 최근 생성순
+        List<ChatRoom> sorted = rooms.stream()
+                .sorted((a, b) -> {
+                    int likeDiff = chatroomLikeRepository.countByChatRoom_Id(b.getId()) -
+                            chatroomLikeRepository.countByChatRoom_Id(a.getId());
+                    if (likeDiff != 0) return likeDiff;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .skip(offset)
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        return mapRoomsToDTOs(sorted);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatRoomListResponseDTO> getMyRooms(Long userId, int offset, int limit) {
+        List<ChatroomUser> allMemberships = chatroomUserRepository.findByUserIdAndStatus(userId, "JOINED");
+
+        List<ChatRoom> ownerRooms = allMemberships.stream()
+                .filter(cu -> "OWNER".equals(cu.getRole()) && "N".equals(cu.getChatRoom().getIsDeleted()))
+                .map(ChatroomUser::getChatRoom)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        List<ChatRoom> joinedRooms = allMemberships.stream()
+                .filter(cu -> !"OWNER".equals(cu.getRole()) && "N".equals(cu.getChatRoom().getIsDeleted()))
+                .map(ChatroomUser::getChatRoom)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .collect(Collectors.toList());
+
+        // 결합 후 페이징
+        List<ChatRoom> merged = Stream.concat(ownerRooms.stream(), joinedRooms.stream())
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return mapRoomsToDTOs(merged);
+    }*/
+
+    private List<ChatRoomListResponseDTO> mapRoomsToDTOs(List<ChatRoom> rooms) {
+        return rooms.stream()
+                .map(room -> {
+                    List<String> hashtags = chatRoomHashtagRepository.findByChatRoomId(room.getId())
+                            .stream()
+                            .map(link -> link.getHashtag().getTagText())
+                            .toList();
+
+                    int likeCount = chatroomLikeRepository.countByChatRoom_Id(room.getId());
+                    int participantCount = chatroomUserRepository.countByChatRoomId(room.getId());
+                    String ownerNickname = chatroomUserRepository
+                            .findByChatRoomIdAndRole(room.getId(), "OWNER")
+                            .map(u -> u.getUser().getNickname())
+                            .orElse("알수없음");
+
+                    return ChatRoomListResponseDTO.builder()
+                            .id(room.getId())
+                            .title(room.getTitle())
+                            .thumbnailImageUrl(room.getThumbnailImageUrl())
+                            .createdAt(room.getCreatedAt())
+                            .hashtags(hashtags)
+                            .likeCount(likeCount)
+                            .participantCount(participantCount)
+                            .ownerNickname(ownerNickname)
+                            .build();
+                })
+                .toList();
+    }
+
+
     //채팅방 생성 처리
     @Transactional
     public Long createChatRoom(ChatRoomCreateRequestDTO dto, Long currentUserId) {
@@ -117,10 +193,11 @@ public class ChatRoomService {
                 .build();
         chatRoom = chatRoomRepository.save(chatRoom);
         chatRoomRepository.flush();
+        System.out.println("저장된 ChatRoom ID: " + chatRoom.getId()); // 로그 추가
 
         // 3. 해시태그 처리 (null 체크 포함)
         List<String> tags = dto.getHashtags();
-        if (tags == null) tags = List.of(); // ✅ null 방지
+        if (tags == null) tags = List.of(); // null 방지
 
         List<Hashtag> hashtags = tags.stream()
                 .map(tag -> hashtagRepository.findByTagText(tag)
@@ -129,10 +206,11 @@ public class ChatRoomService {
                 .toList();
 
         for (Hashtag tag : hashtags) {
-            ChatRoomHashtag rel = ChatRoomHashtag.builder()
-                    .chatRoom(chatRoom)
-                    .hashtag(tag)
-                    .build();
+            System.out.println("💡 해시태그 ID: " + tag.getId() + ", 텍스트: " + tag.getTagText());
+
+            ChatRoomHashtag rel = ChatRoomHashtag.of(chatRoom, tag);
+            System.out.println("🔗 연결 시도: chatRoomId=" + chatRoom.getId() + ", hashtagId=" + tag.getId());
+
             chatRoomHashtagRepository.save(rel);
         }
 
@@ -165,7 +243,8 @@ public class ChatRoomService {
 
         return chatRoom.getId();
     }
- // 채팅방 상세 조회
+
+    // 채팅방 상세 조회
     @Transactional(readOnly = true)
     public ChatRoomDetailResponseDTO getRoomDetail(Long id, Long currentUserId) {
         ChatRoom chatRoom = chatRoomRepository.findById(id)
@@ -206,14 +285,12 @@ public class ChatRoomService {
                 .notice(latestNotice != null ? latestNotice.getContent() : null)
                 .description(latestNotice != null ? latestNotice.getDescription() : null)
                 .hashtags(hashtags)
-                .myRole(role) // 💡 null이면 수정/삭제 버튼 안 보이게 처리
+                .myRole(role) // null이면 수정/삭제 버튼 안 보이게 처리
                 .likeCount(likeCount)
                 .participantCount(participantCount)
                 .ownerNickname(ownerNickname)
                 .build();
     }
-
-
 
 
     // 논리 삭제(DB상 실제 삭제가 아닌 사용자 접근제어 및 가림처리)
@@ -254,10 +331,7 @@ public class ChatRoomService {
 
         // 3. 조인 테이블 직접 삽입
         for (Hashtag tag : newTags) {
-            ChatRoomHashtag rel = ChatRoomHashtag.builder()
-                    .chatRoom(chatRoom)
-                    .hashtag(tag)
-                    .build();
+            ChatRoomHashtag rel = ChatRoomHashtag.of(chatRoom, tag);
             chatRoomHashtagRepository.save(rel);
         }
 
@@ -286,11 +360,44 @@ public class ChatRoomService {
                 .orElseThrow(() -> new IllegalStateException("해당 채팅방에 속한 사용자가 아닙니다."));
 
         if (!user.getRole().equals("OWNER")) {
-            throw new IllegalStateException("삭제 권한이 없습니다."); // ✅ 커스텀 예외 없이 처리
+            throw new IllegalStateException("삭제 권한이 없습니다.");
         }
 
         chatRoom.markAsDeleted(); // isDeleted = 'Y'
         chatRoomRepository.save(chatRoom);
     }
+
+
+    // 전체 채팅방
+    public ChatRoomListPageResponseDTO getAllRoomsWithPagination(int offset, int limit, Long userId) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findAllRooms(offset, limit, userId);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    // 인기 채팅방
+    public ChatRoomListPageResponseDTO getPopularRoomsWithPagination(int offset, int limit) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findPopularRooms(offset, limit);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    // 나의 채팅방
+    public ChatRoomListPageResponseDTO getMyRoomsWithPagination(Long userId, int offset, int limit) {
+        List<ChatRoomListResponseDTO> rooms = chatRoomRepository.findMyRooms(userId, offset, limit);
+        boolean hasMore = rooms.size() == limit;
+        return ChatRoomListPageResponseDTO.builder()
+                .rooms(rooms)
+                .hasMore(hasMore)
+                .build();
+    }
+
+
 
 }

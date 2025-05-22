@@ -65,15 +65,10 @@ public class ChatViewController {
     // ✅ 채팅방 목록 화면
     @GetMapping("/chat")
     public String chatRoomList(Model model) {
-        Long currentUserId = getCurrentUserId();
-        List<ChatRoomListResponseDTO> chatRooms = chatRoomService.getAllRooms(currentUserId);
-        model.addAttribute("chatRooms", chatRooms);
-
-        // 💡 authentication.principal.id → Thymeleaf에서 사용 시 Mock 객체 대신 진짜 값 전달
-        model.addAttribute("currentUserId", currentUserId);
-
+        model.addAttribute("currentUserId", getCurrentUserId());
         return "chat/chat-list";
     }
+
 
     // ✅ 채팅방 수정 폼 페이지
     @GetMapping("/chatroom/detailedit")
