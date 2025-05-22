@@ -11,11 +11,14 @@ import com.test.foodtrip.domain.post.repository.CommentRepository;
 import com.test.foodtrip.domain.post.repository.PostRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,13 +35,36 @@ public class CommentServiceImpl implements CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    // 현재 로그인된 사용자를 세션에서 가져오는 메서드
+    private User getCurrentUser() {
+        try {
+            ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
+            HttpSession session = attr.getRequest().getSession(false);
+
+            if (session != null) {
+                Long userId = (Long) session.getAttribute("user_id");
+                if (userId != null) {
+                    Optional<User> user = userRepository.findById(userId);
+                    return user.orElse(null);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     @Override
     public CommentDTO createComment(CommentCreateRequest request) {
-        // 게시글과 사용자 조회
+        // 현재 로그인된 사용자 가져오기
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
+        }
+
+        // 게시글 조회
         Post post = postRepository.findById(request.getPostId())
                 .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
         // 부모 댓글 조회 (대댓글인 경우)
         Comment parent = null;
@@ -47,8 +73,8 @@ public class CommentServiceImpl implements CommentService {
                     .orElseThrow(() -> new RuntimeException("부모 댓글을 찾을 수 없습니다."));
         }
 
-        // 댓글 생성
-        Comment comment = new Comment(post, user, request.getContent(), parent);
+        // 댓글 생성 (현재 로그인된 사용자로)
+        Comment comment = new Comment(post, currentUser, request.getContent(), parent);
         commentRepository.save(comment);
 
         return entityToDto(comment);
@@ -56,11 +82,17 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentDTO updateComment(Long commentId, CommentUpdateRequest request) {
+        // 현재 로그인된 사용자 가져오기
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
+        }
+
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
 
-        // 작성자 확인
-        if (!comment.getUser().getId().equals(request.getUserId())) {
+        // 작성자 확인 (현재 로그인된 사용자와 비교)
+        if (!comment.getUser().getId().equals(currentUser.getId())) {
             throw new RuntimeException("댓글 수정 권한이 없습니다.");
         }
 
@@ -77,8 +109,20 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void deleteComment(Long commentId) {
+        // 현재 로그인된 사용자 가져오기
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
+        }
+
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
+
+        // 작성자 본인이거나 관리자만 삭제 가능
+        if (!comment.getUser().getId().equals(currentUser.getId()) &&
+                !"ADMIN".equals(currentUser.getRole())) {
+            throw new RuntimeException("댓글 삭제 권한이 없습니다.");
+        }
 
         // 논리적 삭제 (하위 댓글이 있을 수 있으므로)
         comment.delete();
@@ -111,9 +155,8 @@ public class CommentServiceImpl implements CommentService {
             dto.setIsPopular(likeCount >= 5);
             dto.setIsBlinded(dislikeCount >= 10);
 
-            // 현재 사용자의 반응 확인 (임시로 1L 사용)
-            Long currentUserId = 1L;
-            User currentUser = userRepository.findById(currentUserId).orElse(null);
+            // 현재 사용자의 반응 확인 (로그인된 사용자로 변경)
+            User currentUser = getCurrentUser();
             if (currentUser != null) {
                 boolean isLiked = commentReactionRepository.existsByCommentAndUserAndReactionType(
                         comment, currentUser, ReactionType.LIKE);
@@ -122,6 +165,9 @@ public class CommentServiceImpl implements CommentService {
 
                 dto.setIsLikedByCurrentUser(isLiked);
                 dto.setIsDislikedByCurrentUser(isDisliked);
+            } else {
+                dto.setIsLikedByCurrentUser(false);
+                dto.setIsDislikedByCurrentUser(false);
             }
 
             return dto;
@@ -159,15 +205,18 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentReactionResultDTO toggleReaction(Long commentId, CommentReactionRequest request) {
+        // 현재 로그인된 사용자 가져오기
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
+        }
+
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글을 찾을 수 없습니다."));
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-
-        // 기존 반응 조회
+        // 기존 반응 조회 (현재 로그인된 사용자로)
         Optional<CommentReaction> existingReaction =
-                commentReactionRepository.findByCommentAndUser(comment, user);
+                commentReactionRepository.findByCommentAndUser(comment, currentUser);
 
         String action;
         boolean isToggled;
@@ -187,8 +236,8 @@ public class CommentServiceImpl implements CommentService {
                 isToggled = true;
             }
         } else {
-            // 새로운 반응 추가
-            CommentReaction newReaction = new CommentReaction(comment, user, request.getReactionType());
+            // 새로운 반응 추가 (현재 로그인된 사용자로)
+            CommentReaction newReaction = new CommentReaction(comment, currentUser, request.getReactionType());
             commentReactionRepository.save(newReaction);
             action = "ADDED";
             isToggled = true;
@@ -199,9 +248,9 @@ public class CommentServiceImpl implements CommentService {
         Long dislikeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.DISLIKE);
 
         boolean isLiked = commentReactionRepository.existsByCommentAndUserAndReactionType(
-                comment, user, ReactionType.LIKE);
+                comment, currentUser, ReactionType.LIKE);
         boolean isDisliked = commentReactionRepository.existsByCommentAndUserAndReactionType(
-                comment, user, ReactionType.DISLIKE);
+                comment, currentUser, ReactionType.DISLIKE);
 
         return CommentReactionResultDTO.builder()
                 .isToggled(isToggled)

@@ -5,6 +5,7 @@ import com.test.foodtrip.domain.post.dto.PageResultDTO;
 import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.service.PostService;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -46,23 +47,45 @@ public class PostController {
     }
 
     @GetMapping("/post/create")
-    public String create() {
+    public String create(HttpSession session, Model model) {
+        // 로그인 체크
+        if (!isLoggedIn(session)) {
+            return "redirect:/login?error=login_required";
+        }
         return "post/create-post";
     }
 
     @PostMapping("/post/create")
-    public String create(@ModelAttribute PostDTO dto, RedirectAttributes redirectAttributes){
+    public String create(@ModelAttribute PostDTO dto,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes){
         log.info("PostController create() - dto: " + dto);
 
-        Long pno = postService.create(dto);
-        redirectAttributes.addFlashAttribute("msg", pno);
-        return "redirect:/post";
+        // 로그인 체크
+        if (!isLoggedIn(session)) {
+            return "redirect:/login?error=login_required";
+        }
+
+        try {
+            Long pno = postService.create(dto);
+            redirectAttributes.addFlashAttribute("msg", pno);
+            return "redirect:/post";
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/login";
+        }
     }
 
     @GetMapping("/post/modify/{id}")
     public String modify(@PathVariable("id") Long id,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+                         HttpSession session,
                          Model model) {
+        // 로그인 체크
+        if (!isLoggedIn(session)) {
+            return "redirect:/login?error=login_required";
+        }
+
         PostDTO dto = postService.read(id);
         model.addAttribute("dto", dto);
         return "post/modify-post";
@@ -71,30 +94,59 @@ public class PostController {
     @PostMapping("/post/modify")
     public String modify(PostDTO dto,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+                         HttpSession session,
                          RedirectAttributes redirectAttributes) {
         log.info("PostController modify() - dto: " + dto);
 
-        postService.modify(dto);
+        // 로그인 체크
+        if (!isLoggedIn(session)) {
+            return "redirect:/login?error=login_required";
+        }
 
-        redirectAttributes.addAttribute("page", requestDTO.getPage());
-        redirectAttributes.addAttribute("type", requestDTO.getType());
-        redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
+        try {
+            postService.modify(dto);
 
-        return "redirect:/post/" + dto.getId();
+            redirectAttributes.addAttribute("page", requestDTO.getPage());
+            redirectAttributes.addAttribute("type", requestDTO.getType());
+            redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
+
+            return "redirect:/post/" + dto.getId();
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/post/" + dto.getId();
+        }
     }
 
     @PostMapping("/post/remove")
     public String remove(Long id,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+                         HttpSession session,
                          RedirectAttributes redirectAttributes) {
         log.info("PostController remove() - id: " + id);
 
-        postService.remove(id);
+        // 로그인 체크
+        if (!isLoggedIn(session)) {
+            return "redirect:/login?error=login_required";
+        }
 
-        redirectAttributes.addAttribute("page", 1);
-        redirectAttributes.addAttribute("type", requestDTO.getType());
-        redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
+        try {
+            postService.remove(id);
 
-        return "redirect:/post";
+            redirectAttributes.addAttribute("page", 1);
+            redirectAttributes.addAttribute("type", requestDTO.getType());
+            redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
+
+            return "redirect:/post";
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/post";
+        }
     }
+
+    // 로그인 상태를 확인하는 헬퍼 메서드
+    private boolean isLoggedIn(HttpSession session) {
+        return session != null && session.getAttribute("user_id") != null;
+    }
+
+
 }
