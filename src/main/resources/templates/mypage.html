@@ -416,9 +416,11 @@
       margin-left: 8px;
     }
 
-    /* 마이페이지 중간 영역 */
+    /* 마이페이지 중간 영역 - 핵심 수정 부분 */
     .profile-content {
-      margin-bottom: 80px; /* 하단 여백 */
+      margin-bottom: 80px; /* 하단 여백만 유지 */
+      display: block; /* 명시적으로 표시 */
+      visibility: visible; /* 명시적으로 보이게 설정 */
     }
 
     .content-section {
@@ -428,6 +430,10 @@
       border: 1px solid var(--border-color);
       padding: 20px;
       margin-bottom: 25px;
+      /* 핵심: 모든 섹션이 기본적으로 보이도록 설정 */
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .section-header {
@@ -1089,13 +1095,12 @@
 
     /* 래퍼 내부 프로필 버튼 위치 해제 */
     .intro-empty-action .profile-button {
-      position: static !important;  /* 절대 위치 해제 */
+      position: static !important;
       top: auto !important;
       right: auto !important;
       float: none !important;
       display: inline-block;
     }
-
 
     /* 나의 소개 섹션의 수정/삭제 버튼 가로 배치 */
     #intro-section .section-actions {
@@ -1113,8 +1118,28 @@
       float: none !important;
     }
 
-    /* hidden 클래스 정의 */
-    .hidden { display: none !important; }
+    /* hidden 클래스 정의 - 조건부로만 사용하도록 수정 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* 글자수 카운터 스타일 추가 */
+    .char-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-top: 5px;
+    }
+
+    /* 빈 상태 텍스트 스타일 */
+    .no-intro-text {
+      color: var(--text-light);
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+
 
   </style>
 </head>
@@ -1166,9 +1191,9 @@
       <div class="profile-header">
         <img src="/api/placeholder/100/100" alt="프로필 이미지" class="profile-image">
         <div class="profile-info">
-          <h2 class="profile-name" th:text="${user.nickname} + ' ' + (user.role == 'USER' ? '' : user.role)">닉네임 <span class="badge-label">등급</span></h2> <!-- 등급 바인딩은 필요에 맞춰 조정 -->
+          <h2 class="profile-name"th:text="${user.nickname} + ' ' + (user.role == 'USER' ? '' : user.role)">닉네임 <span class="badge-label">등급</span></h2> <!-- 등급 바인딩은 필요에 맞춰 조정 -->
           <div class="profile-email" th:text="${user.socialEmail}">user@example.com</div>
-          <div class="profile-greeting" th:text="${user.greeting}">인사말</div>
+          <div class="profile-greeting" th:text="${user.greeting}">안녕하세요! 여행을 사랑하는 김여행입니다. 함께 멋진 여행을 만들어가요! ✈️</div>
         </div>
       </div>
       <button class="profile-button" id="edit-profile-button">
@@ -1194,37 +1219,33 @@
       </div>
     </div>
 
-    <!-- 프로필 콘텐츠 중간 영역 -->
+    <!-- 프로필 콘텐츠 중간 영역 - 여기서 요소들이 보이도록 수정 -->
     <div class="profile-content">
       <!-- 자기소개 섹션 -->
-      <!-- 나의 소개 전체 섹션 -->
       <div class="content-section" id="intro-section">
         <div class="section-header">
           <h3 class="section-title">나의 소개</h3>
-          <div class="section-actions"
-               th:if="${sessionUserId == pageOwnerId and user.userInfo != null}">
+          <!-- 데모용으로 조건부 표시 제거 -->
+          <div class="section-actions">
             <button id="intro-edit-btn" class="profile-button">수정</button>
             <button id="intro-delete-btn" class="profile-button">삭제</button>
           </div>
         </div>
 
-
-        <!-- 읽기 모드: 소개글이 있으면 보여주는 부분 -->
-        <div id="intro-view"
-             th:classappend="${user.userInfo} == null ? ' hidden' : ''">
-          <p class="introduce-content"
-             th:text="${user.userInfo != null ? user.userInfo.content : ''}">소개글</p>
-          <div class="tag-list"
-               th:classappend="${user.userInfo?.tags} == null ? ' hidden' : ''"
-               th:each="tag : ${#strings.split(user.userInfo?.tags, ',')}">
-            <span class="interest-tag" th:text="'#' + tag">#태그</span>
+        <!-- 읽기 모드: 소개글이 있을 때 표시 (데모용으로 기본 표시) -->
+        <div id="intro-view">
+          <p class="introduce-content">안녕하세요! 여행을 통해 새로운 문화를 경험하고 소중한 추억을 만드는 것을 좋아합니다. 특히 현지 음식을 맛보고 역사적인 장소를 탐방하는 것에 큰 흥미를 가지고 있습니다.</p>
+          <div class="tag-list">
+            <span class="interest-tag">#여행</span>
+            <span class="interest-tag">#맛집탐방</span>
+            <span class="interest-tag">#역사</span>
+            <span class="interest-tag">#사진</span>
+            <span class="interest-tag">#문화체험</span>
           </div>
         </div>
 
-
-        <!-- 읽기 모드: 소개글이 없을 때 보여줄 부분 -->
-        <div id="intro-view-empty"
-             th:classappend="${sessionUserId == pageOwnerId and user.userInfo == null ? '' : ' hidden'}">
+        <!-- 읽기 모드: 소개글이 없을 때 보여줄 부분 (데모용으로 숨김) -->
+        <div id="intro-view-empty" class="hidden">
           <p class="no-intro-text">아직 작성된 소개글이 없습니다.</p>
           <div class="intro-empty-action">
             <button id="intro-create-btn" class="profile-button">
@@ -1233,9 +1254,7 @@
           </div>
         </div>
 
-
         <!-- 편집 모드 (쓰기/수정 폼) -->
-        <!--<div id="intro-edit" style="display:none;">-->
         <div id="intro-edit" class="hidden">
           <div class="form-group">
             <label class="form-label" for="intro-content">나의 소개</label>
@@ -1262,7 +1281,6 @@
           </div>
         </div>
       </div>
-
 
       <!-- 여행 버킷리스트 섹션 -->
       <div class="content-section">
@@ -1466,70 +1484,57 @@
       <h3 class="modal-title">프로필 편집</h3>
       <div class="modal-close" id="modal-close"><i class="fas fa-times"></i></div>
     </div>
-    <form th:action="@{/mypage/edit}" th:object="${user}" method="post" id="profile-edit-form" onsubmit="console.log('🟢 폼 onsubmit 발생');">
 
+    <form th:action="@{/mypage/edit}" th:object="${user}" method="post" id="profile-edit-form">
 
-      <input type="hidden"
-             th:if="${_csrf != null}"
-             th:name="${_csrf.parameterName}"
-             th:value="${_csrf.token}" />
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-
-
-
-
-      <div class="form-group"> <!-- 변경 -->
+      <div class="form-group">
         <label class="form-label">프로필 이미지 URL</label>
-        <input type="text" th:field="*{profileImage}" class="form-input"> <!-- 변경 -->
+        <input type="text" th:field="*{profileImage}" class="form-input" />
       </div>
-
 
       <div class="form-group">
         <label class="form-label">이름</label>
-        <input type="text" th:field="*{name}" class="form-input" readonly> <!-- 변경 -->
+        <input type="text" th:field="*{name}" class="form-input" readonly />
       </div>
-
 
       <div class="form-group">
         <label class="form-label">이메일</label>
-        <input type="email" th:field="*{socialEmail}" class="form-input" readonly>
-        <small style="color: var(--text-light);">이메일은 수정할 수 없습니다.</small>
+        <input type="email" th:field="*{socialEmail}" class="form-input" readonly />
+        <small style="color: var(--text-light);">
+          이메일은 수정할 수 없습니다.
+        </small>
       </div>
-
 
       <div class="form-group">
         <label class="form-label">닉네임</label>
-        <input type="text" th:field="*{nickname}" class="form-input" required>
+        <input type="text" th:field="*{nickname}" class="form-input" required />
       </div>
 
-
-      <div class="form-group"> <!-- 변경 -->
+      <div class="form-group">
         <label class="form-label">성별</label>
-        <select th:field="*{gender}" class="form-input"> <!-- 변경 -->
+        <select th:field="*{gender}" class="form-input">
           <option value="MALE">남성</option>
           <option value="FEMALE">여성</option>
           <option value="OTHER">기타</option>
         </select>
       </div>
 
-
-      <div class="form-group"> <!-- 변경 -->
+      <div class="form-group">
         <label class="form-label">생년월일</label>
-        <input type="date" th:field="*{birthDate}" class="form-input"> <!-- 변경 -->
+        <input type="date" th:field="*{birthDate}" class="form-input" />
       </div>
 
-
-      <div class="form-group"> <!-- 변경 -->
+      <div class="form-group">
         <label class="form-label">연락처 (선택)</label>
-        <input type="tel" th:field="*{phone}" class="form-input"> <!-- 변경 -->
+        <input type="tel" th:field="*{phone}" class="form-input" />
       </div>
 
-
-      <div class="form-group"> <!-- 변경 -->
+      <div class="form-group">
         <label class="form-label">인사말 (선택)</label>
-        <textarea th:field="*{greeting}" class="form-textarea"></textarea> <!-- 변경 -->
+        <textarea th:field="*{greeting}" class="form-textarea"></textarea>
       </div>
-
 
       <div class="form-buttons">
         <button type="button" class="cancel-button" id="cancel-button">취소</button>
@@ -1539,247 +1544,6 @@
   </div>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // 뒤로가기 버튼
-    const backButton = document.getElementById('back-button');
-    if (backButton) {
-      backButton.addEventListener('click', function() {
-        window.history.back();
-      });
-    }
-
-    // 프로필 편집 모달 관련
-    const editProfileButton = document.getElementById('edit-profile-button');
-    const profileEditModal = document.getElementById('profile-edit-modal');
-    const modalClose = document.getElementById('modal-close');
-    const cancelButton = document.getElementById('cancel-button');
-
-    function closeModal() {
-      profileEditModal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
-
-    if (editProfileButton && profileEditModal) {
-      editProfileButton.addEventListener('click', function() {
-        profileEditModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      });
-      modalClose.addEventListener('click', closeModal);
-      cancelButton.addEventListener('click', closeModal);
-      profileEditModal.addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-      });
-    }
-
-    // 프로필 수정 폼 AJAX 제출
-    const profileEditForm = document.getElementById('profile-edit-form');
-    if (profileEditForm) {
-      profileEditForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const url = profileEditForm.action;
-        const formData = new FormData(profileEditForm);
-
-        try {
-          const resp = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-          });
-
-          if (resp.ok) {
-            alert('프로필이 성공적으로 수정되었습니다!');
-            closeModal();
-            window.location.reload();
-          } else if (resp.status === 401) {
-            alert('로그인이 필요합니다.');
-            window.location.href = '/login';
-          } else {
-            alert('프로필 수정에 실패했습니다. 상태 코드: ' + resp.status);
-          }
-        } catch (err) {
-          console.error(err);
-          alert('서버와 연결에 실패했습니다.');
-        }
-      });
-    }
-
-    // 인사말 글자수 세기
-    const greetingTextarea = document.querySelector('.form-textarea');
-    const greetingCount = document.getElementById('greeting-count');
-    if (greetingTextarea && greetingCount) {
-      greetingTextarea.addEventListener('input', function() {
-        greetingCount.textContent = this.value.length;
-      });
-    }
-
-    // 버킷리스트 토글
-    const bucketCheckboxes = document.querySelectorAll('.bucket-checkbox');
-    bucketCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener('change', function() {
-        console.log(`버킷리스트 항목 "${this.nextElementSibling.textContent}" 상태 변경: ${this.checked}`);
-      });
-    });
-
-    // 방명록 등록
-    const leaveMessageButton = document.querySelector('.leave-message button');
-    const leaveMessageTextarea = document.querySelector('.leave-message textarea');
-    if (leaveMessageButton && leaveMessageTextarea) {
-      leaveMessageButton.addEventListener('click', function() {
-        const messageText = leaveMessageTextarea.value.trim();
-        if (messageText) {
-          alert('방명록이 등록되었습니다!');
-          leaveMessageTextarea.value = '';
-
-          const now = new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const day = String(now.getDate()).padStart(2, '0');
-          const formattedDate = `${year}.${month}.${day}`;
-
-          const newGuestbook = document.createElement('div');
-          newGuestbook.className = 'guestbook-item';
-          newGuestbook.innerHTML = `
-          <img src="/api/placeholder/40/40" alt="방명록 작성자" class="guestbook-avatar">
-          <div class="guestbook-content">
-            <div class="guestbook-author">김여행</div>
-            <div class="guestbook-text">${messageText}</div>
-            <div class="guestbook-date">${formattedDate}</div>
-          </div>
-        `;
-          const guestbookSection = document.querySelector('.guestbook-section');
-          if (guestbookSection) {
-            guestbookSection.insertBefore(newGuestbook, document.querySelector('.leave-message'));
-          }
-        }
-      });
-    }
-  });
-
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const createBtn = document.getElementById('intro-create-btn');
-    const viewEmpty = document.getElementById('intro-view-empty');
-    const viewMode  = document.getElementById('intro-view');
-    const editMode  = document.getElementById('intro-edit');
-    const cancelBtn = document.getElementById('intro-cancel-btn');
-    const saveBtn   = document.getElementById('intro-save-btn');
-    const textarea  = document.getElementById('intro-content');
-    const charCount = document.getElementById('intro-char-count');
-    const tagInput  = document.getElementById('intro-tag-input');
-    const tagList   = document.getElementById('intro-new-tags');
-
-    let tags = [];
-
-    // 1) 작성하기 버튼 → 입력 폼 열기
-    if (createBtn) {
-      createBtn.addEventListener('click', () => {
-        viewEmpty.style.display = 'none';
-        editMode.style.display  = 'block';
-        textarea.value = '';
-        tags = [];
-        tagList.innerHTML = '';
-        charCount.textContent = `0 / 500`;
-      });
-    }
-
-    // 2) 취소 → 입력 폼 감추고, 빈뷰 다시
-    if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => {
-        editMode.style.display  = 'none';
-        viewEmpty.style.display = 'block';
-      });
-    }
-
-    // 3) 글자수 카운터
-    if (textarea) {
-      textarea.addEventListener('input', () => {
-        const len = textarea.value.length;
-        charCount.textContent = `${len} / 500`;
-      });
-    }
-
-    // 4) 태그 입력 (Enter or , 로 추가, 최대 10개)
-    if (tagInput) {
-      tagInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const raw = tagInput.value.trim();
-          if (!raw) return;
-
-          // 콤마로 분리해서 여러 개 한꺼번에 처리
-          raw.split(',')
-                  .map(t => t.trim())
-                  .filter(t => t.length > 0)   // 빈문자열 제거
-                  .forEach(t => {
-                    if (tags.includes(t)) return;      // 중복 제거
-                    if (tags.length >= 10) return;     // 최대 10개
-                    if (t.length > 20) return;         // 태그당 최대 20자
-
-                    tags.push(t);
-                    const span = document.createElement('span');
-                    span.className = 'interest-tag';
-                    span.textContent = `#${t}`;
-                    span.addEventListener('click', () => {
-                      tags = tags.filter(x => x !== t);
-                      tagList.removeChild(span);
-                    });
-                    tagList.appendChild(span);
-                  });
-
-          tagInput.value = '';
-        }
-      });
-    }
-
-    // 5) 저장 → AJAX 호출
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        const content = textarea.value.trim();
-        // 간단한 검증
-        if (!content) {
-          alert('소개글을 입력해주세요.');
-          return;
-        }
-
-        try {
-          const resp = await fetch('/mypage/intro', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              content,
-              tags: tags.join(',')
-            })
-          });
-
-          if (resp.ok) {
-            // 성공 시, 서버 응답 DTO로 읽어서 view 갱신
-            const dto = await resp.json();
-            document.querySelector('#intro-view .introduce-content')
-                    .textContent = dto.content;
-            // 태그 렌더
-            const tl = document.querySelector('#intro-view .tag-list');
-            tl.innerHTML = '';
-            dto.tags.split(',').forEach(t => {
-              const sp = document.createElement('span');
-              sp.className = 'interest-tag';
-              sp.textContent = `#${t}`;
-              tl.appendChild(sp);
-            });
-            // 모드 전환
-            editMode.style.display  = 'none';
-            viewMode.style.display  = 'block';
-          } else {
-            alert('저장에 실패했습니다. ('+resp.status+')');
-          }
-        } catch(err) {
-          console.error(err);
-          alert('서버 오류가 발생했습니다.');
-        }
-      });
-    }
-  });
-</script>
+<script th:src="@{/js/mypage.js}" defer></script>
 </body>
 </html>
