@@ -5,6 +5,9 @@ import com.test.foodtrip.domain.post.dto.PageResultDTO;
 import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.service.PostService;
+import com.test.foodtrip.domain.user.entity.User;
+import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.test.foodtrip.domain.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
@@ -13,15 +16,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @Log4j2
 public class PostController {
 
     private final PostService postService;
+    private final UserRepository userRepository;
 
-    public PostController(PostService postService) {
+    public PostController(PostService postService, UserRepository userRepository) {
         this.postService = postService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/")
@@ -45,6 +51,17 @@ public class PostController {
                          Model model) {
         PostDTO dto = postService.read(id);
         model.addAttribute("dto", dto);
+
+        // 게시글 작성자 정보 조회하여 모델에 추가
+        if (dto.getUserId() != null) {
+            Optional<User> authorOpt = userRepository.findById(dto.getUserId());
+            if (authorOpt.isPresent()) {
+                User author = authorOpt.get();
+                model.addAttribute("author", author);
+            }
+        }
+
+
         return "post/detail-post";
     }
 

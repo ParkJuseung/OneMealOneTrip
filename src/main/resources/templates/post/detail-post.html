@@ -432,14 +432,15 @@
                 </div>
             </div>
 
-            <!-- 작성자 정보 -->
+            <!-- 변경된 코드: -->
             <div class="post-detail-author">
-                <img src="/api/placeholder/50/50" alt="작성자 프로필" class="author-avatar">
+                <img th:src="${author != null && author.profileImage != null ? author.profileImage : '/api/placeholder/50/50'}"
+                     th:alt="${author != null ? author.nickname : '작성자'}" class="author-avatar">
                 <div class="author-info">
-                    <span class="author-name">작성자</span>
-                    <span class="author-bio">여행과 모험을 사랑하는 프리랜서 사진작가</span>
+                    <span class="author-name" th:text="${author != null ? author.nickname : '작성자'}">작성자</span>
+                    <span class="author-bio" th:text="${author != null && author.greeting != null ? author.greeting : '자기소개가 없습니다.'}">자기소개가 없습니다.</span>
                 </div>
-                <button class="follow-button" id="followButton">팔로우</button>
+                <button class="follow-button" id="followButton" th:if="${session.user_id != null && session.user_id != dto.userId}">팔로우</button>
             </div>
         </div>
     </div>
@@ -1052,30 +1053,30 @@
                     const isBlinded = (reply.dislikeCount || 0) >= 10;
 
                     let html = `
-    <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
-        <img src="${reply.userProfileImage || '/api/placeholder/32/32'}"
-             alt="${reply.userNickname}" class="comment-avatar">
-        <div class="comment-content">
-            <div class="comment-header">
-                <div class="comment-header-left">
-                    <span class="comment-author">${reply.userNickname}</span>
-                    <span class="comment-date">${this.formatDate(reply.createdAt)}</span>
-                </div>
-                <div class="comment-header-right">
-    `;
+                        <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
+                            <img src="${reply.userProfileImage || '/api/placeholder/32/32'}"
+                                 alt="${reply.userNickname}" class="comment-avatar">
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <div class="comment-header-left">
+                                        <span class="comment-author">${reply.userNickname}</span>
+                                        <span class="comment-date">${this.formatDate(reply.createdAt)}</span>
+                                    </div>
+                                    <div class="comment-header-right">
+                        `;
 
                     // 수정/삭제 버튼 (작성자이고 삭제되지 않고 블라인드되지 않은 경우에만 표시)
                     if (isOwner && !isDeleted && !isBlinded) {
                         html += `
-        <div class="comment-edit-delete">
-            <button class="comment-edit-btn" onclick="commentManager.startEditComment(${reply.id})">
-                <i class="fas fa-edit"></i> 수정
-            </button>
-            <button class="comment-delete-btn" onclick="commentManager.deleteComment(${reply.id})">
-                <i class="fas fa-trash"></i> 삭제
-            </button>
-        </div>
-    `;
+                            <div class="comment-edit-delete">
+                                <button class="comment-edit-btn" onclick="commentManager.startEditComment(${reply.id})">
+                                    <i class="fas fa-edit"></i> 수정
+                                </button>
+                                <button class="comment-delete-btn" onclick="commentManager.deleteComment(${reply.id})">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </div>
+                        `;
                     }
 
                     html += `

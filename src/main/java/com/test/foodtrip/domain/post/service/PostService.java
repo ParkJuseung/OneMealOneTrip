@@ -16,28 +16,6 @@ public interface PostService {
     PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO);
     PostDTO read(Long id);
 
-//    default Post dtoToEntity(PostDTO dto, User user, List<PostTag> tagList) {
-//        Post post = Post.builder()
-//                .title(dto.getTitle())
-//                .content(dto.getContent())
-//                .viewCount(dto.getViewCount() != null ? dto.getViewCount() : 0)
-//                .latitude(dto.getLatitude())
-//                .longitude(dto.getLongitude())
-//                .placeName(dto.getPlaceName())
-//                .build();
-//
-//        post.setUser(user);
-//
-//        if (tagList != null) {
-//            for (PostTag tag : tagList) {
-//                post.addTag(tag);
-//            }
-//        }
-//
-//        return post;
-//    }
-
-
     default Post dtoToEntity(PostDTO dto, User user) {
         Post post = Post.builder()
                 .title(dto.getTitle())
