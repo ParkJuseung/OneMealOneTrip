@@ -54,6 +54,50 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
+    // Entity to DTO 변환 메서드 구현
+    @Override
+    public CommentDTO entityToDto(Comment comment) {
+        CommentDTO dto = CommentDTO.builder()
+                .id(comment.getId())
+                .postId(comment.getPost().getId())
+                .userId(comment.getUser().getId())
+                .userNickname(comment.getUser().getNickname())
+                .userProfileImage(comment.getUser().getProfileImage())
+                .content(comment.getContent())
+                .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
+                .createdAt(comment.getCreatedAt())
+                .updatedAt(comment.getUpdatedAt())
+                .isDeleted(comment.getIsDeleted())
+                .hasReplies(!comment.getReplies().isEmpty())
+                .build();
+
+        // 반응 정보는 별도로 계산
+        Long likeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.LIKE);
+        Long dislikeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.DISLIKE);
+
+        dto.setLikeCount(likeCount);
+        dto.setDislikeCount(dislikeCount);
+        dto.setIsPopular(likeCount >= 5);
+        dto.setIsBlinded(dislikeCount >= 10);
+
+        // 현재 사용자의 반응 확인
+        User currentUser = getCurrentUser();
+        if (currentUser != null) {
+            boolean isLiked = commentReactionRepository.existsByCommentAndUserAndReactionType(
+                    comment, currentUser, ReactionType.LIKE);
+            boolean isDisliked = commentReactionRepository.existsByCommentAndUserAndReactionType(
+                    comment, currentUser, ReactionType.DISLIKE);
+
+            dto.setIsLikedByCurrentUser(isLiked);
+            dto.setIsDislikedByCurrentUser(isDisliked);
+        } else {
+            dto.setIsLikedByCurrentUser(false);
+            dto.setIsDislikedByCurrentUser(false);
+        }
+
+        return dto;
+    }
+
     @Override
     public CommentDTO createComment(CommentCreateRequest request) {
         // 현재 로그인된 사용자 가져오기
@@ -140,40 +184,11 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public PageResultDTO<CommentDTO, Comment> getCommentsByPostId(Long postId, Pageable pageable) {
-        // 단순화된 방식: 먼저 댓글만 조회
+        // 최상위 댓글만 조회 (대댓글은 별도로 로드)
         Page<Comment> comments = commentRepository.findTopLevelCommentsByPostId(postId, pageable);
 
-        Function<Comment, CommentDTO> fn = (comment -> {
-            CommentDTO dto = entityToDto(comment);
+        Function<Comment, CommentDTO> fn = this::entityToDto;
 
-            // 반응 정보 추가 (별도 쿼리)
-            Long likeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.LIKE);
-            Long dislikeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.DISLIKE);
-
-            dto.setLikeCount(likeCount);
-            dto.setDislikeCount(dislikeCount);
-            dto.setIsPopular(likeCount >= 5);
-            dto.setIsBlinded(dislikeCount >= 10);
-
-            // 현재 사용자의 반응 확인 (로그인된 사용자로 변경)
-            User currentUser = getCurrentUser();
-            if (currentUser != null) {
-                boolean isLiked = commentReactionRepository.existsByCommentAndUserAndReactionType(
-                        comment, currentUser, ReactionType.LIKE);
-                boolean isDisliked = commentReactionRepository.existsByCommentAndUserAndReactionType(
-                        comment, currentUser, ReactionType.DISLIKE);
-
-                dto.setIsLikedByCurrentUser(isLiked);
-                dto.setIsDislikedByCurrentUser(isDisliked);
-            } else {
-                dto.setIsLikedByCurrentUser(false);
-                dto.setIsDislikedByCurrentUser(false);
-            }
-
-            return dto;
-        });
-
-        // PageResultDTO 생성 - 올바른 타입으로
         return new PageResultDTO<>(comments, fn);
     }
 
@@ -185,12 +200,7 @@ public class CommentServiceImpl implements CommentService {
 
         return allComments.stream()
                 .filter(comment -> comment.getParent() == null) // 최상위 댓글만
-                .map(comment -> {
-                    CommentDTO dto = entityToDto(comment);
-                    Long likeCount = commentReactionRepository.countByCommentAndReactionType(comment, ReactionType.LIKE);
-                    dto.setLikeCount(likeCount);
-                    return dto;
-                })
+                .map(this::entityToDto)
                 .filter(dto -> dto.getLikeCount() >= 5) // 인기 댓글 필터링
                 .sorted((a, b) -> Long.compare(b.getLikeCount(), a.getLikeCount())) // 좋아요 순 정렬
                 .limit(3) // 최대 3개
