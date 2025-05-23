@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.test.foodtrip.domain.user.entity.User;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "CHATROOM")
@@ -18,6 +20,7 @@ import com.test.foodtrip.domain.user.entity.User;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class ChatRoom {
 
     @Id
@@ -39,6 +42,7 @@ public class ChatRoom {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
