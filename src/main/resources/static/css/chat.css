@@ -1098,3 +1098,67 @@ body {
     color: #e74c3c;
     font-weight: bold;
 }
+
+.chatroom-header {
+    position: relative;
+    height: 200px;
+    background: #ccc center/cover no-repeat;
+    padding: 16px;
+    display: flex;
+    align-items: flex-end;
+    color: white;
+}
+.chatroom-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    z-index: 0;
+}
+.chatroom-header-content {
+    position: relative;
+    z-index: 1;
+}
+.chatroom-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+.chatroom-meta {
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+.like-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+.chatroom-owner {
+    background: white;
+    padding: 12px 16px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+.chatroom-tags {
+    background: white;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.chatroom-tags .tag {
+    background: #e2e6ea;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+}
+
+.chatroom-notice,
+.chatroom-description {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.4;
+}

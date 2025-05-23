@@ -20,6 +20,13 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long>, ChatR
 
 	List<ChatRoom> findByIsDeletedOrderByCreatedAtDesc(String string);
 
+    long countByIsDeleted(String isDeleted);
+
+    // (선택) 기존 페이징용 쿼리
+    List<ChatRoomListResponseDTO> findAllRooms(int offset, int limit, Long userId);
+    List<ChatRoomListResponseDTO> findPopularRooms(int offset, int limit);
+    List<ChatRoomListResponseDTO> findMyRooms(Long userId, int offset, int limit);
+
     @Query("SELECT r FROM ChatRoom r WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY r.title ASC")
     List<ChatRoom> findTop5ByTitleContainingIgnoreCaseOrderByTitleAsc(@Param("keyword") String keyword);
 

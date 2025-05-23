@@ -37,7 +37,7 @@
 
 					<!-- 왼쪽: 썸네일 + 참여자 수 -->
 					<div class="chat-left">
-						<img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/api/placeholder/60/60'}"
+						<img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/images/chat/default-thumbnail-60x60.png'}"
 							alt="채팅방 이미지" class="chat-avatar" />
 						<div class="chat-participant-count">
 							참여자: <span th:text="${room.participantCount}">0</span>명
@@ -91,12 +91,39 @@
 							<i class="fas fa-times"></i>
 						</div>
 					</div>
-					<div class="modal-body">
-						<p id="detail-title"></p>
-						<p id="detail-description"></p>
-						<p id="detail-notice"></p>
-						<div id="detail-hashtags"></div>
+					<div class="modal-body chatroom-detail-modal">
+
+						<!-- 상단 배경 썸네일 이미지 영역 -->
+						<div class="chatroom-header" id="detail-thumbnail-area">
+							<div class="like-toggle" id="like-toggle"><i class="far fa-heart"></i></div>
+							<div class="chatroom-header-content">
+								<div class="chatroom-title" id="detail-title">채팅방 제목</div>
+								<div class="chatroom-meta">
+									참여자 <span id="detail-participants">0</span>명 · 개설일 <span id="detail-created-at">YYYY.MM.DD</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- 방장 -->
+						<div class="chatroom-owner" id="detail-owner">방장: -</div>
+
+						<!-- 해시태그 -->
+						<div class="chatroom-tags" id="detail-hashtags">
+							<!-- 동적으로 태그가 들어감 -->
+						</div>
+
+						<!-- 공지사항 -->
+						<div class="chatroom-notice" id="detail-notice">
+							공지사항: -
+						</div>
+
+						<!-- 설명글 -->
+						<div class="chatroom-description" id="detail-description">
+							설명글: -
+						</div>
+
 					</div>
+
 					<div class="modal-footer">
 						<button class="create-button" id="enter-chatroom">채팅방 입장하기</button>
 						<button class="cancel-button" id="leave-chatroom" style="display:none;">채팅방 나가기</button>
@@ -426,7 +453,7 @@
 						div.setAttribute('data-id', room.id);
 						div.innerHTML = `
 						  <div class="chat-left">
-							<img src="${room.thumbnailImageUrl || '/api/placeholder/100/100'}" class="chat-avatar" alt="썸네일" />
+							<img src="${room.thumbnailImageUrl || '/images/chat/default-thumbnail-100x100.png'}" class="chat-avatar" alt="썸네일" />
 						      <div class="chat-participant-count">
 						          참여자: ${room.participantCount}명
 						      </div>
@@ -450,17 +477,48 @@
 						    const roomDetail = await res.json();
 
 						    // 상세 모달 정보 세팅
-						    document.getElementById('detail-title').textContent = roomDetail.title;
-						    document.getElementById('detail-description').textContent = roomDetail.description || '-';
-						    document.getElementById('detail-notice').textContent = roomDetail.notice || '-';
-						    document.getElementById('detail-hashtags').innerHTML =
-						      roomDetail.hashtags.map(tag => `<span>#${tag}</span>`).join(' ');
+							document.getElementById('detail-title').textContent = roomDetail.title;
+							document.getElementById('detail-participants').textContent = roomDetail.participantCount;
+							document.getElementById('detail-created-at').textContent = new Date(roomDetail.createdAt).toLocaleDateString('ko-KR');
+							document.getElementById('detail-owner').textContent = "방장: " + roomDetail.ownerNickname;
+							document.getElementById('detail-thumbnail-area').style.backgroundImage =
+								`url('${roomDetail.thumbnailImageUrl || '/images/chat/default-banner-768x300.png'}')`;
+
+							  document.getElementById('detail-hashtags').innerHTML =
+									  roomDetail.hashtags.map(tag => `<span class="tag">#${tag}</span>`).join('');
+
+							  document.getElementById('detail-notice').textContent =
+									  "공지사항: " + (roomDetail.notice || '-');
+
+							  document.getElementById('detail-description').textContent =
+									  "설명글: " + (roomDetail.description || '-');
 
 						    // 버튼 제어 (방장 여부 등)
 						    const role = roomDetail.myRole;
 						    document.getElementById('edit-chatroom').style.display = role === 'OWNER' ? 'inline-block' : 'none';
 						    document.getElementById('delete-chatroom').style.display = role === 'OWNER' ? 'inline-block' : 'none';
 						    document.getElementById('leave-chatroom').style.display = role === 'JOINED' ? 'inline-block' : 'none';
+
+							  // 좋아요 토글버튼 이벤트 바인딩
+							  const likeToggle = document.getElementById('like-toggle');
+							  if (likeToggle) {
+								  likeToggle.addEventListener('click', async () => {
+									  const icon = likeToggle.querySelector('i');
+									  const liked = icon.classList.contains('fas');
+
+									  try {
+										  await fetch(`/api/chatrooms/${selectedRoomId}/like`, {
+											  method: liked ? 'DELETE' : 'POST'
+										  });
+
+										  icon.classList.toggle('fas');
+										  icon.classList.toggle('far');
+									  } catch (err) {
+										  alert('좋아요 처리 실패');
+										  console.error(err);
+									  }
+								  });
+							  }
 
 						    // 모달 열기
 							bindModalButtons(roomDetail.id, roomDetail.myRole);
@@ -818,7 +876,7 @@
 
 					div.innerHTML = `
       <div class="chat-left">
-        <img src="${room.thumbnailImageUrl || '/api/placeholder/60/60'}" class="chat-avatar" />
+        <img src="${room.thumbnailImageUrl || '/images/chat/default-thumbnail-60x60.png'}" class="chat-avatar" />
         <div class="chat-participant-count">참여자: ${room.participantCount}명</div>
       </div>
       <div class="chat-center">
@@ -839,10 +897,15 @@
 							const roomDetail = await res.json();
 
 							document.getElementById('detail-title').textContent = roomDetail.title;
-							document.getElementById('detail-description').textContent = roomDetail.description || '-';
+							document.getElementById('detail-participants').textContent = roomDetail.participantCount;
+							document.getElementById('detail-created-at').textContent = new Date(roomDetail.createdAt).toLocaleDateString('ko-KR');
+							document.getElementById('detail-owner').textContent = "방장: " + roomDetail.ownerNickname;
+							document.getElementById('detail-thumbnail-area').style.backgroundImage =
+									`url('${roomDetail.thumbnailImageUrl || '/images/chat/default-banner-768x300.png'}')`;
+
+							document.getElementById('detail-hashtags').innerHTML = roomDetail.hashtags
+									.map(tag => `<span class="tag">#${tag}</span>`).join('');
 							document.getElementById('detail-notice').textContent = roomDetail.notice || '-';
-							document.getElementById('detail-hashtags').innerHTML =
-									roomDetail.hashtags.map(tag => `<span>#${tag}</span>`).join(' ');
 
 							bindModalButtons(roomDetail.id, roomDetail.myRole);
 							openModal(document.getElementById('chat-detail-modal'));
