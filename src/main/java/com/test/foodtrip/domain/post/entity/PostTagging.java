@@ -32,13 +32,20 @@ public class PostTagging {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        // PrePersist에서 ID가 null인 경우 설정
+        if (this.id == null && this.post != null && this.postTag != null) {
+            this.id = new PostTaggingId(this.post.getId(), this.postTag.getId());
+        }
     }
 
-    // 생성자
+    // 생성자 - ID 설정을 나중에 하도록 수정
     public PostTagging(Post post, PostTag postTag) {
-        this.id = new PostTaggingId(post.getId(), postTag.getId());
         this.post = post;
         this.postTag = postTag;
+        // Post가 이미 저장되어 ID가 있는 경우에만 복합키 생성
+        if (post.getId() != null && postTag.getId() != null) {
+            this.id = new PostTaggingId(post.getId(), postTag.getId());
+        }
     }
 
     // 복합키 클래스

@@ -10,436 +10,480 @@
 
 <body>
 <th:block layout:fragment="content">
-        <!-- 게시글 작성 헤더 -->
-        <div class="write-post-header">
-            <div class="back-button" id="backButton">
-                <i class="fas fa-arrow-left"></i>
-                <span>뒤로 가기</span>
+    <!-- 게시글 작성 헤더 -->
+    <div class="write-post-header">
+        <div class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i>
+            <span>뒤로 가기</span>
+        </div>
+        <h2 class="write-post-title">게시글 작성</h2>
+        <div style="width: 80px;"></div> <!-- 균형을 위한 빈 공간 -->
+    </div>
+
+    <!-- 게시글 작성 폼 -->
+    <div class="post-form-container">
+        <form th:action="@{/post/create}" th:method="post" id="postForm">
+            <!-- 카테고리 선택 -->
+            <div class="form-group">
+                <label class="form-label">카테고리 선택</label>
+                <div class="category-select">
+                    <div class="category-option active" data-category="post">
+                        <i class="fas fa-pen-nib"></i>
+                        <span>일반 포스트</span>
+                    </div>
+                    <div class="category-option" data-category="companion">
+                        <i class="fas fa-user-friends"></i>
+                        <span>동행</span>
+                    </div>
+                    <div class="category-option" data-category="route">
+                        <i class="fas fa-route"></i>
+                        <span>추천 여행경로</span>
+                    </div>
+                    <div class="category-option" data-category="review">
+                        <i class="fas fa-star"></i>
+                        <span>리뷰</span>
+                    </div>
+                </div>
             </div>
-            <h2 class="write-post-title">게시글 작성</h2>
-            <div style="width: 80px;"></div> <!-- 균형을 위한 빈 공간 -->
-        </div>
 
-        <!-- 게시글 작성 폼 -->
-        <div class="post-form-container">
-            <form th:action="@{/post/create}" th:method="post" id="postForm">
-                <!-- 카테고리 선택 -->
-                <div class="form-group">
-                    <label class="form-label">카테고리 선택</label>
-                    <div class="category-select">
-                        <div class="category-option active" data-category="post">
-                            <i class="fas fa-pen-nib"></i>
-                            <span>일반 포스트</span>
+            <!-- 제목 입력 -->
+            <div class="form-group">
+                <label class="form-label" for="postTitle">제목</label>
+                <input type="text" id="postTitle" name="title" class="form-control" placeholder="제목을 입력해주세요"
+                       maxlength="100">
+                <div class="character-count"><span id="titleCount">0</span>/100</div>
+                <div class="form-error" id="titleError">제목을 입력해주세요</div>
+            </div>
+
+            <!-- 태그 입력 -->
+            <div class="form-group">
+                <label class="form-label">태그</label>
+                <div class="tags-input-container" id="tagsContainer">
+                    <input type="text" class="tag-input" id="tagInput" placeholder="태그를 입력하고 Enter 키를 누르세요">
+                </div>
+                <span class="form-hint">최대 5개까지 입력 가능합니다. 각 태그는 '#'으로 시작하며 15자 이하로 작성해주세요.</span>
+                <div class="form-error" id="tagsError">태그는 최대 5개까지 입력 가능합니다</div>
+            </div>
+
+            <!-- 내용 입력 -->
+            <div class="form-group">
+                <label class="form-label" for="postContent">내용</label>
+                <textarea id="postContent" name="content" class="form-control form-textarea"
+                          placeholder="내용을 입력해주세요" maxlength="3000" required></textarea>
+                <div class="character-count"><span id="contentCount">0</span>/3000</div>
+                <div class="form-error" id="contentError">내용을 입력해주세요</div>
+            </div>
+
+            <!-- 이미지 업로드 -->
+            <div class="form-group">
+                <label class="form-label">이미지</label>
+                <span class="form-hint">최대 5장까지 업로드 가능합니다. (jpg, png, gif 형식, 각 5MB 이하)</span>
+                <div class="image-upload-container">
+                    <div class="image-preview-area" id="imagePreviewArea">
+                        <label for="imageUpload" class="image-upload-btn">
+                            <i class="fas fa-plus"></i>
+                            <span>이미지 추가</span>
+                        </label>
+                    </div>
+                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/gif" style="display: none;"
+                           multiple>
+                </div>
+                <div class="form-error" id="imageError">이미지는 최대 5장까지 업로드 가능합니다</div>
+            </div>
+
+            <!-- 위치 정보 -->
+            <div class="form-group">
+                <label class="form-label">위치 정보 (선택)</label>
+                <div class="location-search-container">
+                    <div class="location-search-box">
+                        <input type="text" id="locationSearch" class="location-search-input"
+                               placeholder="위치 검색 (예: 서울특별시 강남구)">
+                        <button type="button" id="searchLocationBtn" class="location-search-btn">검색</button>
+                    </div>
+                    <div class="location-preview" id="locationPreview">
+                        <img src="/api/placeholder/500/200" alt="위치 지도" class="location-preview-map">
+                        <div class="location-preview-info">
+                            <div class="location-preview-name">장소명</div>
+                            <div class="location-preview-address">주소 정보</div>
                         </div>
-                        <div class="category-option" data-category="companion">
-                            <i class="fas fa-user-friends"></i>
-                            <span>동행</span>
-                        </div>
-                        <div class="category-option" data-category="route">
-                            <i class="fas fa-route"></i>
-                            <span>추천 여행경로</span>
-                        </div>
-                        <div class="category-option" data-category="review">
-                            <i class="fas fa-star"></i>
-                            <span>리뷰</span>
+                        <div class="location-preview-remove" id="removeLocation">
+                            <i class="fas fa-times"></i>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 제목 입력 -->
-                <div class="form-group">
-                    <label class="form-label" for="postTitle">제목</label>
-                    <input type="text" id="postTitle" name="title" class="form-control" placeholder="제목을 입력해주세요" maxlength="100">
-                    <div class="character-count"><span id="titleCount">0</span>/100</div>
-                    <div class="form-error" id="titleError">제목을 입력해주세요</div>
-                </div>
+            <!-- 폼 액션 버튼 -->
+            <div class="form-actions">
+                <button type="button" id="cancelBtn" class="cancel-btn">취소</button>
+                <button type="submit" id="submitBtn" class="submit-btn">게시하기</button>
+            </div>
+        </form>
+    </div>
 
-                <!-- 태그 입력 -->
-                <div class="form-group">
-                    <label class="form-label">태그</label>
-                    <div class="tags-input-container" id="tagsContainer">
-                        <input type="text" class="tag-input" id="tagInput" placeholder="태그를 입력하고 Enter 키를 누르세요">
+    <!-- 위치 검색 모달 -->
+    <div class="modal" id="locationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">위치 선택</div>
+                <div class="modal-close" id="closeLocationModal"><i class="fas fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div id="locationResults" style="max-height: 300px; overflow-y: auto;">
+                    <!-- 검색 결과가 여기에 표시됩니다 -->
+                    <div class="location-item"
+                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">서울특별시 강남구 삼성동</div>
+                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 삼성동 159</div>
                     </div>
-                    <span class="form-hint">최대 5개까지 입력 가능합니다. 각 태그는 '#'으로 시작하며 15자 이하로 작성해주세요.</span>
-                    <div class="form-error" id="tagsError">태그는 최대 5개까지 입력 가능합니다</div>
-                </div>
-
-                <!-- 내용 입력 -->
-                <div class="form-group">
-                    <label class="form-label" for="postContent">내용</label>
-                    <textarea id="postContent" name="content" class="form-control form-textarea"
-                              placeholder="내용을 입력해주세요" maxlength="3000" required></textarea>
-                    <div class="character-count"><span id="contentCount">0</span>/3000</div>
-                    <div class="form-error" id="contentError">내용을 입력해주세요</div>
-                </div>
-
-                <!-- 이미지 업로드 -->
-                <div class="form-group">
-                    <label class="form-label">이미지</label>
-                    <span class="form-hint">최대 5장까지 업로드 가능합니다. (jpg, png, gif 형식, 각 5MB 이하)</span>
-                    <div class="image-upload-container">
-                        <div class="image-preview-area" id="imagePreviewArea">
-                            <label for="imageUpload" class="image-upload-btn">
-                                <i class="fas fa-plus"></i>
-                                <span>이미지 추가</span>
-                            </label>
-                        </div>
-                        <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/gif" style="display: none;" multiple>
+                    <div class="location-item"
+                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">강남 스타벅스</div>
+                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 테헤란로 107</div>
                     </div>
-                    <div class="form-error" id="imageError">이미지는 최대 5장까지 업로드 가능합니다</div>
-                </div>
-
-                <!-- 위치 정보 -->
-                <div class="form-group">
-                    <label class="form-label">위치 정보 (선택)</label>
-                    <div class="location-search-container">
-                        <div class="location-search-box">
-                            <input type="text" id="locationSearch" class="location-search-input" placeholder="위치 검색 (예: 서울특별시 강남구)">
-                            <button type="button" id="searchLocationBtn" class="location-search-btn">검색</button>
-                        </div>
-                        <div class="location-preview" id="locationPreview">
-                            <img src="/api/placeholder/500/200" alt="위치 지도" class="location-preview-map">
-                            <div class="location-preview-info">
-                                <div class="location-preview-name">장소명</div>
-                                <div class="location-preview-address">주소 정보</div>
-                            </div>
-                            <div class="location-preview-remove" id="removeLocation">
-                                <i class="fas fa-times"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 폼 액션 버튼 -->
-                <div class="form-actions">
-                    <button type="button" id="cancelBtn" class="cancel-btn">취소</button>
-                    <button type="submit" id="submitBtn" class="submit-btn">게시하기</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- 위치 검색 모달 -->
-        <div class="modal" id="locationModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title">위치 선택</div>
-                    <div class="modal-close" id="closeLocationModal"><i class="fas fa-times"></i></div>
-                </div>
-                <div class="modal-body">
-                    <div id="locationResults" style="max-height: 300px; overflow-y: auto;">
-                        <!-- 검색 결과가 여기에 표시됩니다 -->
-                        <div class="location-item" style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                            <div style="font-weight: 600; margin-bottom: 5px;">서울특별시 강남구 삼성동</div>
-                            <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 삼성동 159</div>
-                        </div>
-                        <div class="location-item" style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                            <div style="font-weight: 600; margin-bottom: 5px;">강남 스타벅스</div>
-                            <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 테헤란로 107</div>
-                        </div>
-                        <div class="location-item" style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                            <div style="font-weight: 600; margin-bottom: 5px;">강남역</div>
-                            <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 강남대로 396</div>
-                        </div>
+                    <div class="location-item"
+                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">강남역</div>
+                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 강남대로 396</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- 토스트 메시지용 컨테이너 -->
+    <div id="toast" class="toast"></div>
 
-<script>
-    $(document).ready(function() {
-        // 카테고리 선택
-        $('.category-option').click(function() {
-            $('.category-option').removeClass('active');
-            $(this).addClass('active');
-        });
 
-        // 제목 글자수 카운트
-        $('#postTitle').on('input', function() {
-            const length = $(this).val().length;
-            $('#titleCount').text(length);
 
-            if (length > 0) {
-                $('#titleError').hide();
-            }
-        });
 
-        // 내용 글자수 카운트
-        $('#postContent').on('input', function() {
-            const length = $(this).val().length;
-            $('#contentCount').text(length);
+    <script>
+        $(document).ready(function() {
+            console.log('=== create-post JavaScript 시작 ===');
 
-            if (length > 0) {
-                $('#contentError').hide();
-            }
-        });
+            // 카테고리 선택
+            $('.category-option').click(function() {
+                $('.category-option').removeClass('active');
+                $(this).addClass('active');
+                console.log('카테고리 선택됨:', $(this).data('category'));
+            });
 
-        // 태그 입력 처리
-        $('#tagInput').on('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ',') {
-                e.preventDefault();
+            // 제목 글자수 카운트
+            $('#postTitle').on('input', function() {
+                const length = $(this).val().length;
+                $('#titleCount').text(length);
 
-                const tagText = $(this).val().trim();
-                if (!tagText) return;
+                if (length > 0) {
+                    $('#titleError').hide();
+                }
+            });
 
-                // 태그 형식 확인 (# 붙이기)
-                let tagName = tagText;
-                if (!tagName.startsWith('#')) {
-                    tagName = '#' + tagName;
+            // 내용 글자수 카운트
+            $('#postContent').on('input', function() {
+                const length = $(this).val().length;
+                $('#contentCount').text(length);
+
+                if (length > 0) {
+                    $('#contentError').hide();
+                }
+            });
+
+            // 태그 입력 처리
+            $('#tagInput').on('keydown', function(e) {
+                console.log('태그 키 입력:', e.key);
+
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+
+                    const tagText = $(this).val().trim();
+                    console.log('입력된 태그 텍스트:', tagText);
+
+                    if (!tagText) return;
+
+                    // 태그 형식 확인 (# 붙이기)
+                    let tagName = tagText;
+                    if (!tagName.startsWith('#')) {
+                        tagName = '#' + tagName;
+                    }
+
+                    // 이미 존재하는 태그인지 확인
+                    let tagExists = false;
+                    $('.tag').each(function() {
+                        if ($(this).data('tag') === tagName) {
+                            tagExists = true;
+                            return false;
+                        }
+                    });
+
+                    if (tagExists) {
+                        showToast('이미 추가된 태그입니다');
+                        return;
+                    }
+
+                    // 태그 개수 제한 확인
+                    if ($('.tag').length >= 5) {
+                        $('#tagsError').text('태그는 최대 5개까지 입력 가능합니다').show();
+                        return;
+                    }
+
+                    // 태그 길이 제한 확인
+                    if (tagName.length > 15) {
+                        $('#tagsError').text('태그는 15자 이하로 작성해주세요').show();
+                        return;
+                    }
+
+                    // 새 태그 추가
+                    const newTag = $('<div class="tag" data-tag="' + tagName + '">' + tagName + '<div class="tag-close"><i class="fas fa-times"></i></div></div>');
+                    $(this).before(newTag);
+                    $(this).val('');
+                    $('#tagsError').hide();
+
+                    console.log('태그 추가됨:', tagName);
+
+                    // 태그 삭제 이벤트 바인딩
+                    newTag.find('.tag-close').click(function() {
+                        console.log('태그 삭제:', $(this).parent().data('tag'));
+                        $(this).parent().remove();
+                        $('#tagsError').hide();
+                    });
+                }
+            });
+
+            // 이미지 업로드 처리
+            $('#imageUpload').change(function(e) {
+                const files = e.target.files;
+                const currentImages = $('.image-preview-item').length - 1; // 업로드 버튼 제외
+
+                console.log('이미지 업로드:', files.length, '개');
+
+                // 최대 이미지 수 제한 확인
+                if (currentImages + files.length > 5) {
+                    $('#imageError').show();
+                    return;
+                } else {
+                    $('#imageError').hide();
                 }
 
-                // 이미 존재하는 태그인지 확인
-                let tagExists = false;
+                // 각 파일 처리
+                for (let i = 0; i < files.length; i++) {
+                    if (currentImages + i >= 5) break;
+
+                    const file = files[i];
+
+                    // 파일 유형 및 크기 확인
+                    if (!file.type.match('image/jpeg') && !file.type.match('image/png') && !file.type.match('image/gif')) {
+                        showToast('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다');
+                        continue;
+                    }
+
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        showToast('이미지 크기는 5MB 이하만 가능합니다');
+                        continue;
+                    }
+
+                    // 미리보기 생성
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imagePreview = $('<div class="image-preview-item">' +
+                            '<img src="' + e.target.result + '" class="image-preview-img">' +
+                            '<div class="image-preview-remove"><i class="fas fa-times"></i></div>' +
+                            '</div>');
+
+                        // 이미지 미리보기를 이미지 추가 버튼 앞에 추가
+                        imagePreview.insertBefore('.image-upload-btn');
+
+                        // 이미지 삭제 이벤트 바인딩
+                        imagePreview.find('.image-preview-remove').click(function() {
+                            $(this).parent().remove();
+                            $('#imageError').hide();
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 위치 검색 처리
+            $('#searchLocationBtn').click(function() {
+                const locationQuery = $('#locationSearch').val().trim();
+                if (!locationQuery) {
+                    showToast('검색어를 입력해주세요');
+                    return;
+                }
+
+                console.log('위치 검색:', locationQuery);
+                // 실제 구현에서는 API 요청을 통해 데이터를 가져옴
+                // 여기서는 가상의 데이터를 사용
+                openLocationModal();
+            });
+
+            // 위치 모달 열기
+            function openLocationModal() {
+                $('#locationModal').addClass('active');
+            }
+
+            // 위치 모달 닫기
+            $('#closeLocationModal').click(function() {
+                $('#locationModal').removeClass('active');
+            });
+
+            // 위치 선택 처리
+            $(document).on('click', '.location-item', function() {
+                const locationName = $(this).find('div:first').text();
+                const locationAddress = $(this).find('div:last').text();
+
+                $('#locationPreview').find('.location-preview-name').text(locationName);
+                $('#locationPreview').find('.location-preview-address').text(locationAddress);
+                $('#locationPreview').show();
+                $('#locationModal').removeClass('active');
+
+                console.log('위치 선택됨:', locationName);
+            });
+
+            // 위치 삭제
+            $('#removeLocation').click(function() {
+                $('#locationPreview').hide();
+                $('#locationSearch').val('');
+                console.log('위치 정보 삭제됨');
+            });
+
+            // 뒤로가기 버튼
+            $('#backButton').click(function() {
+                if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
+                    if (confirm('작성 중인 내용이 있습니다. 페이지를 나가시겠습니까?')) {
+                        window.history.back();
+                    }
+                } else {
+                    window.history.back();
+                }
+            });
+
+            // 취소 버튼
+            $('#cancelBtn').click(function() {
+                if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
+                    if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
+                        window.history.back();
+                    }
+                } else {
+                    window.history.back();
+                }
+            });
+
+            // 폼 제출 처리
+            $('#postForm').submit(function(e) {
+                console.log('=== 폼 제출 시작 ===');
+
+                // 유효성 검증
+                let isValid = true;
+
+                // 제목 검증
+                const title = $('#postTitle').val().trim();
+                if (!title) {
+                    $('#titleError').show();
+                    isValid = false;
+                }
+
+                // 내용 검증
+                const content = $('#postContent').val().trim();
+                if (!content) {
+                    $('#contentError').show();
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    console.log('유효성 검사 실패');
+                    // 첫 번째 오류 위치로 스크롤
+                    const firstError = $('.form-error:visible').first();
+                    if (firstError.length) {
+                        $('html, body').animate({
+                            scrollTop: firstError.offset().top - 100
+                        }, 500);
+                    }
+                    return false;
+                }
+
+                // 태그 데이터를 폼에 추가
+                const tags = [];
                 $('.tag').each(function() {
-                    if ($(this).data('tag') === tagName) {
-                        tagExists = true;
-                        return false;
+                    const tagText = $(this).data('tag');
+                    if (tagText) {
+                        // '#' 제거하고 태그 추가
+                        tags.push(tagText.replace('#', ''));
                     }
                 });
 
-                if (tagExists) {
-                    showToast('이미 추가된 태그입니다');
-                    return;
-                }
+                console.log('수집된 태그들:', tags);
 
-                // 태그 개수 제한 확인
-                if ($('.tag').length >= 5) {
-                    $('#tagsError').text('태그는 최대 5개까지 입력 가능합니다').show();
-                    return;
-                }
+                // 기존 hidden input 제거
+                $('input[name="tags"]').remove();
+                $('input[name="category"]').remove();
+                $('input[name="placeName"]').remove();
 
-                // 태그 길이 제한 확인
-                if (tagName.length > 15) {
-                    $('#tagsError').text('태그는 15자 이하로 작성해주세요').show();
-                    return;
-                }
-
-                // 새 태그 추가
-                const newTag = $('<div class="tag" data-tag="' + tagName + '">' + tagName + '<div class="tag-close"><i class="fas fa-times"></i></div></div>');
-                $(this).before(newTag);
-                $(this).val('');
-
-                // 태그 삭제 이벤트 바인딩
-                newTag.find('.tag-close').click(function() {
-                    $(this).parent().remove();
-                    $('#tagsError').hide();
-                });
-            }
-        });
-
-        // 이미지 업로드 처리
-        $('#imageUpload').change(function(e) {
-            const files = e.target.files;
-            const currentImages = $('.image-preview-item').length - 1; // 업로드 버튼 제외
-
-            // 최대 이미지 수 제한 확인
-            if (currentImages + files.length > 5) {
-                $('#imageError').show();
-                return;
-            } else {
-                $('#imageError').hide();
-            }
-
-            // 각 파일 처리
-            for (let i = 0; i < files.length; i++) {
-                if (currentImages + i >= 5) break;
-
-                const file = files[i];
-
-                // 파일 유형 및 크기 확인
-                if (!file.type.match('image/jpeg') && !file.type.match('image/png') && !file.type.match('image/gif')) {
-                    showToast('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다');
-                    continue;
-                }
-
-                if (file.size > 5 * 1024 * 1024) { // 5MB
-                    showToast('이미지 크기는 5MB 이하만 가능합니다');
-                    continue;
-                }
-
-                // 미리보기 생성
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const imagePreview = $('<div class="image-preview-item">' +
-                        '<img src="' + e.target.result + '" class="image-preview-img">' +
-                        '<div class="image-preview-remove"><i class="fas fa-times"></i></div>' +
-                        '</div>');
-
-                    // 이미지 미리보기를 이미지 추가 버튼 앞에 추가
-                    imagePreview.insertBefore('.image-upload-btn');
-
-                    // 이미지 삭제 이벤트 바인딩
-                    imagePreview.find('.image-preview-remove').click(function() {
-                        $(this).parent().remove();
-                        $('#imageError').hide();
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // 위치 검색 처리
-        $('#searchLocationBtn').click(function() {
-            const locationQuery = $('#locationSearch').val().trim();
-            if (!locationQuery) {
-                showToast('검색어를 입력해주세요');
-                return;
-            }
-
-            // 실제 구현에서는 API 요청을 통해 데이터를 가져옴
-            // 여기서는 가상의 데이터를 사용
-            openLocationModal();
-        });
-
-        // 위치 모달 열기
-        function openLocationModal() {
-            $('#locationModal').addClass('active');
-        }
-
-        // 위치 모달 닫기
-        $('#closeLocationModal').click(function() {
-            $('#locationModal').removeClass('active');
-        });
-
-        // 위치 선택 처리
-        $(document).on('click', '.location-item', function() {
-            const locationName = $(this).find('div:first').text();
-            const locationAddress = $(this).find('div:last').text();
-
-            $('#locationPreview').find('.location-preview-name').text(locationName);
-            $('#locationPreview').find('.location-preview-address').text(locationAddress);
-            $('#locationPreview').show();
-            $('#locationModal').removeClass('active');
-        });
-
-        // 위치 삭제
-        $('#removeLocation').click(function() {
-            $('#locationPreview').hide();
-            $('#locationSearch').val('');
-        });
-
-        // 뒤로가기 버튼
-        $('#backButton').click(function() {
-            if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
-                if (confirm('작성 중인 내용이 있습니다. 페이지를 나가시겠습니까?')) {
-                    window.history.back();
-                }
-            } else {
-                window.history.back();
-            }
-        });
-
-        // 취소 버튼
-        $('#cancelBtn').click(function() {
-            if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
-                if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
-                    window.history.back();
-                }
-            } else {
-                window.history.back();
-            }
-        });
-
-        // 폼 제출 처리
-        $('#postForm').submit(function(e) {
-            e.preventDefault();
-
-            // 유효성 검증
-            let isValid = true;
-
-            // 제목 검증
-            const title = $('#postTitle').val().trim();
-            if (!title) {
-                $('#titleError').show();
-                isValid = false;
-            }
-
-            // 내용 검증
-            const content = $('#postContent').val().trim();
-            if (!content) {
-                $('#contentError').show();
-                isValid = false;
-            }
-
-            // 폼이 유효하면 제출
-            if (isValid) {
-                // 태그 수집
-                const tags = [];
-                $('.tag').each(function() {
-                    tags.push($(this).data('tag'));
+                // 태그 hidden input 추가
+                tags.forEach(function(tag) {
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'tags',
+                        value: tag
+                    }).appendTo('#postForm');
+                    console.log('태그 hidden input 추가:', tag);
                 });
 
-                // 카테고리 가져오기
-                const category = $('.category-option.active').data('category');
+                // 카테고리 정보도 추가
+                const category = $('.category-option.active').data('category') || 'post';
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'category',
+                    value: category
+                }).appendTo('#postForm');
+                console.log('카테고리 추가:', category);
 
-                // 위치 정보 가져오기
-                let location = null;
+                // 위치 정보 추가
                 if ($('#locationPreview').is(':visible')) {
-                    location = {
-                        name: $('#locationPreview').find('.location-preview-name').text(),
-                        address: $('#locationPreview').find('.location-preview-address').text()
-                    };
+                    const placeName = $('#locationPreview').find('.location-preview-name').text();
+                    if (placeName && placeName !== '장소명') {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: 'placeName',
+                            value: placeName
+                        }).appendTo('#postForm');
+                        console.log('위치 정보 추가:', placeName);
+                    }
                 }
 
-                // 데이터 객체 생성
-                const postData = {
-                    title: title,
-                    content: content,
-                    category: category,
-                    tags: tags,
-                    location: location
-                    // 이미지는 FormData로 별도 처리해야 함
-                };
+                console.log('=== 폼 제출 데이터 준비 완료 ===');
+                console.log('제목:', title);
+                console.log('내용 길이:', content.length);
+                console.log('태그 개수:', tags.length);
+                console.log('카테고리:', category);
 
-                console.log('게시글 데이터:', postData);
+                // 폼 제출 진행
+                return true;
+            });
 
-                // 실제 구현에서는 AJAX를 통해 서버로 전송
-                showToast('게시글이 등록되었습니다');
+            // 토스트 메시지 표시
+            function showToast(message) {
+                console.log('토스트 메시지:', message);
+                const toast = $('<div style="position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 20px; border-radius: 6px; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;">' + message + '</div>');
 
-                // 성공 시 리디렉션 (실제 구현 시 서버 응답 후 처리)
-                setTimeout(function() {
-                    // window.location.href = '/community';
-                    alert('게시글 등록 완료 (테스트)');
-                }, 1500);
-            } else {
-                // 첫 번째 오류 위치로 스크롤
-                const firstError = $('.form-error:visible').first();
-                if (firstError.length) {
-                    $('html, body').animate({
-                        scrollTop: firstError.offset().top - 100
-                    }, 500);
-                }
-            }
-        });
+                $('body').append(toast);
 
-        var msg = [[${msg}]];
-        console.log(msg)
-
-        // 토스트 메시지 표시
-        function showToast(message) {
-            const toast = $('#toast');
-
-            //유효성 테스트하기
-            if(msg){
-                toast.text(message);
-                toast.addClass('show');
-
-                setTimeout(function() {
-                    toast.removeClass('show');
+                setTimeout(() => toast.css('opacity', '1'), 10);
+                setTimeout(() => {
+                    toast.css('opacity', '0');
+                    setTimeout(() => toast.remove(), 300);
                 }, 3000);
-
             }
-        }
 
-        // 위치 모달 내 아이템 호버 효과
-        $(document).on('mouseenter', '.location-item', function() {
-            $(this).css('background-color', 'var(--primary-light)');
-        }).on('mouseleave', '.location-item', function() {
-            $(this).css('background-color', '');
+            // 위치 모달 내 아이템 호버 효과
+            $(document).on('mouseenter', '.location-item', function() {
+                $(this).css('background-color', 'var(--primary-light)');
+            }).on('mouseleave', '.location-item', function() {
+                $(this).css('background-color', '');
+            });
+
+            console.log('=== create-post JavaScript 초기화 완료 ===');
         });
-    });
-</script>
+    </script>
 </th:block>
 </body>
 </html>

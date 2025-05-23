@@ -21,6 +21,8 @@ public class PostDTO {
     private Double latitude;
     private Double longitude;
     private String placeName;
+    private String placeAddress;
+    private String placeId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
