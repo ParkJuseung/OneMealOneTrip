@@ -16,7 +16,17 @@ import java.util.stream.Collectors;
 public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
 
     @PersistenceContext
-    private final EntityManager em;
+    private EntityManager em;
+
+    private int countParticipants(Long chatRoomId) {
+        return ((Number) em.createQuery("""
+        SELECT COUNT(cu) FROM ChatroomUser cu
+        WHERE cu.chatRoom.id = :chatRoomId
+          AND cu.status = 'JOINED'
+    """)
+                .setParameter("chatRoomId", chatRoomId)
+                .getSingleResult()).intValue();
+    }
 
     @Override
     public List<ChatRoomListResponseDTO> findAllRooms(int offset, int limit, Long userId) {
@@ -30,16 +40,19 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
         List<ChatRoom> rooms = query.getResultList();
 
         return rooms.stream()
-                .map(room -> ChatRoomListResponseDTO.builder()
-                        .id(room.getId())
-                        .title(room.getTitle())
-                        .thumbnailImageUrl(room.getThumbnailImageUrl())
-                        .createdAt(room.getCreatedAt())
-                        .hashtags(List.of())
-                        .likeCount(0)
-                        .participantCount(0)
-                        .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
-                        .build())
+                .map(room -> {
+                    int participantCount = countParticipants(room.getId()); // ✅ 동적 계산
+                    return ChatRoomListResponseDTO.builder()
+                            .id(room.getId())
+                            .title(room.getTitle())
+                            .thumbnailImageUrl(room.getThumbnailImageUrl())
+                            .createdAt(room.getCreatedAt())
+                            .hashtags(List.of())
+                            .likeCount(0)
+                            .participantCount(participantCount) // ✅ 적용
+                            .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 
@@ -62,6 +75,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                 .map(row -> {
                     ChatRoom room = (ChatRoom) row[0];
                     Long likeCount = (Long) row[1];
+                    int participantCount = countParticipants(room.getId()); // ✅ 동적 계산
 
                     return ChatRoomListResponseDTO.builder()
                             .id(room.getId())
@@ -70,7 +84,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                             .createdAt(room.getCreatedAt())
                             .hashtags(List.of())
                             .likeCount(likeCount.intValue())
-                            .participantCount(0)
+                            .participantCount(participantCount) // ✅ 적용
                             .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
                             .build();
                 })
@@ -97,6 +111,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
         return result.stream()
                 .map(row -> {
                     ChatRoom room = (ChatRoom) row[0];
+                    int participantCount = countParticipants(room.getId()); // ✅ 동적 계산
 
                     return ChatRoomListResponseDTO.builder()
                             .id(room.getId())
@@ -105,7 +120,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                             .createdAt(room.getCreatedAt())
                             .hashtags(List.of())
                             .likeCount(0)
-                            .participantCount(0)
+                            .participantCount(participantCount) // ✅ 적용
                             .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
                             .build();
                 })
