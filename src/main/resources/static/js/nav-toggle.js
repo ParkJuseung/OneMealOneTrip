@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 1. 필요한 요소 찾기
     const addButtonContainer = document.querySelector('.nav-item:nth-child(3)');
-    const addButton = addButtonContainer.querySelector('.add-button');
+    /*const addButton = addButtonContainer.querySelector('.add-button');*/
 
     // 2. 오버레이 요소 생성
     const overlay = document.createElement('div');

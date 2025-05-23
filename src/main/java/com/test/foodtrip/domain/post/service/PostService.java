@@ -46,6 +46,8 @@ public interface PostService {
                 .latitude(dto.getLatitude())
                 .longitude(dto.getLongitude())
                 .placeName(dto.getPlaceName())
+                .placeAddress(dto.getPlaceAddress())
+                .placeId(dto.getPlaceId())
                 .build();
 
         post.setUser(user);
@@ -63,6 +65,8 @@ public interface PostService {
                 .latitude(post.getLatitude())
                 .longitude(post.getLongitude())
                 .placeName(post.getPlaceName())
+                .placeAddress(post.getPlaceAddress())
+                .placeId(post.getPlaceId())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .userId(post.getUser() != null ? post.getUser().getId() : null)

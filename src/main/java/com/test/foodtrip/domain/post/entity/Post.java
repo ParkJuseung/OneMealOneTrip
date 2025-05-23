@@ -48,6 +48,12 @@ public class Post {
     @Column(name = "place_name", length = 255)
     private String placeName;
 
+    @Column(name = "place_address", length = 500)
+    private String placeAddress;
+
+    @Column(name = "place_id", length = 100)
+    private String placeId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

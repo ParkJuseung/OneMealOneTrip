@@ -7,6 +7,7 @@ import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.repository.PostRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +61,7 @@ public class PostServiceImpl implements PostService{
         }
     }
 
-    @Override
+    /*@Override
     @Transactional
     public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO){
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
@@ -69,19 +70,63 @@ public class PostServiceImpl implements PostService{
 
         Function<Post, PostDTO> fn = (entity -> entityToDto(entity));
         return new PageResultDTO<>(result, fn);
+    }*/
+
+//    @Override
+//    public PostDTO read(Long id){
+//        Optional<Post> result = postRepository.findById(id);
+//        if (result.isPresent()) {
+//            Post post = result.get();
+//            // 조회수 증가
+//            post.setViewCount(post.getViewCount() + 1);
+//            postRepository.save(post);
+//            return entityToDto(post);
+//        }
+//        return null;
+//    }
+
+    public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO) {
+        Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
+
+        // 📈 최적화: 연관관계 없이 기본 정보만 조회
+        Page<Post> result = postRepository.findAllOptimized(pageable);
+
+        Function<Post, PostDTO> fn = (entity -> {
+            // 📈 최소한의 정보만 DTO로 변환 (연관관계 접근 안함)
+            return PostDTO.builder()
+                    .id(entity.getId())
+                    .title(entity.getTitle())
+                    .content(entity.getContent())
+                    .viewCount(entity.getViewCount())
+                    .placeId(entity.getPlaceId())
+                    .placeName(entity.getPlaceName())
+                    .latitude(entity.getLatitude())
+                    .longitude(entity.getLongitude())
+                    .createdAt(entity.getCreatedAt())
+                    .updatedAt(entity.getUpdatedAt())
+                    // 📈 연관관계는 접근하지 않음 (N+1 방지)
+                    // .imageUrls() - 주석처리
+                    // .tags() - 주석처리
+                    // .likeCount() - 주석처리
+                    // .commentCount() - 주석처리
+                    .build();
+        });
+
+        return new PageResultDTO<>(result, fn);
     }
 
     @Override
-    public PostDTO read(Long id){
-        Optional<Post> result = postRepository.findById(id);
-        if (result.isPresent()) {
-            Post post = result.get();
-            // 조회수 증가
-            post.setViewCount(post.getViewCount() + 1);
-            postRepository.save(post);
-            return entityToDto(post);
-        }
-        return null;
+    @Transactional
+    public PostDTO read(Long id) {
+        // 기본 정보 + 이미지 조회 (한 번의 쿼리)
+        Post post = postRepository.findByIdWithImages(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
+
+        // 조회수 증가
+        postRepository.incrementViewCount(id);
+
+        // DTO 변환
+        return entityToDto(post);
     }
 
     @Override
