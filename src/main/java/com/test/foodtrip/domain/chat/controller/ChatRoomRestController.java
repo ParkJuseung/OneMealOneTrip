@@ -40,8 +40,8 @@ public class ChatRoomRestController {
     // 전체 채팅방 목록 조회
     @GetMapping
     public ChatRoomListPageResponseDTO getAllRooms(
-            @RequestParam int offset,
-            @RequestParam int limit
+            @RequestParam("offset") int offset,
+            @RequestParam("limit") int limit
     ) {
         return chatRoomService.getAllRoomsWithPagination(offset, limit, getCurrentUserId());
     }
@@ -49,8 +49,8 @@ public class ChatRoomRestController {
     //인기 채팅방 목록 조회
     @GetMapping("/popular")
     public ChatRoomListPageResponseDTO getPopularRooms(
-            @RequestParam int offset,
-            @RequestParam int limit
+            @RequestParam("offset") int offset,
+            @RequestParam("limit") int limit
     ) {
         return chatRoomService.getPopularRoomsWithPagination(offset, limit);
     }
@@ -58,8 +58,8 @@ public class ChatRoomRestController {
     //내가 참여중인 채팅방 목록 조회
     @GetMapping("/mine")
     public ChatRoomListPageResponseDTO getMyRooms(
-            @RequestParam int offset,
-            @RequestParam int limit
+            @RequestParam("offset") int offset,
+            @RequestParam("limit") int limit
     ) {
         Long userId = getCurrentUserId();
         return chatRoomService.getMyRoomsWithPagination(userId, offset, limit);

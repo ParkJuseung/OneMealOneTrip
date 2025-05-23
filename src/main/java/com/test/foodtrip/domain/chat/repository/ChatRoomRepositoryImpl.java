@@ -21,7 +21,8 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
     @Override
     public List<ChatRoomListResponseDTO> findAllRooms(int offset, int limit, Long userId) {
         TypedQuery<ChatRoom> query = em.createQuery(
-                "SELECT c FROM ChatRoom c WHERE c.isDeleted = 'N' ORDER BY c.createdAt DESC", ChatRoom.class
+            "SELECT c FROM ChatRoom c JOIN FETCH c.user WHERE c.isDeleted = 'N' ORDER BY c.createdAt DESC",
+            ChatRoom.class
         );
         query.setFirstResult(offset);
         query.setMaxResults(limit);
@@ -34,20 +35,20 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                         .title(room.getTitle())
                         .thumbnailImageUrl(room.getThumbnailImageUrl())
                         .createdAt(room.getCreatedAt())
-                        .hashtags(List.of())  // 나중에 Hashtag join 또는 서비스 레이어에서 추가 가능
+                        .hashtags(List.of())
                         .likeCount(0)
                         .participantCount(0)
-                        .ownerNickname("알수없음")
+                        .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
                         .build())
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ChatRoomListResponseDTO> findPopularRooms(int offset, int limit) {
-        // JPQL로 채팅방과 좋아요 수를 기준으로 정렬 (좋아요 수 DESC, 생성일 DESC)
         List<Object[]> result = em.createQuery("""
             SELECT c, COUNT(l.id)
             FROM ChatRoom c
+            JOIN FETCH c.user
             LEFT JOIN ChatroomLike l ON l.chatRoom.id = c.id
             WHERE c.isDeleted = 'N'
             GROUP BY c
@@ -67,15 +68,14 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                             .title(room.getTitle())
                             .thumbnailImageUrl(room.getThumbnailImageUrl())
                             .createdAt(room.getCreatedAt())
-                            .hashtags(List.of()) // 나중에 서비스 계층에서 추가 처리
+                            .hashtags(List.of())
                             .likeCount(likeCount.intValue())
                             .participantCount(0)
-                            .ownerNickname("알수없음")
+                            .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
                             .build();
                 })
                 .collect(Collectors.toList());
     }
-
 
     @Override
     public List<ChatRoomListResponseDTO> findMyRooms(Long userId, int offset, int limit) {
@@ -83,6 +83,7 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
         SELECT c, cu.role
         FROM ChatroomUser cu
         JOIN cu.chatRoom c
+        JOIN FETCH c.user
         WHERE cu.user.id = :userId
           AND cu.status = 'JOINED'
           AND c.isDeleted = 'N'
@@ -102,13 +103,12 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepositoryCustom {
                             .title(room.getTitle())
                             .thumbnailImageUrl(room.getThumbnailImageUrl())
                             .createdAt(room.getCreatedAt())
-                            .hashtags(List.of()) // 나중에 서비스 계층에서 해시태그 주입
-                            .likeCount(0) // 나중에 서비스 계층에서 주입
+                            .hashtags(List.of())
+                            .likeCount(0)
                             .participantCount(0)
-                            .ownerNickname("알수없음")
+                            .ownerNickname(room.getUser() != null ? room.getUser().getNickname() : "알수없음")
                             .build();
                 })
                 .collect(Collectors.toList());
     }
-
 }
