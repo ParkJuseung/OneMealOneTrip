@@ -402,8 +402,8 @@
                 </div>
             </div>
 
-            <!-- 태그 섹션 -->
-            <div class="post-detail-tags">
+            <!-- 📈 수정: 태그 섹션 - 안전한 조건 추가 -->
+            <div class="post-detail-tags" th:if="${dto.tags != null and !dto.tags.isEmpty()}">
                 <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
             </div>
 
@@ -412,15 +412,15 @@
                 [[${dto.content}]]
             </p>
 
-            <!-- 이미지가 있는 경우만 표시 -->
+            <!-- 📈 수정: 이미지 섹션 - 안전한 조건 추가 -->
             <div class="post-detail-images" th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
                 <div class="post-detail-image" th:each="imageUrl : ${dto.imageUrls}">
                     <img th:src="${imageUrl}" alt="게시글 이미지">
                 </div>
             </div>
 
-            <!-- 위치 정보가 있는 경우만 표시 -->
-            <div class="location-info" th:if="${dto.placeName != null}">
+            <!-- 📈 수정: 위치 정보 - placeName으로 변경 -->
+            <div class="location-info" th:if="${dto.placeName != null and !#strings.isEmpty(dto.placeName)}">
                 <div class="location-header">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>위치 정보</span>

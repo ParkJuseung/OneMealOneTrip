@@ -11,6 +11,7 @@ import com.test.foodtrip.domain.post.repository.PostTagRepository;
 import com.test.foodtrip.domain.post.repository.PostTaggingRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +22,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl implements PostService{
+public class PostServiceImpl implements PostService {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
@@ -36,7 +37,7 @@ public class PostServiceImpl implements PostService{
 
     @Override
     @Transactional
-    public Long create(PostDTO dto){
+    public Long create(PostDTO dto) {
         // 현재 로그인된 사용자 가져오기
         User currentUser = getCurrentUser();
         if (currentUser == null) {
@@ -46,9 +47,9 @@ public class PostServiceImpl implements PostService{
         Post post = dtoToEntity(dto, currentUser);
         postRepository.save(post);
 
-        // 해시태그 처리
+        // ✅ 최적화된 태그 저장
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
-            saveTags(post, dto.getTags());
+            saveTagsOptimized(post, dto.getTags());
         }
 
         return post.getId();
@@ -56,15 +57,38 @@ public class PostServiceImpl implements PostService{
 
     @Override
     @Transactional
-    public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO){
+    public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO) {
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
+
+        // ✅ 1단계: 기본 Post 정보만 페이징 조회
         Page<Post> result = postRepository.findAll(pageable);
 
+        if (result.isEmpty()) {
+            return new PageResultDTO<>(result, entity -> new PostDTO());
+        }
+
+        // ✅ 2단계: 해당 페이지의 모든 Post ID 수집
+        List<Long> postIds = result.getContent().stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+
+        // ✅ 3단계: 모든 태그 정보를 한번에 조회 (N+1 해결!)
+        List<Object[]> tagResults = postTaggingRepository.findTagsByPostIds(postIds);
+
+        // ✅ 4단계: Post ID별로 태그를 그룹핑
+        Map<Long, List<String>> tagsMap = tagResults.stream()
+                .collect(Collectors.groupingBy(
+                        arr -> (Long) arr[0], // Post ID
+                        Collectors.mapping(arr -> (String) arr[1], Collectors.toList()) // Tag Text
+                ));
+
         Function<Post, PostDTO> fn = (entity -> {
-            PostDTO dto = entityToDto(entity);
-            // 태그 정보 추가
-            List<String> tags = postTaggingRepository.findTagsByPostId(entity.getId());
+            PostDTO dto = entityToDto(entity); // ✅ 수정된 인터페이스 메서드 사용
+
+            // ✅ 미리 조회한 태그 정보로 오버라이드 (추가 쿼리 없음!)
+            List<String> tags = tagsMap.getOrDefault(entity.getId(), Collections.emptyList());
             dto.setTags(tags);
+
             return dto;
         });
 
@@ -72,7 +96,7 @@ public class PostServiceImpl implements PostService{
     }
 
     @Override
-    public PostDTO read(Long id){
+    public PostDTO read(Long id) {
         Optional<Post> result = postRepository.findById(id);
         if (result.isPresent()) {
             Post post = result.get();
@@ -81,7 +105,7 @@ public class PostServiceImpl implements PostService{
             postRepository.save(post);
 
             PostDTO dto = entityToDto(post);
-            // 태그 정보 추가
+            // ✅ 태그 정보 추가 (별도 쿼리 1회)
             List<String> tags = postTaggingRepository.findTagsByPostId(id);
             dto.setTags(tags);
 
@@ -117,13 +141,8 @@ public class PostServiceImpl implements PostService{
 
             postRepository.save(post);
 
-            // 기존 태그 삭제 후 새 태그 추가
-            List<PostTagging> existingTaggings = postTaggingRepository.findByPostId(dto.getId());
-            postTaggingRepository.deleteAll(existingTaggings);
-
-            if (dto.getTags() != null && !dto.getTags().isEmpty()) {
-                saveTags(post, dto.getTags());
-            }
+            // ✅ 최적화된 태그 업데이트
+            updatePostTagsOptimized(post, dto.getTags());
         }
     }
 
@@ -162,9 +181,13 @@ public class PostServiceImpl implements PostService{
         }
     }
 
-    // 태그 저장 메서드 - 수정된 버전
-    private void saveTags(Post post, List<String> tagTexts) {
-        System.out.println("=== 태그 저장 시작 ===");
+    // ========== 최적화된 헬퍼 메서드들 ==========
+
+    /**
+     * ✅ 태그 저장 최적화 - 배치 처리로 N+1 해결
+     */
+    private void saveTagsOptimized(Post post, List<String> tagTexts) {
+        System.out.println("=== 태그 저장 시작 (최적화) ===");
         System.out.println("Post ID: " + post.getId());
         System.out.println("태그 개수: " + (tagTexts != null ? tagTexts.size() : 0));
 
@@ -173,43 +196,79 @@ public class PostServiceImpl implements PostService{
             return;
         }
 
-        for (String tagText : tagTexts) {
-            if (tagText != null && !tagText.trim().isEmpty()) {
-                String cleanTagText = tagText.trim();
-                System.out.println("처리 중인 태그: " + cleanTagText);
+        // 1단계: 태그 텍스트 정리
+        List<String> cleanTagTexts = tagTexts.stream()
+                .filter(tag -> tag != null && !tag.trim().isEmpty())
+                .map(String::trim)
+                .distinct()
+                .collect(Collectors.toList());
 
-                try {
-                    // 기존 태그 찾기 또는 새로 생성
-                    PostTag postTag = postTagRepository.findByTagText(cleanTagText)
-                            .orElseGet(() -> {
-                                System.out.println("새 태그 생성: " + cleanTagText);
-                                PostTag newTag = new PostTag(cleanTagText);
-                                return postTagRepository.save(newTag);
-                            });
-
-                    System.out.println("PostTag ID: " + postTag.getId());
-
-                    // 태그-게시글 연결
-                    PostTagging postTagging = new PostTagging(post, postTag);
-
-                    // ID를 수동으로 설정 (Post와 PostTag 모두 ID가 있는 상태)
-                    if (postTagging.getId() == null) {
-                        postTagging.setId(new PostTagging.PostTaggingId(post.getId(), postTag.getId()));
-                    }
-
-                    PostTagging saved = postTaggingRepository.save(postTagging);
-                    System.out.println("PostTagging 저장 완료: " + saved.getId().getPostId() + " - " + saved.getId().getPostTagId());
-
-                } catch (Exception e) {
-                    System.err.println("태그 저장 중 오류: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            }
+        if (cleanTagTexts.isEmpty()) {
+            return;
         }
-        System.out.println("=== 태그 저장 완료 ===");
+
+        System.out.println("정리된 태그들: " + cleanTagTexts);
+
+        try {
+            // ✅ 2단계: 기존 태그들 일괄 조회 (N+1 방지!)
+            List<PostTag> existingTags = postTagRepository.findAllByTagTextIn(cleanTagTexts);
+            Map<String, PostTag> tagMap = existingTags.stream()
+                    .collect(Collectors.toMap(PostTag::getTagText, Function.identity()));
+
+            System.out.println("기존 태그 개수: " + existingTags.size());
+
+            // ✅ 3단계: 새로운 태그들 생성
+            List<PostTag> newTags = cleanTagTexts.stream()
+                    .filter(tagText -> !tagMap.containsKey(tagText))
+                    .map(PostTag::new)
+                    .collect(Collectors.toList());
+
+            if (!newTags.isEmpty()) {
+                System.out.println("새 태그 생성 개수: " + newTags.size());
+                List<PostTag> savedNewTags = postTagRepository.saveAll(newTags);
+                savedNewTags.forEach(tag -> tagMap.put(tag.getTagText(), tag));
+            }
+
+            // ✅ 4단계: PostTagging 일괄 생성
+            List<PostTagging> postTaggings = cleanTagTexts.stream()
+                    .map(tagText -> {
+                        PostTag postTag = tagMap.get(tagText);
+                        PostTagging postTagging = new PostTagging(post, postTag);
+                        postTagging.setId(new PostTagging.PostTaggingId(post.getId(), postTag.getId()));
+                        return postTagging;
+                    })
+                    .collect(Collectors.toList());
+
+            postTaggingRepository.saveAll(postTaggings);
+            System.out.println("PostTagging 저장 완료: " + postTaggings.size() + "개");
+
+        } catch (Exception e) {
+            System.err.println("태그 저장 중 오류: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        System.out.println("=== 태그 저장 완료 (최적화) ===");
     }
 
-    // 현재 로그인된 사용자를 세션에서 가져오는 메서드
+    /**
+     * ✅ 태그 업데이트 최적화
+     */
+    private void updatePostTagsOptimized(Post post, List<String> newTags) {
+        // 기존 태그 삭제
+        List<PostTagging> existingTaggings = postTaggingRepository.findByPostId(post.getId());
+        if (!existingTaggings.isEmpty()) {
+            postTaggingRepository.deleteAll(existingTaggings);
+        }
+
+        // 새 태그 추가
+        if (newTags != null && !newTags.isEmpty()) {
+            saveTagsOptimized(post, newTags);
+        }
+    }
+
+    /**
+     * 현재 로그인된 사용자를 세션에서 가져오는 메서드
+     */
     private User getCurrentUser() {
         try {
             ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
