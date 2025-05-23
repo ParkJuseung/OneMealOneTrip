@@ -3,6 +3,7 @@ package com.test.foodtrip.domain.chat.entity;
 
 import com.test.foodtrip.domain.user.entity.User;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -75,5 +76,15 @@ public class ChatMessage {
     public void addMention(ChatMessageMention mention) {
         mentions.add(mention);
         mention.setMessage(this);
+    }
+    
+    public static ChatMessage create(ChatRoom chatRoom, User user, String messageContent) {
+        ChatMessage message = new ChatMessage();
+        message.chatRoom = chatRoom; // chatRoom이 메시지가 속한 채팅방
+        message.user = user; // user 메시지를 보낸 사용자
+        message.messageType = "TEXT"; 
+        message.messageContent = messageContent; // messageContent 메시지 내용
+        message.createdAt = LocalDateTime.now(); // 혹은 prePersist로 자동 처리됨
+        return message;
     }
 }

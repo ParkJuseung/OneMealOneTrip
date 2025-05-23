@@ -1,22 +1,26 @@
 package com.test.foodtrip.domain.chat.entity;
 
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "CHATROOMNOTICEHISTORY")
+
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder // ← 추가!
+@Entity
+@Table(name = "CHATROOMNOTICEHISTORY")
 public class ChatroomNoticeHistory {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "chatroom_notice_history_seq")
-    @SequenceGenerator(name = "chatroom_notice_history_seq", sequenceName = "chatroom_notice_history_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "chatroom_notice_seq_generator")
+    @SequenceGenerator(
+            name = "chatroom_notice_seq_generator",
+            sequenceName = "chatroom_notice_history_seq",
+            allocationSize = 1
+    )
     @Column(name = "notice_id")
     private Long id;
 
