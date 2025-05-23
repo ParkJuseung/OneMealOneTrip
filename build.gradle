@@ -41,13 +41,17 @@ dependencies {
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.1.0'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    runtimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
+// 컴파일 시 파라미터 이름 보존을 위한 설정
 tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs << "-parameters"
+    options.compilerArgs += ['-parameters']
 }
