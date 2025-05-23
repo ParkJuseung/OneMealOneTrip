@@ -4,6 +4,7 @@ import com.test.foodtrip.domain.user.dto.GoogleResponse;
 import com.test.foodtrip.domain.user.dto.KakaoResponse;
 import com.test.foodtrip.domain.user.dto.NaverResponse;
 
+import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,8 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class CustomOAuth2UserService
-        implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;
     private final DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
@@ -71,17 +71,30 @@ public class CustomOAuth2UserService
                 .getRequest().getSession();
 
         if (userOpt.isEmpty()) {
+            // 신규 사용자의 경우 회원가입 페이지로 이동시키기 위해 정보 저장
             session.setAttribute("oauth2_attrs", Map.of(
                     "provider",     provider,
                     "social_email", socialEmail,
                     "name",         name
             ));
-        } else {
-            // 기존 유저면 바로 user_id 세션에 담고
-            session.setAttribute("user_id", userOpt.get().getId());
-        }
 
-        return oauth2User;
+            // 임시 UserPrincipal 반환 (회원가입 필요)
+            return new UserPrincipal(null, name, null, "GUEST", socialEmail, attrs);
+        } else {
+            // 기존 유저인 경우
+            User user = userOpt.get();
+            session.setAttribute("user_id", user.getId());
+
+            // UserPrincipal로 변환하여 반환
+            return new UserPrincipal(
+                    user.getId(),
+                    user.getNickname(),
+                    user.getProfileImage(),
+                    user.getRole(),
+                    user.getSocialEmail(),
+                    attrs
+            );
+        }
     }
 }
 

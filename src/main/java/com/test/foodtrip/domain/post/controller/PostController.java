@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+
 @Controller
 @Log4j2
 public class PostController {
@@ -57,9 +59,11 @@ public class PostController {
 
     @PostMapping("/post/create")
     public String create(@ModelAttribute PostDTO dto,
+                         @RequestParam(value = "tags", required = false) List<String> tags,
                          HttpSession session,
                          RedirectAttributes redirectAttributes){
         log.info("PostController create() - dto: " + dto);
+        log.info("PostController create() - tags: " + tags);
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -67,6 +71,9 @@ public class PostController {
         }
 
         try {
+            // 태그 정보를 DTO에 설정
+            dto.setTags(tags);
+
             Long pno = postService.create(dto);
             redirectAttributes.addFlashAttribute("msg", pno);
             return "redirect:/post";
@@ -93,10 +100,12 @@ public class PostController {
 
     @PostMapping("/post/modify")
     public String modify(PostDTO dto,
+                         @RequestParam(value = "tags", required = false) List<String> tags,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         log.info("PostController modify() - dto: " + dto);
+        log.info("PostController modify() - tags: " + tags);
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -104,6 +113,9 @@ public class PostController {
         }
 
         try {
+            // 태그 정보를 DTO에 설정
+            dto.setTags(tags);
+
             postService.modify(dto);
 
             redirectAttributes.addAttribute("page", requestDTO.getPage());
