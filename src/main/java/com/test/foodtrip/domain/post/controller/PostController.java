@@ -10,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -44,7 +45,9 @@ public class PostController {
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          Model model) {
         PostDTO dto = postService.read(id);
+        String placeId = dto.getPlaceId();
         model.addAttribute("dto", dto);
+        model.addAttribute("placeId", placeId);
         return "post/detail-post";
     }
 
@@ -60,10 +63,16 @@ public class PostController {
     @PostMapping("/post/create")
     public String create(@ModelAttribute PostDTO dto,
                          @RequestParam(value = "tags", required = false) List<String> tags,
+                         @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+                         @RequestParam(value = "placeId", required = false) String placeId,
+                         @RequestParam(value = "placeName", required = false) String placeName,
+                         @RequestParam(value = "placeAddress", required = false) String placeAddress,
                          HttpSession session,
-                         RedirectAttributes redirectAttributes){
-        log.info("PostController create() - dto: " + dto);
-        log.info("PostController create() - tags: " + tags);
+                         RedirectAttributes redirectAttributes) {
+        log.info("PostController create() - dto: {}", dto);
+        log.info("PostController create() - tags: {}", tags);
+        log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
+        log.info("PostController create() - placeId: {}", placeId);
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -71,16 +80,54 @@ public class PostController {
         }
 
         try {
-            // 태그 정보를 DTO에 설정
+            // 유저 정보 세션에서 가져와서 DTO에 설정
+            Long userId = (Long) session.getAttribute("user_id");
+            dto.setUserId(userId);
+
+            // 태그 정보 설정
             dto.setTags(tags);
 
-            Long pno = postService.create(dto);
+            // 위치 정보 설정
+            dto.setPlaceId(placeId);
+            dto.setPlaceName(placeName);
+            dto.setPlaceAddress(placeAddress);
+
+            // 이미지 배열로 변환
+            MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+
+            // 서비스 호출
+            Long pno = postService.create(dto, imagesArray);
+
             redirectAttributes.addFlashAttribute("msg", pno);
             return "redirect:/post";
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/login";
+        } catch (Exception e) {
+            log.error("게시글 생성 중 오류 발생", e);
+            redirectAttributes.addFlashAttribute("error", "게시글 생성 중 오류가 발생했습니다.");
+            return "redirect:/post/create";
         }
+    }
+
+
+    // 이미지 파일 유효성 검사 메서드
+    private boolean isValidImageFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            return false;
+        }
+
+        // 파일 크기 검사 (5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            return false;
+        }
+
+        // 파일 타입 검사
+        String contentType = file.getContentType();
+        return contentType != null &&
+                (contentType.equals("image/jpeg") ||
+                        contentType.equals("image/png") ||
+                        contentType.equals("image/gif"));
     }
 
     @GetMapping("/post/modify/{id}")

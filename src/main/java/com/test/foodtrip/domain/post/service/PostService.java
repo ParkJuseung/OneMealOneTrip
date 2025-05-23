@@ -6,14 +6,19 @@ import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.entity.PostTag;
 import com.test.foodtrip.domain.user.entity.User;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public interface PostService {
-    Long create(PostDTO dto);
+
+    @Transactional
+    Long create(PostDTO dto, MultipartFile[] images);
+
     PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO);
     PostDTO read(Long id);
 
@@ -52,6 +57,10 @@ public interface PostService {
                 .build();
 
         post.setUser(user);
+
+        if (post.getImages() == null) {
+            post.setImages(new ArrayList<>());
+        }
 
         return post;
     }
