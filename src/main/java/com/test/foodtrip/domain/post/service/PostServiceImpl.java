@@ -4,6 +4,7 @@ import com.test.foodtrip.domain.post.dto.PageRequestDTO;
 import com.test.foodtrip.domain.post.dto.PageResultDTO;
 import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
+import com.test.foodtrip.domain.post.entity.PostImage;
 import com.test.foodtrip.domain.post.entity.PostTag;
 import com.test.foodtrip.domain.post.entity.PostTagging;
 import com.test.foodtrip.domain.post.repository.PostRepository;
@@ -11,7 +12,6 @@ import com.test.foodtrip.domain.post.repository.PostTagRepository;
 import com.test.foodtrip.domain.post.repository.PostTaggingRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,24 +40,58 @@ public class PostServiceImpl implements PostService {
     private final PostTagRepository postTagRepository;
     private final PostTaggingRepository postTaggingRepository;
 
-    @Override
     @Transactional
-    public Long create(PostDTO dto) {
-        // 현재 로그인된 사용자 가져오기
+    @Override
+    public Long create(PostDTO dto, MultipartFile[] images) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
         }
 
         Post post = dtoToEntity(dto, currentUser);
+
+        // ✅ 이미지 저장 및 연관 PostImage 등록
+        if (images != null && images.length > 0) {
+            for (int i = 0; i < images.length; i++) {
+                MultipartFile image = images[i];
+                if (!image.isEmpty()) {
+                    try {
+                        String imageUrl = saveImage(image); // 로컬 저장
+                        PostImage postImage = new PostImage();
+                        postImage.setImageUrl(imageUrl);
+                        postImage.setImageOrder(i);
+                        post.addImage(postImage);
+                    } catch (IOException e) {
+                        throw new RuntimeException("이미지 저장 실패: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
         postRepository.save(post);
 
-        // ✅ 최적화된 태그 저장
+        // ✅ 태그 저장
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
             saveTagsOptimized(post, dto.getTags());
         }
 
         return post.getId();
+    }
+
+    /**
+     * 로컬에 이미지 저장 후 URL 반환
+     */
+    private String saveImage(MultipartFile file) throws IOException {
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        String originalFilename = file.getOriginalFilename();
+        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
+
+        Path path = Paths.get(uploadDir + uniqueFilename);
+
+        Files.createDirectories(path.getParent()); // 폴더 없으면 생성
+        file.transferTo(path.toFile());
+
+        return "/uploads/" + uniqueFilename; // 브라우저 접근용 경로
     }
 
     @Override

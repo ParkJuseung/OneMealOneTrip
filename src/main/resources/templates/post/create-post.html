@@ -6,6 +6,276 @@
 
 <th:block layout:fragment="style">
     <link rel="stylesheet" th:href="@{/css/post-create.css}">
+
+    <!-- Google Maps JavaScript API 추가 (Geocoding API도 포함) -->
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE&libraries=places&callback=initLocationSearch">
+    </script>
+
+    <style>
+        /* 위치 검색 드롭다운 스타일 */
+        .location-search-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .location-search-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .location-search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .location-search-input:focus {
+            border-color: #007bff;
+        }
+
+        .location-search-btn {
+            padding: 12px 20px;
+            background: #0ED8D5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .location-search-btn:hover {
+            background: #0BC5C2;
+        }
+
+        .location-search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 검색 결과 드롭다운 */
+        .location-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        /* 드롭다운이 위로 올라가는 경우 */
+        .location-dropdown.dropup {
+            top: auto;
+            bottom: 100%;
+            border-top: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .location-dropdown.show {
+            display: block;
+        }
+
+        /* 더 나은 스크롤바 스타일 */
+        .location-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .location-dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .location-dropdown::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .location-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        .location-dropdown-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .location-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .location-dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .location-dropdown-item.active {
+            background-color: #e7f3ff;
+        }
+
+        .location-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .location-address {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .location-type {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        /* 위치 미리보기 스타일 개선 */
+        .location-preview {
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 12px;
+            position: relative;
+        }
+
+        .location-preview-map {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .location-preview-info {
+            padding: 12px 16px;
+            background: white;
+        }
+
+        .location-preview-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .location-preview-address {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .location-preview-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .location-preview-remove:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* 검색 입력 상태 표시 */
+        .location-search-loading {
+            padding: 12px 16px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .location-search-no-results {
+            padding: 12px 16px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* 이미지 파일 정보 표시 스타일 */
+        .image-file-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 8px 6px 4px;
+            border-radius: 0 0 8px 8px;
+            font-size: 10px;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            opacity: 0.8;
+        }
+
+        /* 이미지 미리보기 컨테이너 개선 */
+        .image-preview-item {
+            position: relative;
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .image-preview-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .image-preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .image-preview-remove:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+    </style>
 </th:block>
 
 <body>
@@ -22,7 +292,7 @@
 
     <!-- 게시글 작성 폼 -->
     <div class="post-form-container">
-        <form th:action="@{/post/create}" th:method="post" id="postForm">
+        <form th:action="@{/post/create}" th:method="post" id="postForm" enctype="multipart/form-data">
             <!-- 카테고리 선택 -->
             <div class="form-group">
                 <label class="form-label">카테고리 선택</label>
@@ -85,7 +355,7 @@
                             <span>이미지 추가</span>
                         </label>
                     </div>
-                    <input type="file" id="imageUpload" accept="image/jpeg, image/png, image/gif" style="display: none;"
+                    <input type="file" id="imageUpload" name="imageFiles" accept="image/jpeg, image/png, image/gif" style="display: none;"
                            multiple>
                 </div>
                 <div class="form-error" id="imageError">이미지는 최대 5장까지 업로드 가능합니다</div>
@@ -97,9 +367,14 @@
                 <div class="location-search-container">
                     <div class="location-search-box">
                         <input type="text" id="locationSearch" class="location-search-input"
-                               placeholder="위치 검색 (예: 서울특별시 강남구)">
+                               placeholder="전세계 검색: Paris, New York, Tokyo, London, Dubai 등">
                         <button type="button" id="searchLocationBtn" class="location-search-btn">검색</button>
                     </div>
+                    <!-- 검색 결과 드롭다운 -->
+                    <div class="location-dropdown" id="locationDropdown">
+                        <!-- 검색 결과가 여기에 표시됩니다 -->
+                    </div>
+                    <!-- 위치 미리보기 -->
                     <div class="location-preview" id="locationPreview">
                         <img src="/api/placeholder/500/200" alt="위치 지도" class="location-preview-map">
                         <div class="location-preview-info">
@@ -118,57 +393,52 @@
                 <button type="button" id="cancelBtn" class="cancel-btn">취소</button>
                 <button type="submit" id="submitBtn" class="submit-btn">게시하기</button>
             </div>
+
         </form>
     </div>
 
-    <!-- 위치 검색 모달 -->
-    <div class="modal" id="locationModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">위치 선택</div>
-                <div class="modal-close" id="closeLocationModal"><i class="fas fa-times"></i></div>
-            </div>
-            <div class="modal-body">
-                <div id="locationResults" style="max-height: 300px; overflow-y: auto;">
-                    <!-- 검색 결과가 여기에 표시됩니다 -->
-                    <div class="location-item"
-                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                        <div style="font-weight: 600; margin-bottom: 5px;">서울특별시 강남구 삼성동</div>
-                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 삼성동 159</div>
-                    </div>
-                    <div class="location-item"
-                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                        <div style="font-weight: 600; margin-bottom: 5px;">강남 스타벅스</div>
-                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 테헤란로 107</div>
-                    </div>
-                    <div class="location-item"
-                         style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: all 0.3s ease;">
-                        <div style="font-weight: 600; margin-bottom: 5px;">강남역</div>
-                        <div style="font-size: 0.9rem; color: #666;">서울특별시 강남구 강남대로 396</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- 토스트 메시지용 컨테이너 -->
-    <div id="toast" class="toast"></div>
-
-
-
-
     <script>
-        $(document).ready(function() {
-            console.log('=== create-post JavaScript 시작 ===');
+        // Google Maps API 관련 변수들 - 단순화
+        let map;
+        let service;
+        let geocoder;
+        let currentSelectedIndex = -1;
 
+        // Google Maps API 초기화 함수 - 강화
+        function initGoogleMaps() {
+            console.log('🚀 Google Maps API 초기화 시작');
+            try {
+                // DOM에 실제 맵 요소 생성 (더 안정적)
+                const mapDiv = document.createElement('div');
+                mapDiv.style.display = 'none';
+                document.body.appendChild(mapDiv);
+
+                map = new google.maps.Map(mapDiv, {
+                    center: { lat: 0, lng: 0 },
+                    zoom: 1
+                });
+
+                service = new google.maps.places.PlacesService(map);
+                geocoder = new google.maps.Geocoder();
+
+                console.log('✅ Google Maps API 초기화 완료');
+            } catch (error) {
+                console.error('❌ Google Maps API 초기화 실패:', error);
+            }
+        }
+
+        // 페이지 로드 시 Google Maps 초기화
+        window.initLocationSearch = initGoogleMaps;
+
+        $(document).ready(function () {
             // 카테고리 선택
-            $('.category-option').click(function() {
+            $('.category-option').click(function () {
                 $('.category-option').removeClass('active');
                 $(this).addClass('active');
-                console.log('카테고리 선택됨:', $(this).data('category'));
             });
 
             // 제목 글자수 카운트
-            $('#postTitle').on('input', function() {
+            $('#postTitle').on('input', function () {
                 const length = $(this).val().length;
                 $('#titleCount').text(length);
 
@@ -178,7 +448,7 @@
             });
 
             // 내용 글자수 카운트
-            $('#postContent').on('input', function() {
+            $('#postContent').on('input', function () {
                 const length = $(this).val().length;
                 $('#contentCount').text(length);
 
@@ -188,26 +458,18 @@
             });
 
             // 태그 입력 처리
-            $('#tagInput').on('keydown', function(e) {
-                console.log('태그 키 입력:', e.key);
-
+            $('#tagInput').on('keydown', function (e) {
                 if (e.key === 'Enter' || e.key === ',') {
                     e.preventDefault();
 
                     const tagText = $(this).val().trim();
-                    console.log('입력된 태그 텍스트:', tagText);
-
                     if (!tagText) return;
 
-                    // 태그 형식 확인 (# 붙이기)
                     let tagName = tagText;
-                    if (!tagName.startsWith('#')) {
-                        tagName = '#' + tagName;
-                    }
 
                     // 이미 존재하는 태그인지 확인
                     let tagExists = false;
-                    $('.tag').each(function() {
+                    $('.tag').each(function () {
                         if ($(this).data('tag') === tagName) {
                             tagExists = true;
                             return false;
@@ -216,6 +478,7 @@
 
                     if (tagExists) {
                         showToast('이미 추가된 태그입니다');
+                        $(this).val('');
                         return;
                     }
 
@@ -232,38 +495,36 @@
                     }
 
                     // 새 태그 추가
-                    const newTag = $('<div class="tag" data-tag="' + tagName + '">' + tagName + '<div class="tag-close"><i class="fas fa-times"></i></div></div>');
+                    const displayTag = tagName.startsWith('#') ? tagName : '#' + tagName;
+                    const newTag = $('<div class="tag" data-tag="' + tagName + '">' + displayTag + '<div class="tag-close"><i class="fas fa-times"></i></div></div>');
                     $(this).before(newTag);
                     $(this).val('');
                     $('#tagsError').hide();
 
-                    console.log('태그 추가됨:', tagName);
-
                     // 태그 삭제 이벤트 바인딩
-                    newTag.find('.tag-close').click(function() {
-                        console.log('태그 삭제:', $(this).parent().data('tag'));
+                    newTag.find('.tag-close').click(function () {
                         $(this).parent().remove();
                         $('#tagsError').hide();
                     });
                 }
             });
 
-            // 이미지 업로드 처리
-            $('#imageUpload').change(function(e) {
+            // 이미지 업로드 처리 - multipart/form-data 방식
+            $('#imageUpload').change(function (e) {
                 const files = e.target.files;
                 const currentImages = $('.image-preview-item').length - 1; // 업로드 버튼 제외
 
-                console.log('이미지 업로드:', files.length, '개');
-
                 // 최대 이미지 수 제한 확인
                 if (currentImages + files.length > 5) {
-                    $('#imageError').show();
+                    $('#imageError').text('이미지는 최대 5장까지 업로드 가능합니다').show();
+                    // 초과된 파일들은 제거
+                    $(this).val('');
                     return;
                 } else {
                     $('#imageError').hide();
                 }
 
-                // 각 파일 처리
+                // 각 파일 처리 및 미리보기 생성
                 for (let i = 0; i < files.length; i++) {
                     if (currentImages + i >= 5) break;
 
@@ -281,72 +542,438 @@
                     }
 
                     // 미리보기 생성
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imagePreview = $('<div class="image-preview-item">' +
-                            '<img src="' + e.target.result + '" class="image-preview-img">' +
-                            '<div class="image-preview-remove"><i class="fas fa-times"></i></div>' +
-                            '</div>');
-
-                        // 이미지 미리보기를 이미지 추가 버튼 앞에 추가
-                        imagePreview.insertBefore('.image-upload-btn');
-
-                        // 이미지 삭제 이벤트 바인딩
-                        imagePreview.find('.image-preview-remove').click(function() {
-                            $(this).parent().remove();
-                            $('#imageError').hide();
-                        });
-                    };
-                    reader.readAsDataURL(file);
+                    createImagePreview(file, i);
                 }
             });
 
-            // 위치 검색 처리
-            $('#searchLocationBtn').click(function() {
-                const locationQuery = $('#locationSearch').val().trim();
-                if (!locationQuery) {
-                    showToast('검색어를 입력해주세요');
+            // 이미지 미리보기 생성 함수
+            function createImagePreview(file, index) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const uniqueId = 'img_' + Date.now() + '_' + index;
+
+                    const imagePreview = $(`
+                        <div class="image-preview-item" data-file-index="${index}" data-unique-id="${uniqueId}">
+                            <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
+                            <div class="image-preview-remove">
+                                <i class="fas fa-times"></i>
+                            </div>
+                            <div class="image-file-info">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-size">${formatFileSize(file.size)}</div>
+                            </div>
+                        </div>
+                    `);
+
+                    // 이미지 미리보기를 이미지 추가 버튼 앞에 추가
+                    imagePreview.insertBefore('.image-upload-btn');
+
+                    // 이미지 삭제 이벤트 바인딩
+                    imagePreview.find('.image-preview-remove').click(function () {
+                        removeImagePreview(uniqueId, index);
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // 이미지 미리보기 제거 함수
+            function removeImagePreview(uniqueId, fileIndex) {
+                // 미리보기 제거
+                $(`.image-preview-item[data-unique-id="${uniqueId}"]`).remove();
+
+                // 파일 입력에서 해당 파일 제거 (복잡하므로 전체 재구성)
+                const fileInput = $('#imageUpload')[0];
+                const files = Array.from(fileInput.files);
+
+                // DataTransfer 객체를 사용해서 파일 목록 재구성
+                const newFileList = new DataTransfer();
+
+                $('.image-preview-item').each(function() {
+                    const itemIndex = $(this).data('file-index');
+                    if (itemIndex !== fileIndex && files[itemIndex]) {
+                        newFileList.items.add(files[itemIndex]);
+                    }
+                });
+
+                // 파일 입력 업데이트
+                fileInput.files = newFileList.files;
+
+                // 에러 메시지 숨기기
+                $('#imageError').hide();
+            }
+
+            // 파일 크기 포맷팅 함수
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            // 위치 검색 입력 처리 - 단순화
+            let searchTimeout;
+            $('#locationSearch').on('input', function () {
+                const query = $(this).val().trim();
+
+                // 검색어가 비어있으면 드롭다운 숨기기
+                if (!query) {
+                    hideLocationDropdown();
                     return;
                 }
 
-                console.log('위치 검색:', locationQuery);
-                // 실제 구현에서는 API 요청을 통해 데이터를 가져옴
-                // 여기서는 가상의 데이터를 사용
-                openLocationModal();
+                // 최소 2글자 이상부터 검색
+                if (query.length < 2) {
+                    hideLocationDropdown();
+                    return;
+                }
+
+                // 입력 후 600ms 대기 후 검색
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    console.log('⌨️ 입력 검색 시작:', query);
+                    performLocationSearch(query);
+                }, 600);
             });
 
-            // 위치 모달 열기
-            function openLocationModal() {
-                $('#locationModal').addClass('active');
+            // 위치 검색 함수 (Places API + Geocoding API 조합)
+            function performLocationSearch(query) {
+                if (!service || !geocoder) {
+                    showLocationDropdown(['<div class="location-search-loading">지도 서비스를 초기화하는 중...</div>']);
+                    return;
+                }
+
+                // 로딩 상태 표시
+                showLocationDropdown(['<div class="location-search-loading"><i class="fas fa-spinner fa-spin"></i> 전세계 검색 중...</div>']);
+
+                // 1차: Google Places Text Search 실행
+                const placesRequest = {
+                    query: query,
+                    fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types']
+                };
+
+                service.textSearch(placesRequest, (placesResults, placesStatus) => {
+                    console.log('Places API 결과:', placesResults);
+                    console.log('Places API 상태:', placesStatus);
+
+                    // 2차: Geocoding API로 추가 검색 (더 광범위한 검색)
+                    const geocodingRequest = {
+                        address: query
+                    };
+
+                    geocoder.geocode(geocodingRequest, (geocodeResults, geocodeStatus) => {
+                        console.log('Geocoding API 결과:', geocodeResults);
+                        console.log('Geocoding API 상태:', geocodeStatus);
+
+                        // 두 API 결과 합치기
+                        let combinedResults = [];
+
+                        // Places API 결과 추가
+                        if (placesStatus === google.maps.places.PlacesServiceStatus.OK && placesResults) {
+                            combinedResults = [...placesResults];
+                        }
+
+                        // Geocoding API 결과 추가 (중복 제거하면서)
+                        if (geocodeStatus === 'OK' && geocodeResults) {
+                            geocodeResults.forEach(result => {
+                                // Places API 결과와 중복되지 않는지 확인
+                                const isDuplicate = combinedResults.some(existing =>
+                                    existing.formatted_address === result.formatted_address ||
+                                    existing.place_id === result.place_id
+                                );
+
+                                if (!isDuplicate) {
+                                    // Geocoding 결과를 Places API 형식으로 변환
+                                    const convertedResult = {
+                                        place_id: result.place_id,
+                                        name: extractLocationName(result.formatted_address),
+                                        formatted_address: result.formatted_address,
+                                        geometry: result.geometry,
+                                        types: result.types || []
+                                    };
+                                    combinedResults.push(convertedResult);
+                                }
+                            });
+                        }
+
+                        // 결과 표시
+                        if (combinedResults.length > 0) {
+                            displayLocationResults(combinedResults);
+                        } else {
+                            showLocationDropdown([
+                                '<div class="location-search-no-results">검색 결과를 찾을 수 없습니다.<br>' +
+                                '다른 검색어를 시도해보세요. (예: "Paris France", "New York USA")</div>'
+                            ]);
+                        }
+                    });
+                });
             }
 
-            // 위치 모달 닫기
-            $('#closeLocationModal').click(function() {
-                $('#locationModal').removeClass('active');
+            // 주소에서 장소명 추출 함수
+            function extractLocationName(address) {
+                if (!address) return '장소명 없음';
+
+                // 첫 번째 콤마 앞의 텍스트를 장소명으로 사용
+                const parts = address.split(',');
+                return parts[0].trim();
+            }
+
+            // 검색 결과를 드롭다운에 표시
+            function displayLocationResults(results) {
+                let resultsHtml = [];
+
+                results.forEach((place, index) => {
+                    const placeName = place.name || '장소명 없음';
+                    const placeAddress = place.formatted_address || '주소 정보 없음';
+
+                    // 장소 타입 표시 (선택적)
+                    let placeType = '';
+                    if (place.types && place.types.length > 0) {
+                        const typeMap = {
+                            'locality': '도시',
+                            'country': '국가',
+                            'administrative_area_level_1': '주/도',
+                            'tourist_attraction': '관광지',
+                            'restaurant': '레스토랑',
+                            'lodging': '숙박시설',
+                            'airport': '공항',
+                            'train_station': '기차역',
+                            'shopping_mall': '쇼핑몰'
+                        };
+
+                        for (let type of place.types) {
+                            if (typeMap[type]) {
+                                placeType = typeMap[type];
+                                break;
+                            }
+                        }
+                    }
+
+                    const resultHtml = `
+                        <div class="location-dropdown-item" data-index="${index}"
+                             data-place-id="${place.place_id}"
+                             data-place-name="${placeName}"
+                             data-place-address="${placeAddress}">
+                            <div class="location-name">${placeName}</div>
+                            <div class="location-address">${placeAddress}</div>
+                            ${placeType ? `<div class="location-type">${placeType}</div>` : ''}
+                        </div>
+                    `;
+                    resultsHtml.push(resultHtml);
+                });
+
+                showLocationDropdown(resultsHtml);
+                currentSelectedIndex = -1; // 선택 인덱스 초기화
+            }
+
+            // 드롭다운 표시 (화면 위치를 고려한 스마트 배치)
+            function showLocationDropdown(htmlArray) {
+                const dropdown = $('#locationDropdown');
+                const searchContainer = $('.location-search-container');
+
+                dropdown.html(htmlArray.join(''));
+                dropdown.removeClass('dropup'); // 이전 클래스 제거
+                dropdown.addClass('show');
+
+                // 드롭다운 위치 계산
+                setTimeout(() => {
+                    const dropdownHeight = dropdown.outerHeight();
+                    const containerOffset = searchContainer.offset();
+                    const containerHeight = searchContainer.outerHeight();
+                    const windowHeight = $(window).height();
+                    const scrollTop = $(window).scrollTop();
+
+                    // 드롭다운이 화면 아래로 벗어나는지 확인
+                    const spaceBelow = windowHeight + scrollTop - (containerOffset.top + containerHeight);
+                    const spaceAbove = containerOffset.top - scrollTop;
+
+                    // 아래 공간이 부족하고 위 공간이 더 크면 위로 표시
+                    if (dropdownHeight > spaceBelow && spaceAbove > spaceBelow && spaceAbove > 200) {
+                        dropdown.addClass('dropup');
+                    }
+                }, 10); // DOM 업데이트 후 계산
+            }
+
+            // 드롭다운 숨기기
+            function hideLocationDropdown() {
+                const dropdown = $('#locationDropdown');
+                dropdown.removeClass('show dropup');
+                currentSelectedIndex = -1;
+            }
+
+            // 키보드 네비게이션 처리
+            $('#locationSearch').on('keydown', function (e) {
+                const dropdown = $('#locationDropdown');
+                const items = dropdown.find('.location-dropdown-item');
+
+                if (!dropdown.hasClass('show') || items.length === 0) return;
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
+                        updateSelectedItem(items);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+                        updateSelectedItem(items);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (currentSelectedIndex >= 0) {
+                            $(items[currentSelectedIndex]).click();
+                        }
+                        break;
+                    case 'Escape':
+                        hideLocationDropdown();
+                        break;
+                }
+            });
+
+            // 선택된 아이템 표시 업데이트
+            function updateSelectedItem(items) {
+                items.removeClass('active');
+                if (currentSelectedIndex >= 0) {
+                    $(items[currentSelectedIndex]).addClass('active');
+                }
+            }
+
+            // 검색 버튼 클릭 처리 - 단순화
+            $('#searchLocationBtn').click(function () {
+                const query = $('#locationSearch').val().trim();
+                if (query) {
+                    console.log('🔘 버튼 검색 시작:', query);
+                    performLocationSearch(query);
+                }
             });
 
             // 위치 선택 처리
-            $(document).on('click', '.location-item', function() {
-                const locationName = $(this).find('div:first').text();
-                const locationAddress = $(this).find('div:last').text();
+            $(document).on('click', '.location-dropdown-item', function () {
+                const placeId = $(this).data('place-id');
+                const placeName = $(this).data('place-name');
+                const placeAddress = $(this).data('place-address');
 
-                $('#locationPreview').find('.location-preview-name').text(locationName);
-                $('#locationPreview').find('.location-preview-address').text(locationAddress);
+                // 검색 입력 필드에 선택한 장소명 표시
+                $('#locationSearch').val(placeName);
+
+                // 미리보기 텍스트 업데이트
+                $('#locationPreview').find('.location-preview-name').text(placeName);
+                $('#locationPreview').find('.location-preview-address').text(placeAddress);
+
+                // 정확한 위치 정보를 위해 Place Details API 호출
+                if (placeId && service) {
+                    getPlaceDetailsAndUpdateMap(placeId, placeName);
+                } else {
+                    updateLocationMapByAddress(placeAddress);
+                }
+
                 $('#locationPreview').show();
-                $('#locationModal').removeClass('active');
+                hideLocationDropdown();
 
-                console.log('위치 선택됨:', locationName);
+                // Place ID와 장소명을 hidden input으로 저장
+                $('#hiddenPlaceId, #hiddenPlaceName, #hiddenPlaceAddress').remove();
+
+                $('#postForm').append(`
+                    <input type="hidden" id="hiddenPlaceId" name="placeId" value="${placeId || ''}">
+                    <input type="hidden" id="hiddenPlaceName" name="placeName" value="${placeName}">
+                    <input type="hidden" id="hiddenPlaceAddress" name="placeAddress" value="${placeAddress}">
+                `);
+
+                console.log('선택된 위치:', {
+                    placeId: placeId,
+                    placeName: placeName,
+                    placeAddress: placeAddress
+                });
+            });
+
+            // Place Details API로 정확한 좌표 가져와서 지도 업데이트
+            function getPlaceDetailsAndUpdateMap(placeId, placeName) {
+                const request = {
+                    placeId: placeId,
+                    fields: ['geometry', 'name', 'formatted_address']
+                };
+
+                service.getDetails(request, (place, status) => {
+                    if (status === google.maps.places.PlacesServiceStatus.OK && place.geometry && place.geometry.location) {
+                        const lat = place.geometry.location.lat();
+                        const lng = place.geometry.location.lng();
+
+                        console.log('정확한 좌표:', {lat, lng, placeName});
+                        updateLocationMapByCoordinates(lat, lng, placeName);
+                    } else {
+                        console.log('Place Details 가져오기 실패:', status);
+                        updateLocationMapByPlaceId(placeId, placeName);
+                    }
+                });
+            }
+
+            // 좌표를 사용해서 지도 이미지 업데이트
+            function updateLocationMapByCoordinates(lat, lng, placeName) {
+                const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                    `center=${lat},${lng}&` +
+                    `zoom=15&` +
+                    `size=500x200&` +
+                    `markers=color:red%7C${lat},${lng}&` +
+                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+
+                $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
+            }
+
+            // Place ID를 사용해서 지도 이미지 업데이트
+            function updateLocationMapByPlaceId(placeId, placeName) {
+                const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                    `center=place_id:${placeId}&` +
+                    `zoom=15&` +
+                    `size=500x200&` +
+                    `markers=color:red%7Cplace_id:${placeId}&` +
+                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+
+                $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
+            }
+
+            // 주소를 사용해서 지도 이미지 업데이트
+            function updateLocationMapByAddress(address) {
+                const encodedAddress = encodeURIComponent(address);
+                const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
+                    `center=${encodedAddress}&` +
+                    `zoom=15&` +
+                    `size=500x200&` +
+                    `markers=color:red%7C${encodedAddress}&` +
+                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+
+                $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
+            }
+
+            // 윈도우 리사이즈시 드롭다운 위치 재계산
+            $(window).on('resize scroll', function() {
+                const dropdown = $('#locationDropdown');
+                if (dropdown.hasClass('show')) {
+                    // 드롭다운이 열려있으면 위치 재계산
+                    const htmlContent = dropdown.html();
+                    dropdown.removeClass('show dropup');
+                    setTimeout(() => {
+                        showLocationDropdown([htmlContent]);
+                    }, 10);
+                }
+            });
+
+            // 문서 클릭시 드롭다운 숨기기
+            $(document).click(function (e) {
+                if (!$(e.target).closest('.location-search-container').length) {
+                    hideLocationDropdown();
+                }
             });
 
             // 위치 삭제
-            $('#removeLocation').click(function() {
+            $('#removeLocation').click(function () {
                 $('#locationPreview').hide();
                 $('#locationSearch').val('');
-                console.log('위치 정보 삭제됨');
+                $('#hiddenPlaceId, #hiddenPlaceName, #hiddenPlaceAddress').remove();
             });
 
             // 뒤로가기 버튼
-            $('#backButton').click(function() {
+            $('#backButton').click(function () {
                 if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
                     if (confirm('작성 중인 내용이 있습니다. 페이지를 나가시겠습니까?')) {
                         window.history.back();
@@ -357,7 +984,7 @@
             });
 
             // 취소 버튼
-            $('#cancelBtn').click(function() {
+            $('#cancelBtn').click(function () {
                 if ($('#postTitle').val() || $('#postContent').val() || $('.tag').length > 0 || $('.image-preview-item').length > 1) {
                     if (confirm('작성 중인 내용이 있습니다. 취소하시겠습니까?')) {
                         window.history.back();
@@ -368,120 +995,51 @@
             });
 
             // 폼 제출 처리
-            $('#postForm').submit(function(e) {
-                console.log('=== 폼 제출 시작 ===');
+            $('#postForm').submit(function (e) {
+                e.preventDefault();
 
-                // 유효성 검증
                 let isValid = true;
 
-                // 제목 검증
                 const title = $('#postTitle').val().trim();
                 if (!title) {
                     $('#titleError').show();
                     isValid = false;
                 }
 
-                // 내용 검증
                 const content = $('#postContent').val().trim();
                 if (!content) {
                     $('#contentError').show();
                     isValid = false;
                 }
 
-                if (!isValid) {
-                    e.preventDefault();
-                    console.log('유효성 검사 실패');
-                    // 첫 번째 오류 위치로 스크롤
+                if (isValid) {
+                    $('input[name="tags"]').remove();
+
+                    $('.tag').each(function () {
+                        const tagValue = $(this).data('tag');
+                        $('#postForm').append('<input type="hidden" name="tags" value="' + tagValue + '">');
+                    });
+
+                    const category = $('.category-option.active').data('category');
+                    $('#hiddenCategory').remove();
+                    $('#postForm').append('<input type="hidden" id="hiddenCategory" name="category" value="' + category + '">');
+
+                    this.submit();
+                } else {
                     const firstError = $('.form-error:visible').first();
                     if (firstError.length) {
                         $('html, body').animate({
                             scrollTop: firstError.offset().top - 100
                         }, 500);
                     }
-                    return false;
                 }
-
-                // 태그 데이터를 폼에 추가
-                const tags = [];
-                $('.tag').each(function() {
-                    const tagText = $(this).data('tag');
-                    if (tagText) {
-                        // '#' 제거하고 태그 추가
-                        tags.push(tagText.replace('#', ''));
-                    }
-                });
-
-                console.log('수집된 태그들:', tags);
-
-                // 기존 hidden input 제거
-                $('input[name="tags"]').remove();
-                $('input[name="category"]').remove();
-                $('input[name="placeName"]').remove();
-
-                // 태그 hidden input 추가
-                tags.forEach(function(tag) {
-                    $('<input>').attr({
-                        type: 'hidden',
-                        name: 'tags',
-                        value: tag
-                    }).appendTo('#postForm');
-                    console.log('태그 hidden input 추가:', tag);
-                });
-
-                // 카테고리 정보도 추가
-                const category = $('.category-option.active').data('category') || 'post';
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'category',
-                    value: category
-                }).appendTo('#postForm');
-                console.log('카테고리 추가:', category);
-
-                // 위치 정보 추가
-                if ($('#locationPreview').is(':visible')) {
-                    const placeName = $('#locationPreview').find('.location-preview-name').text();
-                    if (placeName && placeName !== '장소명') {
-                        $('<input>').attr({
-                            type: 'hidden',
-                            name: 'placeName',
-                            value: placeName
-                        }).appendTo('#postForm');
-                        console.log('위치 정보 추가:', placeName);
-                    }
-                }
-
-                console.log('=== 폼 제출 데이터 준비 완료 ===');
-                console.log('제목:', title);
-                console.log('내용 길이:', content.length);
-                console.log('태그 개수:', tags.length);
-                console.log('카테고리:', category);
-
-                // 폼 제출 진행
-                return true;
             });
 
             // 토스트 메시지 표시
             function showToast(message) {
-                console.log('토스트 메시지:', message);
-                const toast = $('<div style="position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 15px 20px; border-radius: 6px; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;">' + message + '</div>');
-
-                $('body').append(toast);
-
-                setTimeout(() => toast.css('opacity', '1'), 10);
-                setTimeout(() => {
-                    toast.css('opacity', '0');
-                    setTimeout(() => toast.remove(), 300);
-                }, 3000);
+                const toast = $('#toast');
+                // 토스트 구현이 필요한 경우 여기에 추가
             }
-
-            // 위치 모달 내 아이템 호버 효과
-            $(document).on('mouseenter', '.location-item', function() {
-                $(this).css('background-color', 'var(--primary-light)');
-            }).on('mouseleave', '.location-item', function() {
-                $(this).css('background-color', '');
-            });
-
-            console.log('=== create-post JavaScript 초기화 완료 ===');
         });
     </script>
 </th:block>

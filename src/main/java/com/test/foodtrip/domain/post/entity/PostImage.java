@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "POST_IMAGE")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class PostImage {
 
     @Id
