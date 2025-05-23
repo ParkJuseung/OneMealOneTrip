@@ -6,38 +6,21 @@ import com.test.foodtrip.domain.post.dto.PostDTO;
 import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.entity.PostTag;
 import com.test.foodtrip.domain.user.entity.User;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public interface PostService {
-    Long create(PostDTO dto);
+
+    @Transactional
+    Long create(PostDTO dto, MultipartFile[] images);
+
     PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO);
     PostDTO read(Long id);
-
-//    default Post dtoToEntity(PostDTO dto, User user, List<PostTag> tagList) {
-//        Post post = Post.builder()
-//                .title(dto.getTitle())
-//                .content(dto.getContent())
-//                .viewCount(dto.getViewCount() != null ? dto.getViewCount() : 0)
-//                .latitude(dto.getLatitude())
-//                .longitude(dto.getLongitude())
-//                .placeName(dto.getPlaceName())
-//                .build();
-//
-//        post.setUser(user);
-//
-//        if (tagList != null) {
-//            for (PostTag tag : tagList) {
-//                post.addTag(tag);
-//            }
-//        }
-//
-//        return post;
-//    }
-
 
     default Post dtoToEntity(PostDTO dto, User user) {
         Post post = Post.builder()
@@ -52,6 +35,10 @@ public interface PostService {
                 .build();
 
         post.setUser(user);
+
+        if (post.getImages() == null) {
+            post.setImages(new ArrayList<>());
+        }
 
         return post;
     }
