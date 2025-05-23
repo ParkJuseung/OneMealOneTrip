@@ -12,13 +12,13 @@
 
 <body>
 <th:block layout:fragment="content">
-    <!-- 검색 영역 -->
-    <div class="search-container">
-        <div class="search-input-wrap">
-            <i class="fas fa-search search-icon-input"></i>
-            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">
-        </div>
-    </div>
+<!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
+<!--    <div class="search-container">-->
+<!--        <div class="search-input-wrap">-->
+<!--            <i class="fas fa-search search-icon-input"></i>-->
+<!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
+<!--        </div>-->
+<!--    </div>-->
 
     <!-- 사용자 선택 탭 -->
     <div class="user-selection">
@@ -33,15 +33,15 @@
     </div>
 
     <!-- 트렌딩 토픽 -->
-    <div class="trending-topics">
-        <div class="topic-badge active"># 인기 여행지</div>
-        <div class="topic-badge"># 제주도</div>
-        <div class="topic-badge"># 맛집투어</div>
-        <div class="topic-badge"># 유럽여행</div>
-        <div class="topic-badge"># 배낭여행</div>
-        <div class="topic-badge"># 프라하</div>
-        <div class="topic-badge"># 동행구함</div>
-    </div>
+<!--    <div class="trending-topics">-->
+<!--        <div class="topic-badge active"># 인기 여행지</div>-->
+<!--        <div class="topic-badge"># 제주도</div>-->
+<!--        <div class="topic-badge"># 맛집투어</div>-->
+<!--        <div class="topic-badge"># 유럽여행</div>-->
+<!--        <div class="topic-badge"># 배낭여행</div>-->
+<!--        <div class="topic-badge"># 프라하</div>-->
+<!--        <div class="topic-badge"># 동행구함</div>-->
+<!--    </div>-->
 
     <!-- 탭 네비게이션 -->
     <div class="tab-navigation">
@@ -53,10 +53,21 @@
     </div>
 
     <!-- 검색 결과 영역 -->
-    <div class="search-box">
-        <i class="fas fa-search search-icon"></i>
-        <div class="search-text">여행을 검색해보세요.</div>
-        <i class="fas fa-microphone" style="color: var(--text-light);"></i>
+    <div class="search-container">
+        <div class="search-input-wrap">
+            <i class="fas fa-search search-icon-input"></i>
+            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">
+        </div>
+    </div>
+
+    <div class="trending-topics">
+        <div class="topic-badge active"># 인기 여행지</div>
+        <div class="topic-badge"># 제주도</div>
+        <div class="topic-badge"># 맛집투어</div>
+        <div class="topic-badge"># 유럽여행</div>
+        <div class="topic-badge"># 배낭여행</div>
+        <div class="topic-badge"># 프라하</div>
+        <div class="topic-badge"># 동행구함</div>
     </div>
 
     <!-- 정렬 옵션 -->
@@ -147,7 +158,7 @@
     <div th:if="${result.dtoList.isEmpty()}" class="no-data">
         <p>게시글이 없습니다.</p>
     </div>
-
+    <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>
     <script>
         // 탭 네비게이션
         document.addEventListener('DOMContentLoaded', function () {

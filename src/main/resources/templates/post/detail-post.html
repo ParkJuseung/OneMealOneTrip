@@ -573,11 +573,11 @@
             </div>
         </div>
         -->
-    </div>
+        </div>
 
-    <button class="show-more-comments" id="showMoreBtn">
-        댓글 더보기
-    </button>
+        <button class="show-more-comments" id="showMoreBtn">
+            댓글 더보기
+        </button>
     </div>
 
     <!-- 관련 게시글 -->
@@ -586,16 +586,6 @@
         <div class="related-posts-list">
             <!-- 관련 게시글들이 여기에 표시됩니다 -->
         </div>
-    </div>
-
-    <!-- 수정/삭제 버튼 (작성자인 경우만 표시) -->
-    <div class="post-actions" th:if="${session.user_id == dto.userId}">
-        <button class="edit-post-btn" onclick="editPost()">
-            <i class="fas fa-edit"></i> 수정
-        </button>
-        <button class="delete-post-btn" onclick="deletePost()">
-            <i class="fas fa-trash"></i> 삭제
-        </button>
     </div>
 
     <!-- 토스트 메시지용 컨테이너 -->
