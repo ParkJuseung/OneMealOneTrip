@@ -11,9 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -25,22 +22,6 @@ public class MyPageServiceImpl implements MyPageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
 
-
-        // 1. String 타입 생년월일 꺼내오기
-        String birthDateStr = user.getBirthDate(); // 또는 userDTO.getBirth_date() 등
-
-        // 2. String → LocalDate 변환
-        LocalDate birthDate = null;
-        if (birthDateStr != null && !birthDateStr.isBlank()) {
-            DateTimeFormatter formatter;
-            if (birthDateStr.contains("/")) {
-                formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-            } else {
-                formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            }
-            birthDate = LocalDate.parse(birthDateStr, formatter);
-        }
-
         // DTO로 매핑 (필드 매핑 부분을 반드시 채워주세요)
         return MyPageDTO.builder()
                 .id(user.getId())
@@ -49,7 +30,7 @@ public class MyPageServiceImpl implements MyPageService {
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .gender(user.getGender())
-                .birthDate(birthDate)
+                .birthDate(user.getBirthDate())
                 .phone(user.getPhone())
                 .greeting(user.getGreeting())
                 .profileImage(user.getProfileImage())
@@ -102,6 +83,7 @@ public class MyPageServiceImpl implements MyPageService {
         }
 
 
+
         userRepository.save(user);
 
         // 바로 다시 조회해서 변경이 반영됐는지 한 번 더 로그
@@ -109,6 +91,7 @@ public class MyPageServiceImpl implements MyPageService {
         System.out.println("▶▶ 업데이트 후 nickname=" + updated.getNickname()
                 + ", greeting=" + updated.getGreeting() + updated.getPhone());
     }
+
 
 
     @Override
@@ -129,6 +112,7 @@ public class MyPageServiceImpl implements MyPageService {
 
         return UsersInfoDTO.fromEntity(info);
     }
+
 
 
     @Override
