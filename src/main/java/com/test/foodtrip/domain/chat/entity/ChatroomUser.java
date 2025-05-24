@@ -2,17 +2,18 @@ package com.test.foodtrip.domain.chat.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "CHATROOMUSER")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "chatroomuser")
 public class ChatroomUser {
 
     @Id
@@ -26,9 +27,10 @@ public class ChatroomUser {
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder.Default
     @Column(name = "role", nullable = false, length = 10)
     private String role = "MEMBER";
 
@@ -53,5 +55,27 @@ public class ChatroomUser {
     @PrePersist
     public void prePersist() {
         this.joinedAt = LocalDateTime.now();
+    }
+    
+    // 사용자가 채팅방에 나갔다가 다시 들어왔을때
+    public void rejoin(Long lastMessageId) {
+        this.status = "JOINED";
+        this.joinedAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
+        this.lastReadMessageId = lastMessageId;
+    }
+    
+    // 채팅방 삭제 및 채팅방 나갈경우 status = LEFT로 수정함.
+    public void leave() {
+        this.status = "LEFT";
+        this.leftAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
+    }
+
+    // 채팅방에서 사용자 강퇴 할 경우 KICKED 로 상태 바꿈.
+    public void kick() {
+        this.status = "KICKED";
+        this.leftAt = LocalDateTime.now();
+        this.statusUpdatedAt = LocalDateTime.now();
     }
 }

@@ -1,19 +1,22 @@
 package com.test.foodtrip.domain.chat.entity;
 
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.test.foodtrip.domain.user.entity.User;
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "CHATROOM")
-@Getter @Setter
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
 public class ChatRoom {
 
     @Id
@@ -22,41 +25,48 @@ public class ChatRoom {
     @Column(name = "chatroom_id")
     private Long id;
 
-    @Column(name = "title", nullable = false, length = 100)
+    @Column(name = "title", length = 100, nullable = false)
     private String title;
 
     @Column(name = "thumbnail_image_url", length = 255)
     private String thumbnailImageUrl;
 
-    @Column(name = "is_deleted", nullable = false, length = 1)
+    @Builder.Default
+    @Column(name = "is_deleted", length = 1, nullable = false)
     private String isDeleted = "N";
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // 양방향 관계
+    @Builder.Default
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatroomUser> users = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMessage> messages = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatroomNoticeHistory> notices = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatroomLike> likes = new ArrayList<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "CHATROOMHASHTAG",
-            joinColumns = @JoinColumn(name = "chatroom_id"),
-            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
-    )
-    private List<Hashtag> hashtags = new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatRoomHashtag> chatRoomHashtags = new ArrayList<>();
+    
+    // 채팅방 유저에 대한 log 처리용 채팅방 역할 컬럼을 나누기 위해서
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User user; // 방장 
+
 
     @PrePersist
     public void prePersist() {
@@ -68,7 +78,6 @@ public class ChatRoom {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 편의 메서드
     public void addUser(ChatroomUser user) {
         users.add(user);
         user.setChatRoom(this);
@@ -84,7 +93,17 @@ public class ChatRoom {
         notice.setChatRoom(this);
     }
 
-    public void addHashtag(Hashtag hashtag) {
-        hashtags.add(hashtag);
+    public void softDelete() {
+        this.isDeleted = "Y";
+        this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    public void markAsDeleted() {
+        this.isDeleted = "Y";
+    }
+
 }

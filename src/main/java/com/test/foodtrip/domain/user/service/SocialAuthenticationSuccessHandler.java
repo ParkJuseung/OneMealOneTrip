@@ -5,7 +5,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -23,7 +22,7 @@ public class SocialAuthenticationSuccessHandler
     public SocialAuthenticationSuccessHandler(UserRepository userRepository) {
         super();
         this.userRepository = userRepository;
-        setDefaultTargetUrl("/index");
+        setDefaultTargetUrl("/");
 
     }
 
@@ -68,7 +67,7 @@ public class SocialAuthenticationSuccessHandler
         } else {
             System.out.println(">>> 기존 유저로 판단, 기본 성공 핸들러 실행");
 
-            getRedirectStrategy().sendRedirect(request, response, "/index");
+            getRedirectStrategy().sendRedirect(request, response, "/");
 
 
         }

@@ -1,10 +1,11 @@
 package com.test.foodtrip.domain.post.entity;
 
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 

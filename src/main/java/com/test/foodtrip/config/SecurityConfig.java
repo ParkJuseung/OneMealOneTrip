@@ -1,5 +1,6 @@
 package com.test.foodtrip.config;
 
+import com.test.foodtrip.domain.user.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +13,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.test.foodtrip.domain.user.service.CustomOAuth2UserService;
 import com.test.foodtrip.domain.user.service.SocialAuthenticationSuccessHandler;
 
 @Configuration
