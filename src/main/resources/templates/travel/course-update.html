@@ -928,16 +928,7 @@
     // 취소 버튼
     $('#cancel-trip').on('click', function() {
       if (confirm('작성 중인 여행 계획을 취소하시겠습니까?')) {
-        // 입력 필드 초기화
-        $('#trip-title').val('');
-        $('#trip-description').val('');
-        
-        // 태그 초기화
-        tags = [];
-        $('.tag-item').remove();
-        
-        // 장소 목록 초기화
-        clearAllPlaces();
+        window.history.back();
       }
     });
   }
