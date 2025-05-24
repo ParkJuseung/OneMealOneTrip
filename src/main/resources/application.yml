@@ -1,4 +1,7 @@
 spring:
+  config:
+    import: optional:application-secret.yml
+
   # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
@@ -10,25 +13,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update  # ?? ????? update, ?? ????? validate ??
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.OracleDialect
-
-#  # Security ? OAuth2 ??
-#  security:
-#    oauth2:
-#      client:
-#        registration:
-#          google:
-#            client-id: your-google-client-id
-#            client-secret: your-google-client-secret
-#            scope:
-#              - email
-#              - profile
-#          # ??? ?? ?? OAuth2 ???? ??? ? ????
-#          # naver, kakao ?
 
   # Thymeleaf ??
   thymeleaf:
@@ -67,3 +58,4 @@ logging:
     com.test: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+

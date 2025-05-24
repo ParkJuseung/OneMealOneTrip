@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRIPSODA - 게시글 상세 페이지</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <th:block layout:fragment="style"></th:block>
+</head>
+<body>
+<div class="container">
+    <!-- 왼쪽 배너 영역 -->
+    <div th:replace="~{layout/fragments/banner :: banner}"></div>
+
+
+
+    <!-- 오른쪽 콘텐츠 영역 -->
+    <div class="right-content">
+        <!-- 헤더 -->
+        <header th:replace="~{layout/fragments/header :: header}"></header>
+
+        <!-- 콘텐츠 -->
+        <th:block layout:fragment="content"></th:block>
+
+        <!-- 모달 (삭제 확인용) -->
+        <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">게시글 삭제</div>
+                    <div class="modal-close" id="closeModal"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="modal-body">
+                    <p>정말 이 게시글을 삭제하시겠습니까?</p>
+                    <p>삭제한 게시글은 복구할 수 없습니다.</p>
+                    <div class="confirmation-actions">
+                        <div class="cancel-button" id="cancelDelete">취소</div>
+                        <div class="confirm-button" id="confirmDelete">삭제</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신고 모달 -->
+        <div class="modal" id="reportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">게시글 신고</div>
+                    <div class="modal-close" id="closeReportModal"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="modal-body">
+                    <p>신고 사유를 선택해주세요.</p>
+                    <div style="margin-top: 15px;">
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="spam" style="margin-right: 10px;">
+                                <span>광고/스팸</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="abuse" style="margin-right: 10px;">
+                                <span>욕설/비방</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="inappropriate"
+                                       style="margin-right: 10px;">
+                                <span>부적절한 내용</span>
+                            </label>
+                        </div>
+                        <div class="report-option"
+                             style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="reportReason" value="other" style="margin-right: 10px;">
+                                <span>기타</span>
+                            </label>
+                        </div>
+                    </div>
+                    <textarea
+                            style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; resize: none; font-family: inherit;"
+                            rows="4" placeholder="추가 사유를 입력해주세요 (선택사항)"></textarea>
+                    <div class="confirmation-actions">
+                        <div class="cancel-button" id="cancelReport">취소</div>
+                        <div class="confirm-button" id="confirmReport">신고</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 네비게이션 바 -->
+<!--        <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>-->
+        <!-- 알림 토스트 -->
+        <div class="toast" id="toast">알림 메시지</div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. 필요한 요소 찾기
+        const addButtonContainer = document.querySelector('.nav-item');
+        const addButton = addButtonContainer.querySelector('.add-button');
+
+        // 2. 오버레이 요소 생성
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        document.body.appendChild(overlay);
+
+        // 3. 토글 메뉴 컨테이너 생성
+        const toggleMenu = document.createElement('div');
+        toggleMenu.className = 'toggle-menu';
+
+        // 4. 메뉴 아이템 생성
+        const menuItem1 = document.createElement('div');
+        menuItem1.className = 'menu-item';
+        menuItem1.innerHTML = '<i class="fas fa-camera"></i>';
+
+        const menuItem2 = document.createElement('div');
+        menuItem2.className = 'menu-item';
+        menuItem2.innerHTML = '<i class="fas fa-edit"></i>';
+        menuItem2.addEventListener('click', () => {
+            location.href = '/post/create';
+        });
+
+        // 5. 메뉴 아이템 추가
+        toggleMenu.appendChild(menuItem1);
+        toggleMenu.appendChild(menuItem2);
+
+        // 6. 토글 메뉴를 .add-button 앞에 추가 (DOM에서 형제 요소로)
+        addButtonContainer.insertBefore(toggleMenu, addButton);
+
+        // 8. 토글 기능 구현
+        let isOpen = false;
+
+        function toggleMenuState() {
+            isOpen = !isOpen;
+
+            if (isOpen) {
+                addButton.classList.add('active');
+                toggleMenu.classList.add('active');
+                overlay.classList.add('active');
+            } else {
+                addButton.classList.remove('active');
+                toggleMenu.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        }
+
+        // 9. 이벤트 리스너 등록
+        addButton.addEventListener('click', toggleMenuState);
+
+        overlay.addEventListener('click', () => {
+            if (isOpen) toggleMenuState();
+        });
+
+        // 10. 메뉴 아이템 이벤트 처리
+        menuItem1.addEventListener('click', () => {
+            console.log('카메라 메뉴 클릭됨');
+            toggleMenuState();
+            // 여기에 카메라 기능 구현
+        });
+
+        menuItem2.addEventListener('click', () => {
+            console.log('편집 메뉴 클릭됨');
+            toggleMenuState();
+            // 여기에 편집 기능 구현 (페이지 이동은 위에서 처리)
+        });
+
+
+
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const courseCards = document.querySelectorAll('.course-card');
+        courseCards.forEach(card => {
+            card.addEventListener('click', function() {
+
+                const courseId = this.getAttribute('data-id');
+
+                fetch(`/api/travel/${courseId}/views`, {
+                    method: "PATCH"
+                })
+                    .then(() => {
+                        window.location.href = `/travel/${courseId}`;
+                    })
+                    .catch(err => {
+                        // 실패하더라도 상세 페이지 이동
+                        window.location.href = `/travel/${courseId}`;
+                    });
+
+            });
+        });
+
+        // 검색 기능
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+
+                // 여기에 검색 로직 추가 가능
+                // 예: 검색어와 일치하는 코스 카드만 표시
+
+                // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
+                if (searchTerm.length > 0) {
+                    courseCards.forEach(card => {
+                        const title = card.querySelector('.course-title').textContent.toLowerCase();
+                        const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
+
+                        // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
+                        if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                } else {
+                    // 검색어가 없으면 모두 표시
+                    courseCards.forEach(card => {
+                        card.style.display = 'block';
+                    });
+                }
+            });
+        }
+
+    });
+</script>
+</body>
+</html>

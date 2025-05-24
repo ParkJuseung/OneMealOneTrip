@@ -1,6 +1,7 @@
 package com.test.foodtrip.domain.chat.entity;
 
 
+import com.test.foodtrip.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "CHAT_MESSAGE")
+@Table(name = "CHATMESSAGE")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessage {
@@ -43,10 +44,10 @@ public class ChatMessage {
     @Column(name = "file_type", length = 50)
     private String fileType;
 
-    @Column(name = "latitude", precision = 10, scale = 6)
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", precision = 10, scale = 6)
+    @Column(name = "longitude")
     private Double longitude;
 
     @Column(name = "location_description", length = 255)

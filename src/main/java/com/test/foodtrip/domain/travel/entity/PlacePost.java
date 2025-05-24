@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "PLACE_POST")
+@Table(name = "PlacePost")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlacePost {
