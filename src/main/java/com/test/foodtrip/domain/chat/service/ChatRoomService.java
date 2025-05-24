@@ -41,6 +41,9 @@ public class ChatRoomService {
     private final ChatroomLikeRepository chatroomLikeRepository;
     private final UserRepository userRepository;
 
+    private static final String DEFAULT_THUMBNAIL_URL = "/images/chat/default-thumbnail-100x100.png";
+
+
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -87,9 +90,11 @@ public class ChatRoomService {
         MultipartFile thumbnailFile = dto.getThumbnailImage();
         if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
             if (!fileUploadService.isImageFile(thumbnailFile)) {
-                throw new IllegalArgumentException("jpg 또는 png 형식의 이미지 파일만 업로드 가능합니다.");
+                throw new IllegalArgumentException("업로드 실패: 지원하지 않는 파일 형식입니다. jpg 또는 png만 허용됩니다.");
             }
+            // ✅ [S3 전환 가능 지점 #1]
             thumbnailUrl = fileUploadService.saveFile(thumbnailFile, "chatroom");
+            // 위 로직은 추후 S3Service.saveFile(...)로 교체될 수 있음
         }
 
         // 2. 채팅방 생성
@@ -200,7 +205,7 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void editRoom(Long roomId, ChatRoomEditRequestDTO dto, MultipartFile thumbnailImage, Long currentUserId) {
+    public void editRoom(Long roomId, ChatRoomEditRequestDTO dto, MultipartFile thumbnailImage, boolean resetThumbnail, Long currentUserId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다. ID: " + roomId));
 
@@ -237,6 +242,19 @@ public class ChatRoomService {
                     .build();
             chatroomNoticeRepository.save(history);
             chatroomNoticeRepository.flush();
+        }
+
+        // 썸네일 이미지 처리
+        if (resetThumbnail) {
+            chatRoom.updateThumbnailImageUrl(DEFAULT_THUMBNAIL_URL);
+        } else if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            if (!fileUploadService.isImageFile(thumbnailImage)) {
+                throw new IllegalArgumentException("업로드 실패: 지원하지 않는 파일 형식입니다. jpg 또는 png만 허용됩니다.");
+            }
+            // ✅ [S3 전환 가능 지점 #2]
+            String newUrl = fileUploadService.saveFile(thumbnailImage, "chatroom");
+            // S3 업로드 후 반환된 public URL도 그대로 저장 가능
+            chatRoom.updateThumbnailImageUrl(newUrl);
         }
     }
 

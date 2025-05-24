@@ -98,8 +98,8 @@ export function setDetailModal(room) {
         `url('${room.thumbnailImageUrl || '/images/chat/default-banner-768x300.png'}')`;
     document.getElementById('detail-hashtags').innerHTML =
         room.hashtags.map(tag => `<span class="tag">#${tag}</span>`).join('');
-    document.getElementById('detail-notice').textContent = '공지사항: ' + (room.notice || '-');
-    document.getElementById('detail-description').textContent = '설명글: ' + (room.description || '-');
+    document.getElementById('detail-notice').textContent = room.notice || '-';
+    document.getElementById('detail-description').textContent = room.description || '-';
 }
 
 export function controlDetailButtons(role) {
@@ -246,6 +246,21 @@ export function initEditModal() {
 export function initCreateModal() {
     const confirmCreate = document.getElementById("confirm-create");
     const createChatModal = document.getElementById("create-chat-modal");
+    const fileInput = document.getElementById("chat-thumbnail");
+    const previewImg = document.getElementById("chatCreatePreview");
+
+    if (fileInput && previewImg) {
+        fileInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
     confirmCreate?.addEventListener("click", async () => {
         const title = document.getElementById("chat-title").value;
@@ -258,8 +273,17 @@ export function initCreateModal() {
             return;
         }
 
-        const thumbnailFile = document.getElementById("chat-thumbnail").files[0];
+        const thumbnailFile = fileInput?.files?.[0];
+
         if (thumbnailFile) {
+            // 파일 크기 제한 (5MB)
+            const sizeInMB = (thumbnailFile.size / (1024 * 1024)).toFixed(2);
+            if (thumbnailFile.size > 5 * 1024 * 1024) {
+                alert(`5MB 이하의 이미지만 업로드 가능합니다.\n현재 파일 크기: ${sizeInMB}MB`);
+                return;
+            }
+
+            // 파일 타입 검사
             const type = thumbnailFile.type;
             if (!(type === "image/png" || type === "image/jpeg")) {
                 alert("이미지 파일(png, jpg)만 업로드 가능합니다.");
@@ -292,3 +316,4 @@ export function initCreateModal() {
         }
     });
 }
+

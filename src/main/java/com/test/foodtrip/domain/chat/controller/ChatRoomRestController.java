@@ -98,7 +98,8 @@ public class ChatRoomRestController {
                                           @RequestParam(value = "notice", required = false) String notice,
                                           @RequestParam(value = "description", required = false) String description,
                                           @RequestParam(value = "hashtags", required = false) List<String> hashtags,
-                                          @RequestParam(value = "thumbnailImage", required = false) MultipartFile thumbnailImage) {
+                                          @RequestParam(value = "thumbnailImage", required = false) MultipartFile thumbnailImage,
+                                          @RequestParam(value = "resetThumbnail", defaultValue = "false") boolean resetThumbnail) {
 
         ChatRoomEditRequestDTO dto = ChatRoomEditRequestDTO.builder()
                 .title(title)
@@ -107,7 +108,8 @@ public class ChatRoomRestController {
                 .hashtags(hashtags != null ? hashtags : List.of())
                 .build();
 
-        chatRoomService.editRoom(id, dto, thumbnailImage, getCurrentUserId());
+        chatRoomService.editRoom(id, dto, thumbnailImage, resetThumbnail, getCurrentUserId());
+
         return ResponseEntity.ok().build();
     }
 
