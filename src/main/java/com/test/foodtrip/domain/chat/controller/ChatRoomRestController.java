@@ -15,7 +15,9 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +27,7 @@ public class ChatRoomRestController {
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
 
-    // ✅ 현재 로그인한 유저의 userId 가져오기
+    // 현재 로그인한 유저의 userId 가져오기
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
@@ -44,6 +46,7 @@ public class ChatRoomRestController {
             @RequestParam("limit") int limit,
             @RequestParam(value = "keyword", required = false) String keyword
     ) {
+        Long userId = getCurrentUserId();
         return chatRoomService.getAllRoomsWithPagination(offset, limit, getCurrentUserId(), keyword);
     }
 
@@ -54,7 +57,8 @@ public class ChatRoomRestController {
             @RequestParam("limit") int limit,
             @RequestParam(value = "keyword", required = false) String keyword
     ) {
-        return chatRoomService.getPopularRoomsWithPagination(offset, limit, keyword);
+        Long userId = getCurrentUserId();
+        return chatRoomService.getPopularRoomsWithPagination(offset, limit, getCurrentUserId(), keyword);
     }
 
     // 내가 참여중인 채팅방 목록 조회
@@ -72,6 +76,18 @@ public class ChatRoomRestController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Long createRoom(@ModelAttribute ChatRoomCreateRequestDTO dto) {
         return chatRoomService.createChatRoom(dto, getCurrentUserId());
+    }
+
+
+    @PostMapping("/{chatRoomId}/like")
+    public ResponseEntity<Map<String, Object>> toggleLike(@PathVariable Long chatRoomId) {
+        User user = userRepository.findById(getCurrentUserId())
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+
+        // ✅ 좋아요 상태 + 수가 포함된 Map 반환
+        Map<String, Object> result = chatRoomService.toggleLike(chatRoomId, user);
+
+        return ResponseEntity.ok(result);
     }
 
     // 채팅방 상세 조회
@@ -112,5 +128,6 @@ public class ChatRoomRestController {
 
         return ResponseEntity.ok().build();
     }
+
 
 }

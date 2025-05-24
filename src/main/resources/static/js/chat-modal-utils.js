@@ -100,6 +100,18 @@ export function setDetailModal(room) {
         room.hashtags.map(tag => `<span class="tag">#${tag}</span>`).join('');
     document.getElementById('detail-notice').textContent = room.notice || '-';
     document.getElementById('detail-description').textContent = room.description || '-';
+    // 좋아요 수 세팅
+    //document.getElementById('detail-like-count').textContent = room.likeCount ?? 0;
+
+    // 하트 초기 상태 설정
+    const heartIcon = document.querySelector('#like-toggle i');
+    if (room.liked) {
+        heartIcon.classList.remove('far');
+        heartIcon.classList.add('fas');
+    } else {
+        heartIcon.classList.remove('fas');
+        heartIcon.classList.add('far');
+    }
 }
 
 export function controlDetailButtons(role) {
@@ -112,24 +124,54 @@ export function bindLikeToggle(roomId) {
     const likeToggle = document.getElementById('like-toggle');
     if (!likeToggle) return;
 
-    const icon = likeToggle.querySelector('i');
     const clone = likeToggle.cloneNode(true);
     likeToggle.parentNode.replaceChild(clone, likeToggle);
 
     clone.addEventListener('click', async () => {
-        const liked = icon.classList.contains('fas');
         try {
-            await fetch(`/api/chatrooms/${roomId}/like`, {
-                method: liked ? 'DELETE' : 'POST'
+            const res = await fetch(`/api/chatrooms/${roomId}/like`, {
+                method: 'POST'
             });
-            icon.classList.toggle('fas');
-            icon.classList.toggle('far');
+
+            if (!res.ok) throw new Error("서버 응답 실패");
+
+            const data = await res.json(); // { liked, likeCount }
+            const updatedRes = await fetch(`/api/chatrooms/${roomId}`);
+            if (updatedRes.ok) {
+                const updatedRoom = await updatedRes.json();
+                setDetailModal(updatedRoom);
+            }
+/*
+            // ✅ 모달 내부 요소 다시 선택 (가장 최신)
+            const icon = clone.querySelector('i');
+            const countEl = document.getElementById('detail-like-count');
+
+            icon.classList.toggle('fas', data.liked);
+            icon.classList.toggle('far', !data.liked);
+            if (countEl) countEl.textContent = data.likeCount;
+
+            icon.setAttribute("title", data.liked ? "좋아요 취소" : "좋아요");
+*/
+            // ✅ 리스트 UI도 동기화
+            const listRoom = document.querySelector(`.chat-room[data-room-id="${roomId}"]`);
+            if (listRoom) {
+                const listLikeBlock = listRoom.querySelector(".chat-likes");
+                const listIcon = listLikeBlock.querySelector("i");
+                const listCount = listLikeBlock.querySelector("span");
+                listIcon.classList.toggle("fas", data.liked);
+                listIcon.classList.toggle("far", !data.liked);
+                listCount.textContent = data.likeCount;
+            }
+
         } catch (err) {
             alert('좋아요 처리 실패');
             console.error(err);
         }
     });
+
 }
+
+
 
 export function initDetailModal() {
     const enterBtn = document.getElementById("enter-chatroom");

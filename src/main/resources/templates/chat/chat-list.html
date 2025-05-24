@@ -33,7 +33,7 @@
 
 		<!-- 채팅방 목록 영역 -->
 		<div class="chat-list">
-			<div class="chat-room" th:each="room : ${chatRooms}" th:attr="data-id=${room.id}">
+			<div class="chat-room" th:each="room : ${chatRooms}" th:attr="data-id=${room.id}, data-room-id=${room.id}">
 
 				<!-- 왼쪽: 썸네일 + 참여자 수 -->
 				<div class="chat-left">
@@ -61,8 +61,9 @@
 				<!-- 오른쪽: 시간 + 좋아요 -->
 				<div class="chat-right">
 					<div class="chat-time" th:text="${#temporals.format(room.createdAt, 'yy-MM-dd HH:mm')}">시간</div>
-					<div class="chat-likes">
-						❤️ <span th:text="${room.likeCount}">0</span>
+					<div class="chat-likes" data-room-id="${room.id}">
+						<i class="${room.liked ? 'fas' : 'far'} fa-heart like-icon"></i>
+						<span class="like-count">${room.likeCount}</span>
 					</div>
 				</div>
 			</div>
@@ -97,7 +98,10 @@
 
 							<!-- 상단 배경 썸네일 이미지 영역 -->
 							<div class="chatroom-header" id="detail-thumbnail-area">
-								<div class="like-toggle" id="like-toggle"><i class="far fa-heart"></i></div>
+								<!-- 상세 모달의 좋아요 표시 영역 -->
+								<div class="like-toggle" id="like-toggle">
+									<i class="far fa-heart"></i> <!-- filled: fas, empty: far -->
+								</div>
 								<div class="chatroom-header-content">
 									<div class="chatroom-title" id="detail-title">채팅방 제목</div>
 									<div class="chatroom-meta">
@@ -473,20 +477,24 @@
 				const div = document.createElement('div');
 				div.className = 'chat-room';
 				div.setAttribute('data-id', room.id);
+				div.setAttribute('data-room-id', room.id);
 				div.innerHTML = `
-        <div class="chat-left">
-          <img src="${room.thumbnailImageUrl || '/images/chat/default-thumbnail-100x100.png'}" class="chat-avatar" />
-          <div class="chat-participant-count">참여자: ${room.participantCount}명</div>
-        </div>
-        <div class="chat-center">
-          <div class="chat-title">${room.title}</div>
-          <div class="chat-hashtags">${room.hashtags.map(tag => `<div class="chat-hashtag">#${tag}</div>`).join('')}</div>
-          <div class="chat-owner">방장: ${room.ownerNickname}</div>
-        </div>
-        <div class="chat-right">
-          <div class="chat-time">${new Date(room.createdAt).toLocaleString('ko-KR')}</div>
-          <div class="chat-likes">❤️ ${room.likeCount}</div>
-        </div>`;
+		<div class="chat-left">
+			<img src="${room.thumbnailImageUrl || '/images/chat/default-thumbnail-100x100.png'}" class="chat-avatar" />
+			<div class="chat-participant-count">참여자: ${room.participantCount}명</div>
+		</div>
+		<div class="chat-center">
+			<div class="chat-title">${room.title}</div>
+			<div class="chat-hashtags">${room.hashtags.map(tag => `<div class="chat-hashtag">#${tag}</div>`).join('')}</div>
+			<div class="chat-owner">방장: ${room.ownerNickname}</div>
+		</div>
+		<div class="chat-right">
+			<div class="chat-time">${new Date(room.createdAt).toLocaleString('ko-KR')}</div>
+			<div class="chat-likes" data-room-id="${room.id}">
+			  <i class="${room.liked ? 'fas' : 'far'} fa-heart like-icon"></i>
+			  <span class="like-count">${room.likeCount}</span>
+			</div>
+		</div>`;
 				container.appendChild(div);
 
 				// 상세 모달 바인딩
