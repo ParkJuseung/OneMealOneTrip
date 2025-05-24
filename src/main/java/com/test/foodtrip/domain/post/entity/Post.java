@@ -2,11 +2,8 @@ package com.test.foodtrip.domain.post.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +13,9 @@ import java.util.List;
 @Table(name = "POST")
 @Getter
 @Setter
+@ToString
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
 
@@ -47,6 +47,12 @@ public class Post {
 
     @Column(name = "place_name", length = 255)
     private String placeName;
+
+    @Column(name = "place_address", length = 500)
+    private String placeAddress;
+
+    @Column(name = "place_id", length = 100)
+    private String placeId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -2,11 +2,12 @@ package com.test.foodtrip.domain.chat.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +45,8 @@ public class ChatMessage {
     @Column(name = "file_type", length = 50)
     private String fileType;
 
-    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude")
     private Double longitude;
 
     @Column(name = "location_description", length = 255)
@@ -77,5 +76,15 @@ public class ChatMessage {
     public void addMention(ChatMessageMention mention) {
         mentions.add(mention);
         mention.setMessage(this);
+    }
+    
+    public static ChatMessage create(ChatRoom chatRoom, User user, String messageContent) {
+        ChatMessage message = new ChatMessage();
+        message.chatRoom = chatRoom; // chatRoom이 메시지가 속한 채팅방
+        message.user = user; // user 메시지를 보낸 사용자
+        message.messageType = "TEXT"; 
+        message.messageContent = messageContent; // messageContent 메시지 내용
+        message.createdAt = LocalDateTime.now(); // 혹은 prePersist로 자동 처리됨
+        return message;
     }
 }

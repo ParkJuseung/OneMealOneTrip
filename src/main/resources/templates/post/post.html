@@ -1,1642 +1,227 @@
+<!--post.html-->
+
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TRIPSODA - 게시글 상세 페이지</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <style>
-    /* 전체 스타일 */
-    :root {
-      --primary-color: #0ED8D5;
-      --primary-dark: #04A6A4;
-      --primary-light: #E0F7F7;
-      --secondary-color: #FF8C38;
-      --text-color: #333333;
-      --text-secondary: #666666;
-      --text-light: #888888;
-      --background-color: #F8F9FA;
-      --white: #FFFFFF;
-      --border-color: #EEEEEE;
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.07);
-      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
-      --transition: all 0.3s ease;
-    }
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<th:block layout:fragment="style">
+    <link rel="stylesheet" th:href="@{/css/post.css}">
+</th:block>
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Noto Sans KR', sans-serif;
-    }
-
-    body {
-      background-color: var(--background-color);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-
-    /* 컨테이너 레이아웃 */
-    .container {
-      display: flex;
-      max-width: 1300px;
-      margin: 0 auto;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-lg);
-    }
-
-    /* 왼쪽 배너 영역 */
-    .left-banner {
-      flex: 0 0 45%;
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(120deg, var(--primary-color), var(--primary-dark));
-    }
-
-    .banner-overlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
-      z-index: 1;
-    }
-
-    .banner-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.9;
-      filter: saturate(1.2);
-      transition: transform 15s ease;
-    }
-
-    .left-banner:hover .banner-image {
-      transform: scale(1.05);
-    }
-
-    .banner-text {
-      position: absolute;
-      top: 25%;
-      left: 10%;
-      color: var(--white);
-      z-index: 2;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
-    .banner-text h1 {
-      font-size: 3.2rem;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 1.5rem;
-      letter-spacing: -0.5px;
-    }
-
-    .banner-text p {
-      font-size: 1.1rem;
-      font-weight: 400;
-      max-width: 80%;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
-
-    .banner-button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: var(--white);
-      color: var(--primary-dark);
-      border-radius: var(--radius-md);
-      font-weight: 600;
-      font-size: 1rem;
-      text-decoration: none;
-      box-shadow: var(--shadow-md);
-      transition: var(--transition);
-    }
-
-    .banner-button:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-lg);
-      background-color: var(--primary-light);
-    }
-
-    .qr-code {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      width: 100px;
-      height: 100px;
-      background-color: var(--white);
-      padding: 10px;
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-md);
-      z-index: 2;
-      transition: var(--transition);
-    }
-
-    .qr-code:hover {
-      transform: scale(1.05);
-    }
-
-    .app-download {
-      position: absolute;
-      bottom: 30px;
-      left: 30px;
-      color: var(--white);
-      font-size: 0.95rem;
-      z-index: 2;
-    }
-
-    .app-store-buttons {
-      display: flex;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .app-store-buttons img {
-      height: 36px;
-      cursor: pointer;
-      transition: var(--transition);
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-
-    .app-store-buttons img:hover {
-      transform: translateY(-2px);
-    }
-
-    /* 오른쪽 콘텐츠 영역 */
-    .right-content {
-      flex: 0 0 55%;
-      background-color: var(--white);
-      overflow-y: auto;
-      padding: 25px;
-      position: relative;
-    }
-
-    .right-content::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .right-content::-webkit-scrollbar-track {
-      background: var(--background-color);
-    }
-
-    .right-content::-webkit-scrollbar-thumb {
-      background-color: #DDD;
-      border-radius: 20px;
-    }
-
-    /* 헤더 영역 */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
-      margin-bottom: 25px;
-    }
-
-    .header h2 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--text-color);
-      letter-spacing: -0.5px;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .profile-area {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: var(--radius-md);
-      transition: var(--transition);
-    }
-
-    .profile-area:hover {
-      background-color: var(--primary-light);
-    }
-
-    .profile-pic {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary-color);
-    }
-
-    .top-icons {
-      display: flex;
-      gap: 18px;
-    }
-
-    .notification-icon, .settings-icon {
-      position: relative;
-      cursor: pointer;
-      font-size: 1.2rem;
-      color: var(--text-secondary);
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-    }
-
-    .notification-icon:hover, .settings-icon:hover {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background-color: var(--secondary-color);
-      color: white;
-      font-size: 0.7rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-    }
-
-    /* 게시글 상세 페이지 스타일 */
-    .post-detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .back-button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-
-    .back-button:hover {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-    }
-
-    .post-detail-actions {
-      display: flex;
-      gap: 15px;
-    }
-
-    .action-button {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 12px;
-      border-radius: var(--radius-md);
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .action-button:hover {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-    }
-
-    .action-button.like-button.active {
-      color: #e91e63;
-    }
-
-    .action-button.bookmark-button.active {
-      color: var(--primary-dark);
-    }
-
-    .post-detail-container {
-      background-color: var(--white);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      margin-bottom: 30px;
-      border: 1px solid var(--border-color);
-    }
-
-    .post-detail-header-info {
-      padding: 20px;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .category-badge {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-      padding: 6px 12px;
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-    }
-
-    .post-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: var(--text-light);
-      font-size: 0.9rem;
-    }
-
-    .post-info-divider {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background-color: var(--text-light);
-    }
-
-    .post-detail-content {
-      padding: 25px;
-    }
-
-    .post-detail-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 15px;
-      line-height: 1.4;
-      color: var(--text-color);
-    }
-
-    .post-detail-tags {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .post-tag {
-      font-size: 0.85rem;
-      padding: 5px 12px;
-      background-color: #f5f5f5;
-      border-radius: 20px;
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-
-    .post-tag:hover {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-      cursor: pointer;
-    }
-
-    .post-detail-description {
-      margin-bottom: 25px;
-      color: var(--text-secondary);
-      font-size: 1rem;
-      line-height: 1.8;
-    }
-
-    .post-detail-images {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .post-detail-image {
-      width: 100%;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      position: relative;
-      aspect-ratio: 16/9;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .post-detail-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: var(--transition);
-    }
-
-    .post-detail-image:hover img {
-      transform: scale(1.03);
-    }
-
-    .post-detail-author {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 20px 0;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .author-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary-light);
-    }
-
-    .author-info {
-      flex-grow: 1;
-    }
-
-    .author-name {
-      font-weight: 600;
-      color: var(--text-color);
-      font-size: 1.05rem;
-      display: block;
-      margin-bottom: 3px;
-    }
-
-    .author-bio {
-      color: var(--text-light);
-      font-size: 0.9rem;
-    }
-
-    .follow-button {
-      padding: 8px 16px;
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-      border-radius: var(--radius-md);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      border: none;
-    }
-
-    .follow-button:hover {
-      background-color: var(--primary-color);
-      color: var(--white);
-    }
-
-    .follow-button.following {
-      background-color: var(--primary-color);
-      color: var(--white);
-    }
-
-    /* 위치 정보 */
-    .location-info {
-      background-color: var(--background-color);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      margin-bottom: 25px;
-    }
-
-    .location-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      color: var(--text-color);
-      font-weight: 600;
-    }
-
-    .location-header i {
-      color: var(--primary-dark);
-    }
-
-    .location-map {
-      width: 100%;
-      height: 200px;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      position: relative;
-      margin-bottom: 10px;
-    }
-
-    .location-map img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .location-address {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    /* 댓글 섹션 */
-    .comments-section {
-      margin-top: 30px;
-    }
-
-    .comments-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .comments-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    .comments-count {
-      color: var(--primary-dark);
-      font-weight: 600;
-    }
-
-    .comments-sort {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-
-    .comment-input-container {
-      display: flex;
-      margin-bottom: 30px;
-      gap: 15px;
-    }
-
-    .comment-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary-light);
-    }
-
-    .comment-input-wrapper {
-      flex-grow: 1;
-      position: relative;
-    }
-
-    .comment-input {
-      width: 100%;
-      padding: 15px;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      font-size: 0.95rem;
-      resize: none;
-      transition: var(--transition);
-      margin-bottom: 10px;
-    }
-
-    .comment-input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(14, 216, 213, 0.1);
-    }
-
-    .comment-submit {
-      display: inline-block;
-      padding: 8px 20px;
-      background-color: var(--primary-color);
-      color: var(--white);
-      border-radius: var(--radius-md);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      border: none;
-      float: right;
-    }
-
-    .comment-submit:hover {
-      background-color: var(--primary-dark);
-      transform: translateY(-2px);
-    }
-
-    .comments-list {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .comment-item {
-      display: flex;
-      gap: 15px;
-    }
-
-    .comment-content {
-      flex-grow: 1;
-    }
-
-    .comment-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-
-    .comment-author {
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    .comment-date {
-      font-size: 0.85rem;
-      color: var(--text-light);
-    }
-
-    .comment-text {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 8px;
-    }
-
-    .comment-actions {
-      display: flex;
-      gap: 15px;
-    }
-
-    .comment-action {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.85rem;
-      color: var(--text-light);
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .comment-action:hover {
-      color: var(--primary-dark);
-    }
-
-    .reply-list {
-      margin-top: 15px;
-      margin-left: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .show-more-comments {
-      text-align: center;
-      padding: 12px;
-      background-color: var(--background-color);
-      border-radius: var(--radius-md);
-      color: var(--text-secondary);
-      font-weight: 500;
-      cursor: pointer;
-      margin-top: 20px;
-      transition: var(--transition);
-    }
-
-    .show-more-comments:hover {
-      background-color: var(--primary-light);
-      color: var(--primary-dark);
-    }
-
-    /* 관련 게시글 섹션 */
-    .related-posts {
-      margin-top: 50px;
-      margin-bottom: 80px;
-    }
-
-    .related-posts-header {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: var(--text-color);
-    }
-
-    .related-posts-list {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .related-post-card {
-      background-color: var(--white);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-color);
-      transition: var(--transition);
-    }
-
-    .related-post-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary-light);
-    }
-
-    .related-post-image {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-    }
-
-    .related-post-content {
-      padding: 15px;
-    }
-
-    .related-post-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-      line-height: 1.4;
-      color: var(--text-color);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .related-post-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      color: var(--text-light);
-    }
-
-    /* 네비게이션 바 */
-    .navbar {
-      display: flex;
-      justify-content: space-around;
-      background-color: var(--white);
-      padding: 16px 0;
-      border-top: 1px solid var(--border-color);
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-width: 1300px;
-      margin: 0 auto;
-      box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-      z-index: 100;
-    }
-
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: var(--text-light);
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .nav-item i {
-      font-size: 1.2rem;
-      margin-bottom: 5px;
-    }
-
-    .nav-item:hover:not(.active) {
-      color: var(--primary-dark);
-    }
-
-    .nav-item.active {
-      color: var(--primary-color);
-      font-weight: 600;
-    }
-
-    .add-button {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--white);
-      font-size: 1.4rem;
-      margin-top: -40px;
-      box-shadow: 0 4px 15px rgba(3, 139, 139, 0.3);
-      transition: var(--transition);
-    }
-
-    .add-button:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(3, 139, 139, 0.4);
-    }
-
-    /* 모달 스타일 */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background-color: var(--white);
-      border-radius: var(--radius-lg);
-      width: 90%;
-      max-width: 500px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: var(--shadow-lg);
-      animation: modalFadeIn 0.3s ease;
-    }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .modal-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    .modal-close {
-      cursor: pointer;
-      font-size: 1.2rem;
-      color: var(--text-light);
-      transition: var(--transition);
-    }
-
-    .modal-close:hover {
-      color: var(--text-color);
-    }
-
-    .modal-body {
-      padding: 20px;
-    }
-
-    .confirmation-actions {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .confirm-button, .cancel-button {
-      flex: 1;
-      padding: 12px;
-      border-radius: var(--radius-md);
-      font-weight: 600;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .confirm-button {
-      background-color: var(--primary-color);
-      color: var(--white);
-    }
-
-    .confirm-button:hover {
-      background-color: var(--primary-dark);
-    }
-
-    .cancel-button {
-      background-color: var(--background-color);
-      color: var(--text-secondary);
-    }
-
-    .cancel-button:hover {
-      background-color: #e0e0e0;
-    }
-
-    /* 알림 토스트 */
-    .toast {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: var(--text-color);
-      color: var(--white);
-      padding: 12px 24px;
-      border-radius: var(--radius-md);
-      font-size: 0.9rem;
-      font-weight: 500;
-      box-shadow: var(--shadow-md);
-      z-index: 1000;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s, visibility 0.3s;
-    }
-
-    .toast.show {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    /* 애니메이션 효과 */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .post-detail-container, .comments-section, .related-posts {
-      animation: fadeIn 0.5s ease-out;
-    }
-  </style>
-</head>
 <body>
-<div class="container">
-  <!-- 왼쪽 배너 영역 -->
-  <div class="left-banner">
-    <div class="banner-overlay"></div>
-    <img src="/api/placeholder/800/1200" alt="여행 친구들" class="banner-image">
-    <div class="banner-text">
-      <h1>함께라면<br>못 갈 곳은<br>없어</h1>
-      <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
-      <a href="#" class="banner-button">지금 시작하기</a>
-    </div>
-    <div class="app-download">
-      <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
-      <div class="app-store-buttons">
-        <img src="/api/placeholder/120/40" alt="Google Play">
-        <img src="/api/placeholder/120/40" alt="App Store">
-      </div>
-    </div>
-    <img src="/api/placeholder/100/100" alt="QR 코드" class="qr-code">
-  </div>
+<th:block layout:fragment="content">
+<!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
+<!--    <div class="search-container">-->
+<!--        <div class="search-input-wrap">-->
+<!--            <i class="fas fa-search search-icon-input"></i>-->
+<!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
+<!--        </div>-->
+<!--    </div>-->
 
-  <!-- 오른쪽 콘텐츠 영역 -->
-  <div class="right-content">
-    <!-- 헤더 -->
-    <div class="header">
-      <h2>모험가님!</h2>
-      <div class="header-actions">
-        <div class="top-icons">
-          <div class="notification-icon">
-            <i class="far fa-bell"></i>
-            <span class="notification-badge">3</span>
-          </div>
+    <!-- 사용자 선택 탭 -->
+    <div class="user-selection">
+        <div class="user-tab active">
+            <i class="far fa-user"></i>
+            나의 선택
         </div>
-        <div class="profile-area">
-          <img src="/api/placeholder/36/36" alt="프로필" class="profile-pic">
-          <span>김여행</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 게시글 상세 헤더 -->
-    <div class="post-detail-header">
-      <div class="back-button" id="backButton">
-        <i class="fas fa-arrow-left"></i>
-        <span>뒤로 가기</span>
-      </div>
-      <div class="post-detail-actions">
-        <div class="action-button like-button" id="likeButton">
-          <i class="far fa-heart"></i>
-          <span>좋아요</span>
-        </div>
-        <div class="action-button bookmark-button" id="bookmarkButton">
-          <i class="far fa-bookmark"></i>
-          <span>저장</span>
-        </div>
-        <div class="action-button">
-          <i class="fas fa-share-alt"></i>
-          <span>공유</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 게시글 상세 콘텐츠 -->
-    <div class="post-detail-container">
-      <div class="post-detail-header-info">
-        <div class="category-badge">동행</div>
-        <div class="post-info">
-          <span>조회 238</span>
-          <div class="post-info-divider"></div>
-          <span>2025.05.11</span>
-        </div>
-      </div>
-      <div class="post-detail-content">
-        <h1 class="post-detail-title">5월 17일 프라하에서 스카이다이빙 동행 구해요!</h1>
-        <div class="post-detail-tags">
-          <span class="post-tag">#프라하</span>
-          <span class="post-tag">#스카이다이빙</span>
-          <span class="post-tag">#20대</span>
-          <span class="post-tag">#동행</span>
-          <span class="post-tag">#체코</span>
-        </div>
-        <p class="post-detail-description">
-          안녕하세요! 20대 동행자 구합니다.<br><br>
-          5월 17-18일 체코 여행 예정인데, 17일에는 스카이다이빙을 하려고 합니다. 혼자하기에는 너무 무섭고 좀 더 특별한 경험을 함께 나누고 싶어서 동행자를 구해봅니다. <br><br>
-          대화시간이 길지 않아도 실실함과 친함이 동반된다면 좋겠습니다! 최근 몇 년간 여행을 많이 다녔고, 색다른 경험을 좋아해서 스카이다이빙에 도전하게 되었어요. 처음이라 두렵지만 함께한다면 더 좋은 추억이 될 것 같습니다.<br><br>
-          18일은 체스키 크룸로프 방문하기 원해요. 관심 있으신 분 연락주세요! 참고로 스카이다이빙 비용은 약 200유로 정도이며, 예약은 제가 도와드릴 수 있습니다.
-        </p>
-        <div class="post-detail-images">
-          <div class="post-detail-image">
-            <img src="/api/placeholder/300/200" alt="프라하 스카이다이빙 1">
-          </div>
-          <div class="post-detail-image">
-            <img src="/api/placeholder/300/200" alt="프라하 스카이다이빙 2">
-          </div>
-          <div class="post-detail-image">
-            <img src="/api/placeholder/300/200" alt="체스키 크룸로프 1">
-          </div>
-          <div class="post-detail-image">
-            <img src="/api/placeholder/300/200" alt="체스키 크룸로프 2">
-          </div>
-        </div>
-
-        <!-- 위치 정보 -->
-        <div class="location-info">
-          <div class="location-header">
+        <div class="user-tab">
             <i class="fas fa-map-marker-alt"></i>
-            <span>위치 정보</span>
-          </div>
-          <div class="location-map">
-            <img src="/api/placeholder/500/200" alt="프라하 지도">
-          </div>
-          <div class="location-address">
-            체코 프라하, 스카이다이빙 센터 (Praha Skydiving Center)
-          </div>
+            근처 동향
         </div>
-
-        <!-- 작성자 정보 -->
-        <div class="post-detail-author">
-          <img src="/api/placeholder/50/50" alt="작성자 프로필" class="author-avatar">
-          <div class="author-info">
-            <span class="author-name">20대 여행자</span>
-            <span class="author-bio">여행과 모험을 사랑하는 프리랜서 사진작가</span>
-          </div>
-          <button class="follow-button" id="followButton">팔로우</button>
-        </div>
-      </div>
     </div>
 
-    <!-- 댓글 섹션 -->
-    <div class="comments-section">
-      <div class="comments-header">
-        <div class="comments-title">댓글 <span class="comments-count">8</span></div>
-        <div class="comments-sort">
-          <span>최신순</span>
-          <i class="fas fa-chevron-down"></i>
+    <!-- 트렌딩 토픽 -->
+<!--    <div class="trending-topics">-->
+<!--        <div class="topic-badge active"># 인기 여행지</div>-->
+<!--        <div class="topic-badge"># 제주도</div>-->
+<!--        <div class="topic-badge"># 맛집투어</div>-->
+<!--        <div class="topic-badge"># 유럽여행</div>-->
+<!--        <div class="topic-badge"># 배낭여행</div>-->
+<!--        <div class="topic-badge"># 프라하</div>-->
+<!--        <div class="topic-badge"># 동행구함</div>-->
+<!--    </div>-->
+
+    <!-- 탭 네비게이션 -->
+    <div class="tab-navigation">
+        <div class="tab active" data-tab="all">포스트</div>
+        <div class="tab" data-tab="companion">추천 여행경로</div>
+        <div class="tab" data-tab="post">채팅</div>
+        <div class="tab" data-tab="explorer"></div>
+        <div class="tab-indicator"></div>
+    </div>
+
+    <!-- 검색 결과 영역 -->
+    <div class="search-container">
+        <div class="search-input-wrap">
+            <i class="fas fa-search search-icon-input"></i>
+            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">
         </div>
-      </div>
+    </div>
 
-      <!-- 댓글 입력 -->
-      <div class="comment-input-container">
-        <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
-        <div class="comment-input-wrapper">
-          <textarea class="comment-input" placeholder="댓글을 남겨보세요..." rows="3"></textarea>
-          <button class="comment-submit">등록</button>
+    <div class="trending-topics">
+        <div class="topic-badge active"># 인기 여행지</div>
+        <div class="topic-badge"># 제주도</div>
+        <div class="topic-badge"># 맛집투어</div>
+        <div class="topic-badge"># 유럽여행</div>
+        <div class="topic-badge"># 배낭여행</div>
+        <div class="topic-badge"># 프라하</div>
+        <div class="topic-badge"># 동행구함</div>
+    </div>
+
+    <!-- 정렬 옵션 -->
+    <div class="sort-options">
+        <div class="sort-dropdown">
+            최신순 <i class="fas fa-chevron-down"></i>
         </div>
-      </div>
-
-      <!-- 댓글 목록 -->
-      <div class="comments-list">
-        <!-- 댓글 1 -->
-        <div class="comment-item">
-          <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-          <div class="comment-content">
-            <div class="comment-header">
-              <span class="comment-author">유럽 여행러</span>
-              <span class="comment-date">2시간 전</span>
+        <div class="view-options">
+            <div class="view-option active">
+                <i class="fas fa-th-list"></i>
             </div>
-            <p class="comment-text">
-              저도 프라하 여행 계획중인데, 스카이다이빙은 처음 들어봐요! 체스키 크룸로프는 꼭 가보세요. 정말 아름다운 곳이에요. 동행은 못하지만 좋은 여행 되시길 바랍니다!
-            </p>
-            <div class="comment-actions">
-              <div class="comment-action">
-                <i class="far fa-heart"></i>
-                <span>5</span>
-              </div>
-              <div class="comment-action reply-btn">
-                <i class="far fa-comment"></i>
-                <span>답글</span>
-              </div>
+            <div class="view-option">
+                <i class="fas fa-th"></i>
             </div>
+        </div>
+    </div>
 
-            <!-- 대댓글 -->
-            <div class="reply-list">
-              <div class="comment-item">
-                <img src="/api/placeholder/40/40" alt="대댓글 작성자" class="comment-avatar">
-                <div class="comment-content">
-                  <div class="comment-header">
-                    <span class="comment-author">20대 여행자</span>
-                    <span class="comment-date">1시간 전</span>
-                  </div>
-                  <p class="comment-text">
-                    체스키 크룸로프 추천 감사합니다! 혹시 프라하에서 꼭 가봐야 할 맛집 있으신가요?
-                  </p>
-                  <div class="comment-actions">
-                    <div class="comment-action">
-                      <i class="far fa-heart"></i>
-                      <span>2</span>
+    <!-- 게시글 목록 -->
+    <div class="post-list">
+        <!-- 게시글 반복 -->
+        <div class="post-card" th:each="dto : ${result.dtoList}">
+            <div class="post-header">
+                <span class="category-badge">동행</span>
+                <div class="post-header-icons">
+                    <i class="far fa-bookmark post-header-icon"></i>
+                    <i class="fas fa-share-alt post-header-icon"></i>
+                </div>
+            </div>
+            <div class="post-content">
+                <h3 class="post-title">[[${dto.title}]]</h3>
+                <div class="post-tags">
+                    <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
+                </div>
+                <img src="/api/placeholder/130/90" alt="여행 사진" class="post-image"
+                     th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
+                <p class="post-text">[[${dto.content}]]</p>
+                <div class="post-meta">
+                    <div class="post-author">
+                        <img src="/api/placeholder/28/28" alt="프로필" class="author-avatar">
+                        <span>20대 여행자</span>
                     </div>
-                    <div class="comment-action reply-btn">
-                      <i class="far fa-comment"></i>
-                      <span>답글</span>
-                    </div>
-                  </div>
+                    <span class="post-date">[[${dto.elapsedTime}]]</span>
                 </div>
-              </div>
+                <a th:href="@{'/post/' + ${dto.id}}" class="view-btn">자세히 보기</a>
             </div>
-          </div>
         </div>
-
-        <!-- 댓글 2 -->
-        <div class="comment-item">
-          <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-          <div class="comment-content">
-            <div class="comment-header">
-              <span class="comment-author">모험가 김철수</span>
-              <span class="comment-date">5시간 전</span>
-            </div>
-            <p class="comment-text">
-              작년에 프라하에서 스카이다이빙 했었어요! 정말 멋진 경험이었습니다. 저도 같이 가면 좋겠지만 일정이 안 맞네요 ㅠㅠ 추천 팁을 드리자면, 미리 동영상 촬영 옵션도 선택하세요. 그 순간의 표정이 정말 웃겨요 ㅋㅋ
-            </p>
-            <div class="comment-actions">
-              <div class="comment-action">
-                <i class="far fa-heart"></i>
-                <span>12</span>
-              </div>
-              <div class="comment-action reply-btn">
-                <i class="far fa-comment"></i>
-                <span>답글</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 댓글 3 -->
-        <div class="comment-item">
-          <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-          <div class="comment-content">
-            <div class="comment-header">
-              <span class="comment-author">체코여행중</span>
-              <span class="comment-date">1일 전</span>
-            </div>
-            <p class="comment-text">
-              지금 체코 여행 중인데 관심 있어요! DM 드렸습니다 :)
-            </p>
-            <div class="comment-actions">
-              <div class="comment-action">
-                <i class="far fa-heart"></i>
-                <span>3</span>
-              </div>
-              <div class="comment-action reply-btn">
-                <i class="far fa-comment"></i>
-                <span>답글</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="show-more-comments">
-        댓글 더보기
-      </div>
     </div>
 
-    <!-- 관련 게시글 -->
-    <div class="related-posts">
-      <h3 class="related-posts-header">관련 게시글</h3>
-      <div class="related-posts-list">
-        <!-- 관련 게시글 1 -->
-        <div class="related-post-card">
-          <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-          <div class="related-post-content">
-            <h4 class="related-post-title">프라하 3박 4일 여행 일정 공유 & 동행 구해요</h4>
-            <div class="related-post-info">
-              <span>동행</span>
-              <span>3일 전</span>
-            </div>
-          </div>
+    <!-- 페이지네이션 -->
+    <div class="pagination-container" th:if="${result.totalPage > 1}">
+        <div class="pagination">
+            <!-- 이전 페이지 그룹 -->
+            <a th:if="${result.prev}"
+               th:href="@{/post(page=${result.start - 1})}"
+               class="page-prev">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <span th:if="${!result.prev}" class="page-prev disabled">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+
+            <!-- 페이지 번호들 -->
+            <th:block th:each="page : ${result.pageList}">
+                <span th:if="${page == result.page}" class="current" th:text="${page}"></span>
+                <a th:if="${page != result.page}"
+                   th:href="@{/post(page=${page})}"
+                   th:text="${page}"></a>
+            </th:block>
+
+            <!-- 다음 페이지 그룹 -->
+            <a th:if="${result.next}"
+               th:href="@{/post(page=${result.end + 1})}"
+               class="page-next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            <span th:if="${!result.next}" class="page-next disabled">
+                <i class="fas fa-chevron-right"></i>
+            </span>
         </div>
 
-        <!-- 관련 게시글 2 -->
-        <div class="related-post-card">
-          <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-          <div class="related-post-content">
-            <h4 class="related-post-title">체코 여행 필수 코스 & 현지 꿀팁 총정리!</h4>
-            <div class="related-post-info">
-              <span>포스트</span>
-              <span>1주일 전</span>
-            </div>
-          </div>
+        <!-- 페이지 정보 표시 -->
+        <div class="page-info">
+            [[${result.page}]] / [[${result.totalPage}]] 페이지
         </div>
-
-        <!-- 관련 게시글 3 -->
-        <div class="related-post-card">
-          <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-          <div class="related-post-content">
-            <h4 class="related-post-title">유럽 스카이다이빙 추천 장소 BEST 5</h4>
-            <div class="related-post-info">
-              <span>포스트</span>
-              <span>2주일 전</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 관련 게시글 4 -->
-        <div class="related-post-card">
-          <img src="/api/placeholder/250/150" alt="관련 게시글 이미지" class="related-post-image">
-          <div class="related-post-content">
-            <h4 class="related-post-title">체스키 크룸로프 당일치기 여행 코스</h4>
-            <div class="related-post-info">
-              <span>포스트</span>
-              <span>1달 전</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- 네비게이션 바 -->
-    <div class="navbar">
-      <div class="nav-item active">
-        <i class="fas fa-home"></i>
-        <span>커뮤니티</span>
-      </div>
-      <div class="nav-item">
-        <i class="far fa-compass"></i>
-        <span>히트맵</span>
-      </div>
-      <div class="nav-item">
-        <div class="add-button">
-          <i class="fas fa-plus"></i>
-        </div>
-      </div>
-      <div class="nav-item">
-        <i class="far fa-user"></i>
-        <span>내 프로필</span>
-      </div>
-      <div class="nav-item">
-        <i class="fas fa-cog"></i>
-        <span>세팅</span>
-      </div>
+    <!-- 데이터가 없는 경우 -->
+    <div th:if="${result.dtoList.isEmpty()}" class="no-data">
+        <p>게시글이 없습니다.</p>
     </div>
+    <nav th:replace="~{layout/fragments/nav :: navbar}"></nav>
+    <script>
+        // 탭 네비게이션
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab');
+            const indicator = document.querySelector('.tab-indicator');
 
-    <!-- 모달 (삭제 확인용) -->
-    <div class="modal" id="deleteModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title">게시글 삭제</div>
-          <div class="modal-close" id="closeModal"><i class="fas fa-times"></i></div>
-        </div>
-        <div class="modal-body">
-          <p>정말 이 게시글을 삭제하시겠습니까?</p>
-          <p>삭제한 게시글은 복구할 수 없습니다.</p>
-          <div class="confirmation-actions">
-            <div class="cancel-button" id="cancelDelete">취소</div>
-            <div class="confirm-button" id="confirmDelete">삭제</div>
-          </div>
-        </div>
-      </div>
-    </div>
+            function setIndicatorPosition(activeTab) {
+                const tabRect = activeTab.getBoundingClientRect();
+                const navRect = document.querySelector('.tab-navigation').getBoundingClientRect();
 
-    <!-- 신고 모달 -->
-    <div class="modal" id="reportModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title">게시글 신고</div>
-          <div class="modal-close" id="closeReportModal"><i class="fas fa-times"></i></div>
-        </div>
-        <div class="modal-body">
-          <p>신고 사유를 선택해주세요.</p>
-          <div style="margin-top: 15px;">
-            <div class="report-option" style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-              <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="radio" name="reportReason" value="spam" style="margin-right: 10px;">
-                <span>광고/스팸</span>
-              </label>
-            </div>
-            <div class="report-option" style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-              <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="radio" name="reportReason" value="abuse" style="margin-right: 10px;">
-                <span>욕설/비방</span>
-              </label>
-            </div>
-            <div class="report-option" style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-              <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="radio" name="reportReason" value="inappropriate" style="margin-right: 10px;">
-                <span>부적절한 내용</span>
-              </label>
-            </div>
-            <div class="report-option" style="padding: 10px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">
-              <label style="display: flex; align-items: center; cursor: pointer;">
-                <input type="radio" name="reportReason" value="other" style="margin-right: 10px;">
-                <span>기타</span>
-              </label>
-            </div>
-          </div>
-          <textarea style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; resize: none; font-family: inherit;" rows="4" placeholder="추가 사유를 입력해주세요 (선택사항)"></textarea>
-          <div class="confirmation-actions">
-            <div class="cancel-button" id="cancelReport">취소</div>
-            <div class="confirm-button" id="confirmReport">신고</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 알림 토스트 -->
-    <div class="toast" id="toast">알림 메시지</div>
-  </div>
-</div>
-
-<script>
-  $(document).ready(function () {
-    // 좋아요 기능
-    $('#likeButton').click(function () {
-      $(this).toggleClass('active');
-      if ($(this).hasClass('active')) {
-        $(this).find('i').removeClass('far').addClass('fas');
-        $(this).find('span').text('좋아요 취소');
-        showToast('게시글을 좋아요 했습니다.');
-      } else {
-        $(this).find('i').removeClass('fas').addClass('far');
-        $(this).find('span').text('좋아요');
-        showToast('좋아요를 취소했습니다.');
-      }
-    });
-
-    // 북마크 기능
-    $('#bookmarkButton').click(function () {
-      $(this).toggleClass('active');
-      if ($(this).hasClass('active')) {
-        $(this).find('i').removeClass('far').addClass('fas');
-        $(this).find('span').text('저장됨');
-        showToast('게시글을 저장했습니다.');
-      } else {
-        $(this).find('i').removeClass('fas').addClass('far');
-        $(this).find('span').text('저장');
-        showToast('저장을 취소했습니다.');
-      }
-    });
-
-    // 팔로우 기능
-    $('#followButton').click(function () {
-      $(this).toggleClass('following');
-      if ($(this).hasClass('following')) {
-        $(this).text('팔로잉');
-        showToast('작성자를 팔로우 했습니다.');
-      } else {
-        $(this).text('팔로우');
-        showToast('팔로우를 취소했습니다.');
-      }
-    });
-
-    // 댓글 좋아요 기능
-    $('.comment-action i.fa-heart').click(function () {
-      var $this = $(this);
-      var $span = $this.next('span');
-      var count = parseInt($span.text());
-
-      if ($this.hasClass('far')) {
-        $this.removeClass('far').addClass('fas');
-        $span.text(count + 1);
-        $this.css('color', '#e91e63');
-      } else {
-        $this.removeClass('fas').addClass('far');
-        $span.text(count - 1);
-        $this.css('color', '');
-      }
-    });
-
-    // 모달 관련 기능
-    function openModal(modalId) {
-      $('#' + modalId).addClass('active');
-      $('body').css('overflow', 'hidden');
-    }
-
-    function closeModal(modalId) {
-      $('#' + modalId).removeClass('active');
-      $('body').css('overflow', '');
-    }
-
-    // 삭제 모달
-    $('.delete-post').click(function () {
-      openModal('deleteModal');
-    });
-
-    $('#closeModal, #cancelDelete').click(function () {
-      closeModal('deleteModal');
-    });
-
-    $('#confirmDelete').click(function () {
-      // 삭제 처리 로직
-      showToast('게시글이 삭제되었습니다.');
-      closeModal('deleteModal');
-      // 아래는 실제 구현 시에는 서버 요청 후 리다이렉트
-      setTimeout(function () {
-        // window.location.href = '/community';
-      }, 1500);
-    });
-
-    // 신고 모달
-    $('.report-post').click(function () {
-      openModal('reportModal');
-    });
-
-    $('#closeReportModal, #cancelReport').click(function () {
-      closeModal('reportModal');
-    });
-
-    $('#confirmReport').click(function () {
-      // 신고 처리 로직
-      showToast('신고가 접수되었습니다.');
-      closeModal('reportModal');
-    });
-
-    // 토스트 메시지 표시
-    function showToast(message) {
-      var toast = $('#toast');
-      toast.text(message);
-      toast.addClass('show');
-
-      setTimeout(function () {
-        toast.removeClass('show');
-      }, 3000);
-    }
-
-    // 뒤로가기 기능
-    $('#backButton').click(function () {
-      window.history.back();
-    });
-
-    // 댓글 등록
-    $('.comment-submit').click(function () {
-      var commentText = $('.comment-input').val().trim();
-      if (commentText) {
-        // 댓글 추가 로직 (실제로는 서버로 전송)
-        const currentDate = new Date();
-        const hours = currentDate.getHours();
-        const minutes = currentDate.getMinutes();
-        const timeString = `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
-
-        const newComment = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">김여행</span>
-                <span class="comment-date">방금 전</span>
-              </div>
-              <p class="comment-text">${commentText}</p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>0</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-        $('.comments-list').prepend(newComment);
-        $('.comment-input').val('');
-
-        // 댓글 수 업데이트
-        var commentsCount = parseInt($('.comments-count').text());
-        $('.comments-count').text(commentsCount + 1);
-
-        showToast('댓글이 등록되었습니다.');
-
-        // 새로 추가된 댓글에 이벤트 바인딩
-        $('.comments-list .comment-item:first .comment-action i.fa-heart').click(function () {
-          var $this = $(this);
-          var $span = $this.next('span');
-          var count = parseInt($span.text());
-
-          if ($this.hasClass('far')) {
-            $this.removeClass('far').addClass('fas');
-            $span.text(count + 1);
-            $this.css('color', '#e91e63');
-          } else {
-            $this.removeClass('fas').addClass('far');
-            $span.text(count - 1);
-            $this.css('color', '');
-          }
-        });
-      } else {
-        showToast('댓글 내용을 입력해주세요.');
-      }
-    });
-
-    // 댓글 더보기
-    $('.show-more-comments').click(function () {
-      // 추가 댓글 로딩 (실제로는 서버에서 더 가져옴)
-      $(this).text('로딩 중...');
-
-      setTimeout(function () {
-        const additionalComments = `
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">여행초보</span>
-                <span class="comment-date">1일 전</span>
-              </div>
-              <p class="comment-text">
-                스카이다이빙 정말 가고 싶네요! 혹시 가격이 어떻게 되나요?
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>2</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="comment-item" style="animation: fadeIn 0.5s ease-out; animation-delay: 0.1s;">
-            <img src="/api/placeholder/40/40" alt="댓글 작성자" class="comment-avatar">
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="comment-author">프라하마스터</span>
-                <span class="comment-date">2일 전</span>
-              </div>
-              <p class="comment-text">
-                프라하에서 꼭 방문해야 할 음식점 추천드려요! Lokal이라는 맥주집과 Sisters라는 체코 전통 빵집이 정말 맛있어요. 체스키 크룸로프 가는 길에는 체스키 부데요비체에 있는 부트바르도 추천!
-              </p>
-              <div class="comment-actions">
-                <div class="comment-action">
-                  <i class="far fa-heart"></i>
-                  <span>8</span>
-                </div>
-                <div class="comment-action reply-btn">
-                  <i class="far fa-comment"></i>
-                  <span>답글</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-
-        $('.comments-list').append(additionalComments);
-        $('.show-more-comments').text('더 이상 댓글이 없습니다').css('pointer-events', 'none');
-
-        // 새로 추가된 댓글에 이벤트 바인딩
-        $('.comments-list .comment-item:last-child .comment-action i.fa-heart, .comments-list .comment-item:nth-last-child(2) .comment-action i.fa-heart').click(function () {
-          var $this = $(this);
-          var $span = $this.next('span');
-          var count = parseInt($span.text());
-
-          if ($this.hasClass('far')) {
-            $this.removeClass('far').addClass('fas');
-            $span.text(count + 1);
-            $this.css('color', '#e91e63');
-          } else {
-            $this.removeClass('fas').addClass('far');
-            $span.text(count - 1);
-            $this.css('color', '');
-          }
-        });
-      }, 1000);
-    });
-
-    // 레포트 옵션 스타일링
-    $('.report-option').hover(
-            function () {
-              $(this).css('background-color', 'var(--primary-light)');
-            },
-            function () {
-              if (!$(this).find('input').prop('checked')) {
-                $(this).css('background-color', '');
-              }
+                indicator.style.width = `${tabRect.width}px`;
+                indicator.style.left = `${tabRect.left - navRect.left}px`;
             }
-    );
-  });
-</script>
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function () {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    setIndicatorPosition(this);
+                });
+            });
+
+            // 초기 인디케이터 위치 설정
+            const activeTab = document.querySelector('.tab.active');
+            if (activeTab) {
+                setIndicatorPosition(activeTab);
+            }
+
+            // 창 크기 변경시 인디케이터 위치 조정
+            window.addEventListener('resize', function () {
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab) {
+                    setIndicatorPosition(activeTab);
+                }
+            });
+        });
+
+        // 사용자 선택 탭
+        const userTabs = document.querySelectorAll('.user-tab');
+        userTabs.forEach(tab => {
+            tab.addEventListener('click', function () {
+                userTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 토픽 배지
+        const topicBadges = document.querySelectorAll('.topic-badge');
+        topicBadges.forEach(badge => {
+            badge.addEventListener('click', function () {
+                this.classList.toggle('active');
+            });
+        });
+
+        // 뷰 옵션
+        const viewOptions = document.querySelectorAll('.view-option');
+        viewOptions.forEach(option => {
+            option.addEventListener('click', function () {
+                viewOptions.forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</th:block>
 </body>
 </html>

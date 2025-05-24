@@ -2,8 +2,9 @@ package com.test.foodtrip.domain.user.entity;
 
 import com.test.foodtrip.domain.post.entity.Comment;
 import com.test.foodtrip.domain.post.entity.Post;
-import lombok.*;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -101,14 +102,4 @@ public class User {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    // ✅ 정적 생성 메서드 추가
-    public static User fromOAuth2(String socialType, String socialEmail) {
-        User user = new User();
-        user.socialType = socialType;
-        user.socialEmail = socialEmail;
-        user.nickname = socialEmail.split("@")[0]; // 이메일 앞부분으로 기본 닉네임 생성
-        return user;
-    }
-
 }
