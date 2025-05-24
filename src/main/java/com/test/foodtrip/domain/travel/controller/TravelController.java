@@ -4,6 +4,7 @@ import com.test.foodtrip.domain.travel.dto.TravelRouteDTO;
 import com.test.foodtrip.domain.travel.dto.TravelRouteListItemDTO;
 import com.test.foodtrip.domain.travel.service.TravelRouteService;
 import com.test.foodtrip.domain.user.dto.UserDTO;
+import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import com.test.foodtrip.global.oauth.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,16 +42,16 @@ public class TravelController {
 
     @GetMapping("/travel/{routeId}")
     public String courseDetail(@PathVariable("routeId") Long routeId, Model model,
-                               @AuthenticationPrincipal CustomOAuth2User loginUser) {
+                               @AuthenticationPrincipal UserPrincipal loginUser) {
         TravelRouteDTO route = travelRouteService.getRouteDetail(routeId);
 
         boolean editable = false;
-        if (loginUser != null && loginUser.getUser() != null) {
-            Long loginUserId = loginUser.getUser().getId();
+        if (loginUser != null && loginUser.getUserId() != null) {
+            Long loginUserId = loginUser.getUserId();
             editable = loginUserId.equals(route.getUserId());
         }
 
-        System.out.println("로그인 유저: " + (loginUser != null ? loginUser.getUser().getId() : "null"));
+        System.out.println("로그인 유저: " + (loginUser != null ? loginUser.getUserId() : "null"));
 
         // 거리: 소수점 1자리 km 단위
         String formattedDistance = String.format("%.1f", route.getTotalDistance() / 1000);
@@ -74,19 +75,19 @@ public class TravelController {
 
 
     @GetMapping("/travel/add")
-    public String courseCreatePage(@AuthenticationPrincipal CustomOAuth2User loginUser, Model model) {
-        model.addAttribute("profileImage", loginUser.getUser().getProfileImage());
-        model.addAttribute("loginUserId", loginUser.getUser().getId());
-        model.addAttribute("userNickname", loginUser.getUser().getNickname());
+    public String courseCreatePage(@AuthenticationPrincipal UserPrincipal loginUser, Model model) {
+        model.addAttribute("profileImage", loginUser.getProfileImage());
+        model.addAttribute("loginUserId", loginUser.getUserId());
+        model.addAttribute("userNickname", loginUser.getNickname());
         return "travel/course-create";
     }
 
     @GetMapping("/travel/{routeId}/edit")
-    public String editPage(@AuthenticationPrincipal CustomOAuth2User loginUser, @PathVariable Long routeId, Model model) {
+    public String editPage(@AuthenticationPrincipal UserPrincipal loginUser, @PathVariable Long routeId, Model model) {
         TravelRouteDTO dto = travelRouteService.getRouteDetail(routeId);
-        model.addAttribute("profileImage", loginUser.getUser().getProfileImage());
-        model.addAttribute("loginUserId", loginUser.getUser().getId());
-        model.addAttribute("userNickname", loginUser.getUser().getNickname());
+        model.addAttribute("profileImage", loginUser.getProfileImage());
+        model.addAttribute("loginUserId", loginUser.getUserId());
+        model.addAttribute("userNickname", loginUser.getNickname());
         model.addAttribute("route", dto);
         return "travel/course-update";
     }

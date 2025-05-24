@@ -3,6 +3,7 @@ package com.test.foodtrip.domain.travel.controller;
 import com.test.foodtrip.domain.travel.dto.CreateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.dto.UpdateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.service.TravelRouteService;
+import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.global.oauth.CustomOAuth2User;
 import jakarta.servlet.http.HttpSession;
@@ -23,8 +24,8 @@ public class TravelRouteRestController {
     private final TravelRouteService travelRouteService;
 
     @PostMapping
-    public ResponseEntity<?> createTravelRoute(@RequestBody CreateTravelRouteDTO dto, @AuthenticationPrincipal CustomOAuth2User oauthUser) {
-        Long userId = oauthUser.getUser().getId();
+    public ResponseEntity<?> createTravelRoute(@RequestBody CreateTravelRouteDTO dto, @AuthenticationPrincipal UserPrincipal oauthUser) {
+        Long userId = oauthUser.getUserId();
         dto.setUserId(userId);
         travelRouteService.createTravelRoute(dto);
         return ResponseEntity.ok("저장 성공");
