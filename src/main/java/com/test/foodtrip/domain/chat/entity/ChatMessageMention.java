@@ -9,7 +9,7 @@ import lombok.Setter;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "CHAT_MESSAGE_MENTION")
+@Table(name = "CHATMESSAGEMENTION")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessageMention {

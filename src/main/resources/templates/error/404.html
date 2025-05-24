@@ -1,10 +1,258 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRIPSODA - 페이지를 찾을 수 없습니다</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 전체 스타일 */
+        :root {
+            --primary-color: #0ED8D5;
+            --primary-dark: #04A6A4;
+            --primary-light: #E0F7F7;
+            --secondary-color: #FF8C38;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --text-light: #888888;
+            --background-color: #F8F9FA;
+            --white: #FFFFFF;
+            --border-color: #EEEEEE;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 컨테이너 레이아웃 */
+        .container {
+            display: flex;
+            max-width: 1300px;
+            margin: 0 auto;
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* 에러 페이지 컨텐츠 */
+        .error-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--white), var(--primary-light));
+        }
+
+        .error-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            letter-spacing: -4px;
+            line-height: 1;
+            text-shadow: 2px 2px 0px var(--primary-dark);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .error-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .error-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .home-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .home-button:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+            background-color: var(--primary-dark);
+        }
+
+        .suggestion-links {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .suggestion-link {
+            padding: 8px 16px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .suggestion-link:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .error-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 2rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .error-footer {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* 애니메이션 */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* 미디어 쿼리 */
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 6rem;
+            }
+
+            .error-title {
+                font-size: 1.5rem;
+            }
+
+            .error-image {
+                max-width: 80%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .error-code {
+                font-size: 4rem;
+            }
+
+            .error-title {
+                font-size: 1.2rem;
+            }
+
+            .error-description {
+                font-size: 0.9rem;
+            }
+
+            .error-image {
+                max-width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-
+<div class="container">
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="error-code">404</div>
+            <h1 class="error-title">페이지를 찾을 수 없습니다</h1>
+<!--            <img src="/api/placeholder/400/320" alt="여행자 길 잃음" class="error-image">-->
+            <p class="error-description">
+                요청하신 페이지가 존재하지 않거나, 이동되었거나, 삭제되었을 수 있습니다.
+                URL을 다시 확인하시거나 아래 링크를 통해 다른 페이지로 이동해보세요.
+            </p>
+            <a href="/" class="home-button">
+                <i class="fas fa-home"></i> 홈으로 돌아가기
+            </a>
+            <div class="suggestion-links">
+                <a href="/chatrooms" class="suggestion-link">
+                    <i class="fas fa-comments"></i> 채팅방 목록
+                </a>
+                <a href="/community" class="suggestion-link">
+                    <i class="fas fa-users"></i> 커뮤니티
+                </a>
+                <a href="/travel-recommendations" class="suggestion-link">
+                    <i class="fas fa-map-marked-alt"></i> 여행 추천
+                </a>
+            </div>
+            <div class="error-footer">
+                도움이 필요하시면 <a href="mailto:support@tripsoda.com" style="color: var(--primary-color);">support@tripsoda.com</a>으로 문의해주세요.
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
