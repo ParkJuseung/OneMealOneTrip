@@ -41,28 +41,31 @@ public class ChatRoomRestController {
     @GetMapping
     public ChatRoomListPageResponseDTO getAllRooms(
             @RequestParam("offset") int offset,
-            @RequestParam("limit") int limit
+            @RequestParam("limit") int limit,
+            @RequestParam(value = "keyword", required = false) String keyword
     ) {
-        return chatRoomService.getAllRoomsWithPagination(offset, limit, getCurrentUserId());
+        return chatRoomService.getAllRoomsWithPagination(offset, limit, getCurrentUserId(), keyword);
     }
 
-    //인기 채팅방 목록 조회
+    // 인기 채팅방 목록 조회
     @GetMapping("/popular")
     public ChatRoomListPageResponseDTO getPopularRooms(
             @RequestParam("offset") int offset,
-            @RequestParam("limit") int limit
+            @RequestParam("limit") int limit,
+            @RequestParam(value = "keyword", required = false) String keyword
     ) {
-        return chatRoomService.getPopularRoomsWithPagination(offset, limit);
+        return chatRoomService.getPopularRoomsWithPagination(offset, limit, keyword);
     }
 
-    //내가 참여중인 채팅방 목록 조회
+    // 내가 참여중인 채팅방 목록 조회
     @GetMapping("/mine")
     public ChatRoomListPageResponseDTO getMyRooms(
             @RequestParam("offset") int offset,
-            @RequestParam("limit") int limit
+            @RequestParam("limit") int limit,
+            @RequestParam(value = "keyword", required = false) String keyword
     ) {
         Long userId = getCurrentUserId();
-        return chatRoomService.getMyRoomsWithPagination(userId, offset, limit);
+        return chatRoomService.getMyRoomsWithPagination(userId, offset, limit, keyword);
     }
 
     // 채팅방 생성

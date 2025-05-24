@@ -1,10 +1,7 @@
 package com.test.foodtrip.domain.chat.repository;
 
-import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
