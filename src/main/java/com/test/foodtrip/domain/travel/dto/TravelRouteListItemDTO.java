@@ -14,6 +14,7 @@ public class TravelRouteListItemDTO {
     private Integer placeCount;
     private Integer views;
     private String userName;
+    private String profileImage;
     private Long userId;
     private List<String> tagNames; // 단순 문자열 리스트로
 

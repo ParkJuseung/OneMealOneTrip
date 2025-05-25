@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "TravelRouteTagging")
+@Table(name = "TRAVELROUTETAGGING")
 public class TravelRouteTagging {
 
     @Id

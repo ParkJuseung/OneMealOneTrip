@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "TravelRoute")
+@Table(name = "TRAVELROUTE")
 public class TravelRoute {
 
     @Id
