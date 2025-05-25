@@ -2,9 +2,8 @@ package com.test.foodtrip.domain.user.entity;
 
 import com.test.foodtrip.domain.post.entity.Comment;
 import com.test.foodtrip.domain.post.entity.Post;
-import jakarta.persistence.*;
 import lombok.*;
-
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.test.foodtrip.domain.chat.controller;
 
-import com.test.foodtrip.domain.chat.dto.ChatMessageResponseDTO;
 import com.test.foodtrip.domain.chat.dto.ChatMessageSendRequestDTO;
+import com.test.foodtrip.domain.chat.dto.ChatMessageResponseDTO;
 import com.test.foodtrip.domain.chat.entity.ChatMessage;
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.repository.ChatMessageRepository;

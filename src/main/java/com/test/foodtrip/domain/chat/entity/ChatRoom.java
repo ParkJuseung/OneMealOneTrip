@@ -1,14 +1,18 @@
 package com.test.foodtrip.domain.chat.entity;
 
-import com.test.foodtrip.domain.user.entity.User;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import jakarta.persistence.*;
-import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.test.foodtrip.domain.user.entity.User;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Table(name = "CHATROOM")
@@ -93,13 +97,12 @@ public class ChatRoom {
         notice.setChatRoom(this);
     }
 
-    public void softDelete() {
-        this.isDeleted = "Y";
-        this.updatedAt = LocalDateTime.now();
-    }
-
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public void updateThumbnailImageUrl(String url) {
+        this.thumbnailImageUrl = url;
     }
 
     public void markAsDeleted() {

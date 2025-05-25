@@ -1,13 +1,15 @@
 package com.test.foodtrip.domain.chat.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChatRoomDetailResponseDTO {
     private Long id;
     private String title;
@@ -23,5 +25,7 @@ public class ChatRoomDetailResponseDTO {
     private int likeCount;
     private int participantCount;
     private String ownerNickname;
+
+    private boolean liked;
 
 }

@@ -19,9 +19,5 @@ public interface ChatRoomHashtagRepository extends JpaRepository<ChatRoomHashtag
     @Query("DELETE FROM ChatRoomHashtag crh WHERE crh.chatRoom.id = :chatRoomId")
     void deleteByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
-    // 선택적: 특정 해시태그로 연결된 방 목록 조회
-    List<ChatRoomHashtag> findByHashtagId(Long hashtagId);
-
-
     List<ChatRoomHashtag> findByChatRoomId(Long id);
 }

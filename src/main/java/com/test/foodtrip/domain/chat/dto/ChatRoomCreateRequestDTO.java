@@ -2,10 +2,11 @@ package com.test.foodtrip.domain.chat.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter

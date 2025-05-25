@@ -19,4 +19,5 @@ public class ChatRoomListResponseDTO {
 	private int likeCount; // ❤️ 좋아요 수
 	private int participantCount; // 참여자 수
 	private String ownerNickname; // 방장 닉네임
+	private boolean liked; // 좋아요 여부
 }

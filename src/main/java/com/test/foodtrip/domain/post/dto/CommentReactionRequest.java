@@ -1,10 +1,11 @@
 package com.test.foodtrip.domain.post.dto;
 
 import com.test.foodtrip.domain.post.entity.enums.ReactionType;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import jakarta.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor

@@ -1,12 +1,14 @@
 package com.test.foodtrip.domain.user.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.foodtrip.domain.user.dto.GoogleResponse;
 import com.test.foodtrip.domain.user.dto.KakaoResponse;
 import com.test.foodtrip.domain.user.dto.NaverResponse;
+
 import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

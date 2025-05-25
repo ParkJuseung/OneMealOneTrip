@@ -1,9 +1,8 @@
 package com.test.foodtrip.domain.chat.entity;
 
 
-import jakarta.persistence.*;
 import lombok.*;
-
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

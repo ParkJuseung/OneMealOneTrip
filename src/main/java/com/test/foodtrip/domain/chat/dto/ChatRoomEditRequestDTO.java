@@ -2,7 +2,6 @@ package com.test.foodtrip.domain.chat.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-
 import java.util.List;
 
 //채팅방 수정 요청 시 클라이언트가 보내는 데이터 구조

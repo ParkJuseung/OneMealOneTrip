@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.chat.controller;
 
+import com.test.foodtrip.domain.chat.dto.ChatRoomListResponseDTO;
 import com.test.foodtrip.domain.chat.dto.ChatRoomViewDTO;
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.repository.ChatRoomRepository;
@@ -7,7 +8,9 @@ import com.test.foodtrip.domain.chat.service.ChatRoomService;
 import com.test.foodtrip.domain.chat.service.ChatRoomUserService;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +22,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 
 @Controller

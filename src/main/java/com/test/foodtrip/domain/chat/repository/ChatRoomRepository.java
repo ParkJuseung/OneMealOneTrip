@@ -12,9 +12,6 @@ import java.util.List;
 // 기본 CRUD 외에 채팅방 리스트 출력에 주로 사용
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long>, ChatRoomRepositoryCustom {
 
-    @Query("SELECT c FROM ChatRoom c WHERE c.isDeleted = 'N'")
-    List<ChatRoom> findAllNotDeleted();
-
     List<ChatRoom> findByIsDeleted(String isDeleted);
 
 	List<ChatRoom> findByIsDeletedOrderByCreatedAtDesc(String string);

@@ -7,6 +7,7 @@ import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.service.PostService;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.test.foodtrip.domain.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;

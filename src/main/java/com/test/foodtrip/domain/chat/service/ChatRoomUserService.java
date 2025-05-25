@@ -1,5 +1,11 @@
 package com.test.foodtrip.domain.chat.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import com.test.foodtrip.domain.chat.repository.ChatMessageRepository;
@@ -7,12 +13,8 @@ import com.test.foodtrip.domain.chat.repository.ChatRoomRepository;
 import com.test.foodtrip.domain.chat.repository.ChatroomUserRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

@@ -1,8 +1,10 @@
 package com.test.foodtrip.domain.chat.entity;
 
 
-import jakarta.persistence.*;
 import lombok.*;
+import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -10,8 +12,9 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder // ← 추가!
+@Builder
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "CHATROOMNOTICEHISTORY")
 public class ChatroomNoticeHistory {
 
@@ -35,11 +38,8 @@ public class ChatroomNoticeHistory {
     @Column(name = "description", length = 200)
     private String description;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
 }

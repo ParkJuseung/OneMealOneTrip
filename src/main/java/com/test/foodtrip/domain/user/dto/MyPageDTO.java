@@ -2,17 +2,14 @@
 
 package com.test.foodtrip.domain.user.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 //import com.test.foodtrip.domain.post.dto.PostDTO;
 //import com.test.foodtrip.domain.post.dto.CommentDTO;
-
+import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 //import com.test.foodtrip.domain.user.dto.TravelBucketDTO;
 
 /**

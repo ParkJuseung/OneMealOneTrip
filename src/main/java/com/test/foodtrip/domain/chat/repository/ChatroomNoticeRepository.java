@@ -1,7 +1,7 @@
 package com.test.foodtrip.domain.chat.repository;
 
-import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import com.test.foodtrip.domain.chat.entity.ChatroomNoticeHistory;
+import com.test.foodtrip.domain.chat.entity.ChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

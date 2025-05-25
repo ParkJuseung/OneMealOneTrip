@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.chat.service;
 
+import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import com.test.foodtrip.domain.chat.repository.ChatRoomRepository;
 import com.test.foodtrip.domain.chat.repository.ChatroomUserRepository;
 import com.test.foodtrip.domain.chat.repository.HashtagRepository;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

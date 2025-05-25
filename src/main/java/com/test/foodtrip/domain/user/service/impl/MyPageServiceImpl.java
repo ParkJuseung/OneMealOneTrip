@@ -3,8 +3,8 @@ package com.test.foodtrip.domain.user.service.impl;
 
 import com.test.foodtrip.domain.user.dto.MyPageDTO;
 import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
-import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.entity.UsersInfo;
+import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 import com.test.foodtrip.domain.user.service.MyPageService;
 import lombok.RequiredArgsConstructor;

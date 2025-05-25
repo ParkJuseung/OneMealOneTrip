@@ -5,12 +5,13 @@ package com.test.foodtrip.domain.user.controller;
 import com.test.foodtrip.domain.user.dto.MyPageDTO;
 import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 import com.test.foodtrip.domain.user.service.MyPageService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequiredArgsConstructor
