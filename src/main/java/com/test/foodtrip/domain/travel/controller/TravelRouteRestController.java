@@ -6,6 +6,7 @@ import com.test.foodtrip.domain.travel.service.TravelRouteService;
 import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +23,11 @@ public class TravelRouteRestController {
     private final TravelRouteService travelRouteService;
 
     @PostMapping
-    public ResponseEntity<?> createTravelRoute(@RequestBody CreateTravelRouteDTO dto, @AuthenticationPrincipal UserPrincipal oauthUser) {
-        Long userId = oauthUser.getUserId();
+    public ResponseEntity<?> createTravelRoute(@RequestBody CreateTravelRouteDTO dto, HttpSession session) {
+        Long userId = (Long) session.getAttribute("user_id");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 정보 없음");
+        }
         dto.setUserId(userId);
         travelRouteService.createTravelRoute(dto);
         return ResponseEntity.ok("저장 성공");
