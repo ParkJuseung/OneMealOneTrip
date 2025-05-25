@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "RoutePlace")
+@Table(name = "ROUTEPLACE")
 public class RoutePlace {
 
     @Id
@@ -23,7 +23,7 @@ public class RoutePlace {
     @JoinColumn(name = "route_id")
     private TravelRoute travelRoute;
 
-    @Column(name = "api_place_id", nullable = false, length = 100)
+    @Column(name = "api_place_id", nullable = false, length = 200)
     private String apiPlaceId;
 
     @Column(name = "place_name", nullable = false, length = 200)

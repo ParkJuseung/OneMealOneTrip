@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "TravelRouteTag")
+@Table(name = "TRAVELROUTETAG")
 public class TravelRouteTag {
 
     @Id

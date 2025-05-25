@@ -32,7 +32,7 @@
             </div>
 
             <!-- 코스 그리드 -->
-            <div class="course-grid">
+            <div class="course-grid" th:if="${routes != null and !routes.isEmpty()}">
                 <div class="course-card" th:each="route : ${routes}" th:data-id="${route.routeId}">
                     <div class="course-image-container js-thumbnail-container" th:data-id="${route.routeId}">
                         <div class="course-like">
@@ -56,14 +56,18 @@
                                 </div>
                             </div>
                             <div class="creator-info">
-                                <img th:src="@{/api/user/profile/{id}(id=${route.userId})}" alt="작성자" class="creator-avatar" />
+                                <img th:src="${route.profileImage != null ? route.profileImage : '/images/default-profile.png'}" alt="작성자" class="creator-avatar" />
                                 <span th:text="${route.userName}">작성자</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
+            <div class="empty-state" th:if="${routes == null or routes.isEmpty()}">
+                <i class="fas fa-route"></i>
+                <div class="empty-state-title">검색 결과가 없습니다.</div>
+                <p class="empty-state-text">다른 키워드로 검색해보세요.</p>
+            </div>
 
 
             <!-- 페이지네이션 -->
@@ -80,7 +84,7 @@
 <!--                    <i class="fas fa-chevron-right"></i>-->
 <!--                </div>-->
 <!--            </div>-->
-            <div class="pagination">
+            <div class="pagination" th:if="${totalPages > 1 and routes != null and !routes.isEmpty()}">
                 <div class="page-arrow" th:if="${currentPage > 0}"
                      th:attr="data-page=${currentPage - 1}">
                     <i class="fas fa-chevron-left"></i>
