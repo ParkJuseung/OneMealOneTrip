@@ -3,21 +3,15 @@ package com.test.foodtrip.domain.travel.controller;
 import com.test.foodtrip.domain.travel.dto.TravelRouteDTO;
 import com.test.foodtrip.domain.travel.dto.TravelRouteListItemDTO;
 import com.test.foodtrip.domain.travel.service.TravelRouteService;
-import com.test.foodtrip.domain.user.dto.UserDTO;
 import com.test.foodtrip.domain.user.dto.UserPrincipal;
-import com.test.foodtrip.global.oauth.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 @Controller
 @RequiredArgsConstructor

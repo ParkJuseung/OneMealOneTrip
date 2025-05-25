@@ -4,8 +4,6 @@ import com.test.foodtrip.domain.travel.dto.CreateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.dto.UpdateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.service.TravelRouteService;
 import com.test.foodtrip.domain.user.dto.UserPrincipal;
-import com.test.foodtrip.domain.user.entity.User;
-import com.test.foodtrip.global.oauth.CustomOAuth2User;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
