@@ -1,28 +1,30 @@
 package com.test.foodtrip.domain.travel.entity;
 
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "ROUTE_PLACE")
-@Getter @Setter
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "ROUTEPLACE")
 public class RoutePlace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "route_place_seq")
     @SequenceGenerator(name = "route_place_seq", sequenceName = "route_place_seq", allocationSize = 1)
     @Column(name = "place_id")
-    private Long id;
+    private Long placeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "route_id")
     private TravelRoute travelRoute;
+
+    @Column(name = "api_place_id", nullable = false, length = 200)
+    private String apiPlaceId;
 
     @Column(name = "place_name", nullable = false, length = 200)
     private String placeName;
@@ -49,4 +51,13 @@ public class RoutePlace {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public void setTravelRoute(TravelRoute travelRoute) {
+        this.travelRoute = travelRoute;
+    }
+
+    public void setRoute(TravelRoute route) {
+        this.travelRoute = route;
+    }
+
 }

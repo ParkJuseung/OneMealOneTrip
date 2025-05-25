@@ -10,7 +10,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ROUTE_BOOKMARK", uniqueConstraints = {
+@Table(name = "RouteBookmark", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"route_id", "user_id"})
 })
 @Getter @Setter
@@ -21,7 +21,7 @@ public class RouteBookmark {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "route_bookmark_seq")
     @SequenceGenerator(name = "route_bookmark_seq", sequenceName = "route_bookmark_seq", allocationSize = 1)
     @Column(name = "bookmark_id")
-    private Long id;
+    private Long bookmarkId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "route_id")

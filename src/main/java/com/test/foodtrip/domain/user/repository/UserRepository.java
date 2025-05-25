@@ -16,6 +16,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 닉네임으로 사용자 검색
     Optional<User> findByNickname(String nickname);
+    
+    //
+    Optional<User> findBySocialEmail(String email);
 
     // 활성 상태인 사용자 조회
     @Query("SELECT u FROM User u WHERE u.active = 'Y'")

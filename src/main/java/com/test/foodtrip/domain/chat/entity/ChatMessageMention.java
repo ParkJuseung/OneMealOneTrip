@@ -2,11 +2,11 @@ package com.test.foodtrip.domain.chat.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.*;
 
 @Entity
 @Table(name = "CHATMESSAGEMENTION")

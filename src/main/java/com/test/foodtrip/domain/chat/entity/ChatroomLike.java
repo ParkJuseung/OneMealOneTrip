@@ -2,19 +2,19 @@ package com.test.foodtrip.domain.chat.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "CHATROOMLIKE", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"chatroom_id", "user_id"})
 })
-@Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatroomLike {
 
     @Id
