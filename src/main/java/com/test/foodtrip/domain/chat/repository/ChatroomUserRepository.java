@@ -1,7 +1,10 @@
 package com.test.foodtrip.domain.chat.repository;
 
+
 import com.test.foodtrip.domain.chat.entity.ChatroomUser;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,4 +34,16 @@ public interface ChatroomUserRepository extends JpaRepository<ChatroomUser, Long
 
     // 유저가 참여한 채팅방 목록 중 특정 상태 필터링
     List<ChatroomUser> findByUserIdAndStatus(Long userId, String joined);
+
+    @Query("""
+    	    SELECT cu.lastReadMessageId FROM ChatroomUser cu
+    	    WHERE cu.chatRoom.id = :chatRoomId AND cu.user.id = :userId
+    	""")
+    	Optional<Long> findLastReadMessageId(
+    	    @Param("chatRoomId") Long chatRoomId,
+    	    @Param("userId") Long userId
+    	);
+
+    boolean existsByChatRoom_IdAndUser_Id(Long chatRoomId, Long userId);
+	
 }
