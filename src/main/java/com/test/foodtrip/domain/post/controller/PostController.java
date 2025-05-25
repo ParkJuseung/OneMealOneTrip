@@ -91,6 +91,21 @@ public class PostController {
         log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
         log.info("PostController create() - placeId: {}", placeId);
 
+        // 🔍 추가 디버깅: 각 이미지 파일 정보 출력
+        System.out.println("=== Controller 이미지 파일 디버깅 ===");
+        System.out.println("받은 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : "null"));
+
+        if (imageFiles != null) {
+            for (int i = 0; i < imageFiles.size(); i++) {
+                MultipartFile file = imageFiles.get(i);
+                System.out.println("파일 " + i + ":");
+                System.out.println("  - 파일명: " + file.getOriginalFilename());
+                System.out.println("  - 크기: " + file.getSize() + " bytes");
+                System.out.println("  - Content-Type: " + file.getContentType());
+                System.out.println("  - 비어있음: " + file.isEmpty());
+            }
+        }
+
         // 로그인 체크
         if (!isLoggedIn(session)) {
             return "redirect:/login?error=login_required";
@@ -109,8 +124,13 @@ public class PostController {
             dto.setPlaceName(placeName);
             dto.setPlaceAddress(placeAddress);
 
+            // 🔍 배열 변환 전 추가 로그
+            System.out.println("배열 변환 전 리스트 크기: " + (imageFiles != null ? imageFiles.size() : 0));
+
             // 이미지 배열로 변환
             MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+
+            System.out.println("배열 변환 후 크기: " + imagesArray.length);
 
             // 서비스 호출
             Long pno = postService.create(dto, imagesArray);

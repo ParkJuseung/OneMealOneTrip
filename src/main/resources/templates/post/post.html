@@ -8,17 +8,45 @@
 
 <th:block layout:fragment="style">
     <link rel="stylesheet" th:href="@{/css/post.css}">
+
+    <!-- 추가 스타일: 리스트 이미지 표시용 -->
+    <style>
+        /* 게시글 카드 이미지 */
+        .post-image {
+            width: 130px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            margin: 10px 0;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .post-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .post-image {
+                width: 100px;
+                height: 70px;
+            }
+        }
+
+    </style>
 </th:block>
 
 <body>
 <th:block layout:fragment="content">
-<!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
-<!--    <div class="search-container">-->
-<!--        <div class="search-input-wrap">-->
-<!--            <i class="fas fa-search search-icon-input"></i>-->
-<!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
-<!--        </div>-->
-<!--    </div>-->
+    <!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
+    <!--    <div class="search-container">-->
+    <!--        <div class="search-input-wrap">-->
+    <!--            <i class="fas fa-search search-icon-input"></i>-->
+    <!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
+    <!--        </div>-->
+    <!--    </div>-->
 
     <!-- 사용자 선택 탭 -->
     <div class="user-selection">
@@ -33,15 +61,15 @@
     </div>
 
     <!-- 트렌딩 토픽 -->
-<!--    <div class="trending-topics">-->
-<!--        <div class="topic-badge active"># 인기 여행지</div>-->
-<!--        <div class="topic-badge"># 제주도</div>-->
-<!--        <div class="topic-badge"># 맛집투어</div>-->
-<!--        <div class="topic-badge"># 유럽여행</div>-->
-<!--        <div class="topic-badge"># 배낭여행</div>-->
-<!--        <div class="topic-badge"># 프라하</div>-->
-<!--        <div class="topic-badge"># 동행구함</div>-->
-<!--    </div>-->
+    <!--    <div class="trending-topics">-->
+    <!--        <div class="topic-badge active"># 인기 여행지</div>-->
+    <!--        <div class="topic-badge"># 제주도</div>-->
+    <!--        <div class="topic-badge"># 맛집투어</div>-->
+    <!--        <div class="topic-badge"># 유럽여행</div>-->
+    <!--        <div class="topic-badge"># 배낭여행</div>-->
+    <!--        <div class="topic-badge"># 프라하</div>-->
+    <!--        <div class="topic-badge"># 동행구함</div>-->
+    <!--    </div>-->
 
     <!-- 탭 네비게이션 -->
     <div class="tab-navigation">
@@ -101,8 +129,20 @@
                 <div class="post-tags">
                     <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
                 </div>
-                <img src="/api/placeholder/130/90" alt="여행 사진" class="post-image"
-                     th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
+
+                <!-- 🔧 간단한 이미지 표시 - 첫 번째 이미지만 -->
+                <img th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}"
+                     th:src="${dto.imageUrls[0]}"
+                     alt="게시글 이미지"
+                     class="post-image"
+                     onerror="this.src='/api/placeholder/130/90';">
+
+                <!-- 이미지가 없는 경우 기본 플레이스홀더 -->
+                <img th:if="${dto.imageUrls == null or dto.imageUrls.isEmpty()}"
+                     src="/api/placeholder/130/90"
+                     alt="기본 이미지"
+                     class="post-image">
+
                 <p class="post-text">[[${dto.content}]]</p>
                 <div class="post-meta">
                     <div class="post-author">
@@ -193,6 +233,17 @@
                 if (activeTab) {
                     setIndicatorPosition(activeTab);
                 }
+            });
+
+            // 🔧 이미지 클릭 시 상세보기로 이동
+            document.querySelectorAll('.post-image').forEach(image => {
+                image.addEventListener('click', function() {
+                    const postCard = this.closest('.post-card');
+                    const viewBtn = postCard.querySelector('.view-btn');
+                    if (viewBtn) {
+                        viewBtn.click();
+                    }
+                });
             });
         });
 
