@@ -24,8 +24,6 @@ public class MyPageServiceImpl implements MyPageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
 
-
-
         // DTO로 매핑 (필드 매핑 부분을 반드시 채워주세요)
         return MyPageDTO.builder()
                 .id(user.getId())
@@ -155,6 +153,8 @@ public class MyPageServiceImpl implements MyPageService {
             userRepository.save(user);
         }
     }
+
+
 
 
 
