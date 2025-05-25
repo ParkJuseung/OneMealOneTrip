@@ -1221,3 +1221,16 @@ body {
     word-break: break-word;     /* 강제 줄바꿈 허용 */
     overflow-x: hidden;         /* 가로 스크롤 막기 */
 }
+
+/* 방장인 채팅방 강조 스타일 */
+.chat-room.owner-room {
+    border: 2px solid var(--secondary-color) !important;
+    background-color: #fff3e6 !important;
+    position: relative;
+}
+
+.chat-room.owner-room .chat-title::before {
+    content: "👑 ";
+    font-size: 1rem;
+    color: var(--secondary-color);
+}

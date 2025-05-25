@@ -33,8 +33,10 @@
 
 		<!-- 채팅방 목록 영역 -->
 		<div class="chat-list">
-			<div class="chat-room" th:each="room : ${chatRooms}" th:attr="data-id=${room.id}, data-room-id=${room.id}">
-
+			<div class="chat-room"
+				 th:each="room : ${chatRooms}"
+				 th:classappend="${room.myRole == 'OWNER'} ? ' owner-room' : ''"
+				 th:attr="data-id=${room.id}, data-room-id=${room.id}">
 				<!-- 왼쪽: 썸네일 + 참여자 수 -->
 				<div class="chat-left">
 					<img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/images/chat/default-thumbnail-100x100.png'}"
@@ -475,7 +477,7 @@
 			const container = document.querySelector('.chat-list');
 			rooms.forEach(room => {
 				const div = document.createElement('div');
-				div.className = 'chat-room';
+				div.className = `chat-room${room.myRole === 'OWNER' ? ' owner-room' : ''}`;
 				div.setAttribute('data-id', room.id);
 				div.setAttribute('data-room-id', room.id);
 				div.innerHTML = `
