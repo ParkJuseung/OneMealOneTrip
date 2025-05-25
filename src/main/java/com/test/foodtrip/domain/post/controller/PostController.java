@@ -177,19 +177,58 @@ public class PostController {
             return "redirect:/login?error=login_required";
         }
 
-        PostDTO dto = postService.read(id);
-        model.addAttribute("dto", dto);
-        return "post/modify-post";
+        try {
+            System.out.println("=== 게시글 수정 페이지 로드 시작 ===");
+            System.out.println("게시글 ID: " + id);
+
+            PostDTO dto = postService.read(id);
+
+            System.out.println("=== PostDTO 확인 ===");
+            if (dto != null) {
+                System.out.println("제목: " + dto.getTitle());
+                System.out.println("내용: " + dto.getContent());
+                System.out.println("태그 수: " + (dto.getTags() != null ? dto.getTags().size() : 0));
+                System.out.println("이미지 수: " + (dto.getImageUrls() != null ? dto.getImageUrls().size() : 0));
+                System.out.println("위치명: " + dto.getPlaceName());
+
+                if (dto.getTags() != null) {
+                    System.out.println("태그 목록: " + dto.getTags());
+                }
+                if (dto.getImageUrls() != null) {
+                    System.out.println("이미지 URL 목록: " + dto.getImageUrls());
+                }
+            } else {
+                System.out.println("❌ DTO가 null입니다!");
+                return "redirect:/post";
+            }
+
+            model.addAttribute("dto", dto);
+            model.addAttribute("requestDTO", requestDTO);
+
+            System.out.println("=== Model에 데이터 추가 완료 ===");
+            System.out.println("템플릿 반환: post/modify-post");
+
+            return "post/modify-post";
+        } catch (Exception e) {
+            System.err.println("❌ 게시글 수정 페이지 로드 중 오류: " + e.getMessage());
+            e.printStackTrace();
+            return "redirect:/post";
+        }
     }
 
     @PostMapping("/post/modify")
     public String modify(PostDTO dto,
                          @RequestParam(value = "tags", required = false) List<String> tags,
+                         @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+                         @RequestParam(value = "deleteImageIndexes", required = false) List<Integer> deleteImageIndexes,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
+
         log.info("PostController modify() - dto: " + dto);
         log.info("PostController modify() - tags: " + tags);
+        log.info("PostController modify() - 새 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : 0));
+        log.info("PostController modify() - 삭제할 이미지 인덱스: " + deleteImageIndexes);
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -200,7 +239,12 @@ public class PostController {
             // 태그 정보를 DTO에 설정
             dto.setTags(tags);
 
-            postService.modify(dto);
+            // 이미지 배열로 변환
+            MultipartFile[] imagesArray = imageFiles != null ?
+                    imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+
+            // 수정 서비스 호출 (이미지도 함께 처리)
+            postService.modify(dto, imagesArray, deleteImageIndexes);
 
             redirectAttributes.addAttribute("page", requestDTO.getPage());
             redirectAttributes.addAttribute("type", requestDTO.getType());
@@ -210,6 +254,10 @@ public class PostController {
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/post/" + dto.getId();
+        } catch (Exception e) {
+            log.error("게시글 수정 중 오류 발생", e);
+            redirectAttributes.addFlashAttribute("error", "게시글 수정 중 오류가 발생했습니다.");
+            return "redirect:/post/modify/" + dto.getId();
         }
     }
 

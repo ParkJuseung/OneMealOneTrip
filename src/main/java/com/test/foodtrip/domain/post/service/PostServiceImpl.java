@@ -261,6 +261,114 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    public void modify(PostDTO dto, MultipartFile[] images, List<Integer> deleteImageIndexes) {
+        Optional<Post> result = postRepository.findByIdWithImages(dto.getId()); // 이미지도 함께 조회
+        if (result.isPresent()) {
+            Post post = result.get();
+
+            // 권한 체크
+            User currentUser = getCurrentUser();
+            if (currentUser == null) {
+                throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
+            }
+
+            if (!post.getUser().getId().equals(currentUser.getId()) &&
+                    !"ADMIN".equals(currentUser.getRole())) {
+                throw new IllegalStateException("게시글을 수정할 권한이 없습니다.");
+            }
+
+            // 기본 정보 수정
+            post.setTitle(dto.getTitle());
+            post.setContent(dto.getContent());
+            post.setLatitude(dto.getLatitude());
+            post.setLongitude(dto.getLongitude());
+            post.setPlaceName(dto.getPlaceName());
+            post.setPlaceAddress(dto.getPlaceAddress());
+            post.setPlaceId(dto.getPlaceId());
+
+            // 🔧 기존 이미지 삭제 처리 (인덱스 기반)
+            if (deleteImageIndexes != null && !deleteImageIndexes.isEmpty()) {
+                List<PostImage> currentImages = new ArrayList<>(post.getImages());
+
+                // 인덱스를 내림차순으로 정렬해서 삭제 (인덱스 변화 방지)
+                Collections.sort(deleteImageIndexes, Collections.reverseOrder());
+
+                for (Integer index : deleteImageIndexes) {
+                    if (index >= 0 && index < currentImages.size()) {
+                        PostImage imageToDelete = currentImages.get(index);
+
+                        // 파일 시스템에서 실제 파일 삭제
+                        deleteImageFile(imageToDelete.getImageUrl());
+
+                        // DB에서 이미지 삭제
+                        post.getImages().remove(imageToDelete);
+                        postImageRepository.delete(imageToDelete);
+
+                        System.out.println("기존 이미지 삭제: " + imageToDelete.getImageUrl());
+                    }
+                }
+
+                // 남은 이미지들의 순서 재정렬
+                List<PostImage> remainingImages = new ArrayList<>(post.getImages());
+                for (int i = 0; i < remainingImages.size(); i++) {
+                    remainingImages.get(i).setImageOrder(i);
+                }
+            }
+
+            // 🔧 새 이미지 추가 처리
+            if (images != null && images.length > 0) {
+                int currentMaxOrder = post.getImages().stream()
+                        .mapToInt(PostImage::getImageOrder)
+                        .max()
+                        .orElse(-1);
+
+                int addedCount = 0;
+                for (int i = 0; i < images.length; i++) {
+                    MultipartFile image = images[i];
+                    if (!image.isEmpty()) {
+                        try {
+                            String imageUrl = saveImage(image);
+                            PostImage postImage = new PostImage();
+                            postImage.setImageUrl(imageUrl);
+                            postImage.setImageOrder(currentMaxOrder + addedCount + 1);
+                            post.addImage(postImage);
+                            addedCount++;
+
+                            System.out.println("새 이미지 추가: " + imageUrl);
+                        } catch (IOException e) {
+                            throw new RuntimeException("이미지 저장 실패: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            // Post 저장
+            postRepository.save(post);
+
+            // 태그 업데이트
+            updatePostTagsOptimized(post, dto.getTags());
+
+            System.out.println("게시글 수정 완료 - ID: " + post.getId());
+        }
+    }
+
+    // 파일 삭제 헬퍼 메서드 (기존에 없다면 추가)
+    private void deleteImageFile(String imageUrl) {
+        try {
+            if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
+                String filename = imageUrl.substring("/uploads/".length());
+                String uploadDir = System.getProperty("user.dir") + "/uploads/";
+                Path path = Paths.get(uploadDir + filename);
+                Files.deleteIfExists(path);
+                System.out.println("파일 시스템에서 이미지 삭제: " + path);
+            }
+        } catch (IOException e) {
+            System.err.println("이미지 파일 삭제 실패: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
     public void remove(Long id) {
         Optional<Post> result = postRepository.findById(id);
         if (result.isPresent()) {
