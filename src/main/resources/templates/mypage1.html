@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/mypage-main}">
+
+<th:block layout:fragment="content">
+
+    <div class="profile-section">
+        <div class="profile-header">
+            <img src="/api/placeholder/100/100" alt="프로필 이미지" class="profile-image">
+            <div class="profile-info">
+                <h2 class="profile-name"th:text="${user.nickname} + ' ' + (user.role == 'USER' ? '' : user.role)">닉네임 <span class="badge-label">등급</span></h2> <!-- 등급 바인딩은 필요에 맞춰 조정 -->
+                <div class="profile-email" th:text="${user.socialEmail}">user@example.com</div>
+                <div class="profile-greeting" th:text="${user.greeting}">안녕하세요! 여행을 사랑하는 김여행입니다. 함께 멋진 여행을 만들어가요! ✈️</div>
+            </div>
+        </div>
+        <button class="profile-button" id="edit-profile-button">
+            <i class="fas fa-pencil-alt"></i> 프로필 편집
+        </button>
+        <div class="profile-stats">
+            <div class="stat-item">
+                <div class="stat-number">42</div>
+                <div class="stat-label">팔로워</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">35</div>
+                <div class="stat-label">팔로잉</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">128</div>
+                <div class="stat-label">방문자</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">15</div>
+                <div class="stat-label">게시글</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 프로필 콘텐츠 중간 영역 - 여기서 요소들이 보이도록 수정 -->
+    <div class="profile-content">
+        <!-- 자기소개 섹션 -->
+        <div class="content-section" id="intro-section">
+            <div class="section-header">
+                <h3 class="section-title">나의 소개</h3>
+                <!-- 데모용으로 조건부 표시 제거 -->
+                <div class="section-actions">
+                    <button id="intro-edit-btn" class="profile-button">수정</button>
+                    <button id="intro-delete-btn" class="profile-button">삭제</button>
+                </div>
+            </div>
+
+            <!-- 읽기 모드: 소개글이 있을 때 표시 (데모용으로 기본 표시) -->
+            <div id="intro-view">
+                <p class="introduce-content">안녕하세요! 여행을 통해 새로운 문화를 경험하고 소중한 추억을 만드는 것을 좋아합니다. 특히 현지 음식을 맛보고 역사적인 장소를 탐방하는 것에 큰 흥미를 가지고 있습니다.</p>
+                <div class="tag-list">
+                    <span class="interest-tag">#여행</span>
+                    <span class="interest-tag">#맛집탐방</span>
+                    <span class="interest-tag">#역사</span>
+                    <span class="interest-tag">#사진</span>
+                    <span class="interest-tag">#문화체험</span>
+                </div>
+            </div>
+
+            <!-- 읽기 모드: 소개글이 없을 때 보여줄 부분 (데모용으로 숨김) -->
+            <div id="intro-view-empty" class="hidden">
+                <p class="no-intro-text">아직 작성된 소개글이 없습니다.</p>
+                <div class="intro-empty-action">
+                    <button id="intro-create-btn" class="profile-button">
+                        나의 소개 작성하기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 편집 모드 (쓰기/수정 폼) -->
+            <div id="intro-edit" class="hidden">
+                <div class="form-group">
+                    <label class="form-label" for="intro-content">나의 소개</label>
+                    <textarea id="intro-content"
+                              class="form-textarea"
+                              maxlength="500"
+                              placeholder="자신을 소개하는 글을 입력하세요 (최대 500자)"></textarea>
+                    <div class="char-count" id="intro-char-count">0 / 500</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="intro-tag-input">관심사 태그</label>
+                    <input type="text"
+                           id="intro-tag-input"
+                           class="form-input"
+                           placeholder="태그를 입력하고 Enter" />
+                    <div class="tag-list" id="intro-new-tags"></div>
+                    <small class="text-light">최대 10개, 한 태그당 최대 20자</small>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" id="intro-save-btn" class="submit-button">저장</button>
+                    <button type="button" id="intro-cancel-btn" class="cancel-button">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 여행 버킷리스트 섹션 -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3 class="section-title">여행 버킷리스트</h3>
+            </div>
+            <div class="bucket-list">
+                <div class="bucket-item">
+                    <input type="checkbox" class="bucket-checkbox" id="bucket1">
+                    <label class="bucket-text" for="bucket1">오로라 구경하기 (아이슬란드)</label>
+                    <button><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <div class="bucket-item">
+                    <input type="checkbox" class="bucket-checkbox" id="bucket2" checked>
+                    <label class="bucket-text" for="bucket2">제주도 올레길 완주하기</label>
+                    <button><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <div class="bucket-item">
+                    <input type="checkbox" class="bucket-checkbox" id="bucket3">
+                    <label class="bucket-text" for="bucket3">열기구 타기 (카파도키아)</label>
+                    <button><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <div class="bucket-item">
+                    <input type="checkbox" class="bucket-checkbox" id="bucket4">
+                    <label class="bucket-text" for="bucket4">산티아고 순례길 걷기</label>
+                    <button><i class="fas fa-pencil-alt"></i></button>
+                </div>
+                <div class="bucket-item">
+                    <input type="checkbox" class="bucket-checkbox" id="bucket5">
+                    <label class="bucket-text" for="bucket5">몰디브에서 수상 방갈로 숙박하기</label>
+                    <button><i class="fas fa-pencil-alt"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 대표 사진첩 섹션 -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3 class="section-title">대표 사진첩</h3>
+                <a href="#" class="more-link">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="photos-grid">
+                <div class="photo-item">
+                    <img src="/api/placeholder/300/300" alt="여행 사진 1">
+                    <div class="photo-overlay">제주도 성산일출봉</div>
+                </div>
+                <div class="photo-item">
+                    <img src="/api/placeholder/300/300" alt="여행 사진 2">
+                    <div class="photo-overlay">도쿄 스카이트리</div>
+                </div>
+                <div class="photo-item">
+                    <img src="/api/placeholder/300/300" alt="여행 사진 3">
+                    <div class="photo-overlay">방콕 왓아룬 사원</div>
+                </div>
+                <div class="photo-item">
+                    <img src="/api/placeholder/300/300" alt="여행 사진 4">
+                    <div class="photo-overlay">홍콩 야경</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 대표 게시글 섹션 -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3 class="section-title">대표 게시글</h3>
+                <a href="#" class="more-link">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="posts-list">
+                <div class="post-item">
+                    <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
+                    <div class="post-info">
+                        <div class="post-title">제주도 3박 4일 자유여행 일정 공유</div>
+                        <div class="post-stats">
+                            <div class="post-stat"><i class="far fa-eye"></i> 248</div>
+                            <div class="post-stat"><i class="far fa-heart"></i> 54</div>
+                            <div class="post-stat"><i class="far fa-comment"></i> 12</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-item">
+                    <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
+                    <div class="post-info">
+                        <div class="post-title">도쿄 맛집 투어 가이드 & 추천 맛집 15곳</div>
+                        <div class="post-stats">
+                            <div class="post-stat"><i class="far fa-eye"></i> 356</div>
+                            <div class="post-stat"><i class="far fa-heart"></i> 89</div>
+                            <div class="post-stat"><i class="far fa-comment"></i> 27</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-item">
+                    <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
+                    <div class="post-info">
+                        <div class="post-title">태국 방콕+치앙마이 자유여행 경비 정리</div>
+                        <div class="post-stats">
+                            <div class="post-stat"><i class="far fa-eye"></i> 412</div>
+                            <div class="post-stat"><i class="far fa-heart"></i> 67</div>
+                            <div class="post-stat"><i class="far fa-comment"></i> 15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 추천 여행 경로 섹션 -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3 class="section-title">추천 여행 경로</h3>
+                <a href="#" class="more-link">더보기 <i class="fas fa-chevron-right"></i></a>
+            </div>
+            <div class="routes-list">
+                <div class="route-item">
+                    <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
+                    <div class="route-info">
+                        <div class="route-title">제주도 서부권 드라이브 코스</div>
+                        <div class="route-description">협재해수욕장 → 곽지해수욕장 → 한림공원 → 오설록 티뮤지엄</div>
+                        <div class="route-days">1일 코스</div>
+                    </div>
+                </div>
+                <div class="route-item">
+                    <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
+                    <div class="route-info">
+                        <div class="route-title">일본 간사이 지역 베스트 코스</div>
+                        <div class="route-description">오사카 → 교토 → 나라 → 고베</div>
+                        <div class="route-days">4일 코스</div>
+                    </div>
+                </div>
+                <div class="route-item">
+                    <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
+                    <div class="route-info">
+                        <div class="route-title">태국 방콕 시내 당일 투어</div>
+                        <div class="route-description">왕궁 → 왓아룬 → 짜뚜짝 시장 → 아시아티크</div>
+                        <div class="route-days">1일 코스</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 방명록 섹션 -->
+        <div class="content-section">
+            <div class="section-header">
+                <h3 class="section-title">방명록</h3>
+            </div>
+            <div class="guestbook-section">
+                <div class="guestbook-item">
+                    <img src="/api/placeholder/40/40" alt="방명록 작성자" class="guestbook-avatar">
+                    <div class="guestbook-content">
+                        <div class="guestbook-author">여행하는뚜벅이</div>
+                        <div class="guestbook-text">제주도 여행 포스트 정말 유익했어요! 다음 달에 제주도 가는데 많은 도움이 되었습니다. 감사합니다!</div>
+                        <div class="guestbook-date">2025.05.01</div>
+                    </div>
+                </div>
+                <div class="guestbook-item">
+                    <img src="/api/placeholder/40/40" alt="방명록 작성자" class="guestbook-avatar">
+                    <div class="guestbook-content">
+                        <div class="guestbook-author">맛집탐험가</div>
+                        <div class="guestbook-text">도쿄 맛집 추천 글 덕분에 일본 여행에서 정말 맛있는 음식들을 많이 먹었어요! 특히 츠키지 시장의 그 초밥집은 평생 기억에 남을 것 같아요.</div>
+                        <div class="guestbook-date">2025.04.25</div>
+                    </div>
+                </div>
+                <div class="leave-message">
+                    <textarea placeholder="방명록을 남겨보세요..." rows="3"></textarea>
+                    <button>등록</button>
+                    <div style="clear: both;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 프로필 편집 모달 -->
+    <div class="modal-overlay" id="profile-edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">프로필 편집</h3>
+                <div class="modal-close" id="modal-close"><i class="fas fa-times"></i></div>
+            </div>
+
+            <form th:action="@{/mypage/edit}" th:object="${user}" method="post" id="profile-edit-form">
+
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="form-group">
+                    <label class="form-label">프로필 이미지 URL</label>
+                    <input type="text" th:field="*{profileImage}" class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">이름</label>
+                    <input type="text" th:field="*{name}" class="form-input" readonly />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">이메일</label>
+                    <input type="email" th:field="*{socialEmail}" class="form-input" readonly />
+                    <small style="color: var(--text-light);">
+                        이메일은 수정할 수 없습니다.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">닉네임</label>
+                    <input type="text" th:field="*{nickname}" class="form-input" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">성별</label>
+                    <select th:field="*{gender}" class="form-input">
+                        <option value="MALE">남성</option>
+                        <option value="FEMALE">여성</option>
+                        <option value="OTHER">기타</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">생년월일</label>
+                    <input type="date" th:field="*{birthDate}" class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">연락처 (선택)</label>
+                    <input type="tel" th:field="*{phone}" class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">인사말 (선택)</label>
+                    <textarea th:field="*{greeting}" class="form-textarea"></textarea>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="cancel-button" id="cancel-button">취소</button>
+                    <button type="submit" class="submit-button">저장하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/mypage.js}" defer></script>
+
+
+</th:block>
+
+
+</html>

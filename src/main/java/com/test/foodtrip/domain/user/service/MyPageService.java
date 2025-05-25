@@ -17,4 +17,6 @@ public interface MyPageService {
 
     /** 나의 소개 삭제(내용 비우기) */
     void deleteIntro(Long userId);
+
+
 }

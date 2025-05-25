@@ -64,5 +64,32 @@ document.addEventListener('DOMContentLoaded', () => {
     submitBtn.disabled = true;
     nicknameInput.addEventListener('input', updateButtonState);
 
+    // 로드 확인용 디버그 로그
+    console.log('▶ signup.js loaded');
+
+    // 프로필 미리보기 로직
+    const input = document.getElementById('profile-input');
+    const preview = document.getElementById('profile-preview');
+
+    if (!input || !preview) {
+        console.warn('signup.js: profile-input 또는 profile-preview를 찾을 수 없습니다.');
+    } else {
+        input.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 기존 내용 제거
+            preview.innerHTML = '';
+
+            // 이미지 태그 생성 및 삽입
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = () => URL.revokeObjectURL(img.src);
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.alt = '프로필 미리보기';
+            preview.appendChild(img);
+        });
+    }
 
 });

@@ -5,7 +5,7 @@ spring:
   # ?????? ?? (Oracle)
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521:xe
+    url: jdbc:oracle:thin:@localhost:1521:freepdb1
     username: foodtrip
     password: java1234
 
@@ -32,6 +32,13 @@ spring:
     livereload:
       enabled: true
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+
 # MyBatis ??
 mybatis:
   mapper-locations: classpath:mappers/**/*.xml
@@ -49,6 +56,8 @@ server:
       enabled: true
       force: true
 
+
+
 # ?? ??
 logging:
   level:
@@ -56,3 +65,8 @@ logging:
     com.test: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+# 프로필 이미지 업로드 기본 폴더
+file:
+  upload-dir: uploads/profile-images

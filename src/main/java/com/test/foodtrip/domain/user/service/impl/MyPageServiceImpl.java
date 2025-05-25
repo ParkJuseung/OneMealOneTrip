@@ -6,6 +6,7 @@ import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 import com.test.foodtrip.domain.user.entity.UsersInfo;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.test.foodtrip.domain.user.repository.UsersInfoRepository;
 import com.test.foodtrip.domain.user.service.MyPageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MyPageServiceImpl implements MyPageService {
     private final UserRepository userRepository;
+    private final UsersInfoRepository infoRepository;
 
     @Override
     public MyPageDTO getMyPage(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
+
+
 
         // DTO로 매핑 (필드 매핑 부분을 반드시 채워주세요)
         return MyPageDTO.builder()
@@ -58,6 +62,15 @@ public class MyPageServiceImpl implements MyPageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
 
+        // 삭제 플래그 처리 후, 프로필 이미지 반영
+        if (formDto.getProfileImage() != null) {
+            // 새로 업로드된 이미지가 있으면 업데이트
+            user.setProfileImage(formDto.getProfileImage());
+        } else if (formDto.isRemoveProfileImage()) {
+            // 삭제 요청이 있으면 null 로 초기화
+            user.setProfileImage(null);
+        }
+// else { 아무 작업도 하지 않아서, 기존 이미지 유지 }
         // nickname 은 무조건 덮어쓰기
 
         user.setNickname(formDto.getNickname());
@@ -78,9 +91,7 @@ public class MyPageServiceImpl implements MyPageService {
             user.setGreeting(formDto.getGreeting());
         }
 
-        if (formDto.getProfileImage() != null) {
-            user.setProfileImage(formDto.getProfileImage());
-        }
+
 
 
 
@@ -99,16 +110,19 @@ public class MyPageServiceImpl implements MyPageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
 
-
-        // builder() 사용해서 UsersInfo 생성
+        // 1) UsersInfo 엔티티로 변환
         UsersInfo info = UsersInfo.builder()
                 .user(user)
                 .content(introDto.getContent())
                 .tags(introDto.getTags())
                 .build();
 
+        // 2) UsersInfo 단독 저장
+        info = infoRepository.save(info);
+
+        // 3) User 에 연관관계 설정 후 저장 (cascade 가 없어도 동작)
         user.setUserInfo(info);
-        userRepository.saveAndFlush(user);
+        userRepository.save(user);
 
         return UsersInfoDTO.fromEntity(info);
     }
@@ -125,7 +139,7 @@ public class MyPageServiceImpl implements MyPageService {
         }
         info.setContent(introDto.getContent());
         info.setTags(introDto.getTags());
-        userRepository.saveAndFlush(user);
+        info = infoRepository.save(info);    // 변경된 엔티티만 저장
         return UsersInfoDTO.fromEntity(info);
     }
 
@@ -135,11 +149,13 @@ public class MyPageServiceImpl implements MyPageService {
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
         UsersInfo info = user.getUserInfo();
         if (info != null) {
-            info.setContent(null);
-            info.setTags(null);
-            userRepository.saveAndFlush(user);
+            // 엔티티 자체를 지워버려도 되지만, 요구사항이 “내용 비우기”라면:
+            infoRepository.delete(info);
+            user.setUserInfo(null);
+            userRepository.save(user);
         }
     }
+
 
 
 }

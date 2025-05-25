@@ -3,6 +3,7 @@ package com.test.foodtrip.domain.user.controller;
 import com.test.foodtrip.domain.user.dto.SignupDTO;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.test.foodtrip.domain.user.service.FileStorageService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -22,6 +24,11 @@ import java.util.Map;
 public class SignupController {
 
     private final UserRepository userRepository;
+
+    private final FileStorageService storageService;
+
+
+
 
     @GetMapping
     public String showSignupForm(HttpSession session, Model model) {
@@ -89,7 +96,12 @@ public class SignupController {
             signupDTO.setPhone(null);
         }
 
-
+        // 1) 프로필 이미지가 있으면 저장하고, 반환된 파일명을 DTO에 세팅
+        MultipartFile file = signupDTO.getProfileImageFile();
+        if (file != null && !file.isEmpty()) {
+            String filename = storageService.storeFile(file);
+            signupDTO.setProfileImage(filename);
+        }
 
         User user = User.builder()
                 .socialType(signupDTO.getSocialType())
@@ -101,6 +113,7 @@ public class SignupController {
                 .phone(signupDTO.getPhone())
                 .address(signupDTO.getAddress())
                 .greeting(signupDTO.getGreeting())
+                .profileImage(signupDTO.getProfileImage())
                 .build();
 
         User saved = userRepository.save(user);
@@ -110,6 +123,6 @@ public class SignupController {
         session.setAttribute("user_id", user.getId());
 
 
-        return "redirect:/index";
+        return "redirect:/post";
     }
 }
