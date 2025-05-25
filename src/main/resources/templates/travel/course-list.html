@@ -1,1165 +1,101 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRIPSODA - 여행 코스 리스트</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<style>
-    /* 전체 스타일 */
-    :root {
-        --primary-color: #0ED8D5;
-        --primary-dark: #04A6A4;
-        --primary-light: #E0F7F7;
-        --secondary-color: #FF8C38;
-        --text-color: #333333;
-        --text-secondary: #666666;
-        --text-light: #888888;
-        --background-color: #F8F9FA;
-        --white: #FFFFFF;
-        --border-color: #EEEEEE;
-        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-        --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.07);
-        --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --radius-sm: 6px;
-        --radius-md: 10px;
-        --radius-lg: 16px;
-        --transition: all 0.3s ease;
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Noto Sans KR', sans-serif;
-    }
-
-    body {
-        background-color: var(--background-color);
-        color: var(--text-color);
-        line-height: 1.6;
-    }
-
-    /* 컨테이너 레이아웃 */
-    .container {
-        display: flex;
-        max-width: 1300px;
-        margin: 0 auto;
-        height: 100vh;
-        position: relative;
-        overflow: hidden;
-        box-shadow: var(--shadow-lg);
-    }
-
-    /* 왼쪽 배너 영역 */
-    .left-banner {
-        flex: 0 0 45%;
-        position: relative;
-        overflow: hidden;
-        background: linear-gradient(120deg, var(--primary-color), var(--primary-dark));
-    }
-
-    .banner-overlay {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
-        z-index: 1;
-    }
-
-    .banner-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0.9;
-        filter: saturate(1.2);
-        transition: transform 15s ease;
-    }
-
-    .left-banner:hover .banner-image {
-        transform: scale(1.05);
-    }
-
-    .banner-text {
-        position: absolute;
-        top: 25%;
-        left: 10%;
-        color: var(--white);
-        z-index: 2;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
-    .banner-text h1 {
-        font-size: 3.2rem;
-        font-weight: 700;
-        line-height: 1.2;
-        margin-bottom: 1.5rem;
-        letter-spacing: -0.5px;
-    }
-
-    .banner-text p {
-        font-size: 1.1rem;
-        font-weight: 400;
-        max-width: 80%;
-        margin-bottom: 2rem;
-        opacity: 0.9;
-    }
-
-    .banner-button {
-        display: inline-block;
-        padding: 12px 24px;
-        background-color: var(--white);
-        color: var(--primary-dark);
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        font-size: 1rem;
-        text-decoration: none;
-        box-shadow: var(--shadow-md);
-        transition: var(--transition);
-    }
-
-    .banner-button:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-        background-color: var(--primary-light);
-    }
-
-    .qr-code {
-        position: absolute;
-        bottom: 30px;
-        right: 30px;
-        width: 100px;
-        height: 100px;
-        background-color: var(--white);
-        padding: 10px;
-        border-radius: var(--radius-sm);
-        box-shadow: var(--shadow-md);
-        z-index: 2;
-        transition: var(--transition);
-    }
-
-    .qr-code:hover {
-        transform: scale(1.05);
-    }
-
-    .app-download {
-        position: absolute;
-        bottom: 30px;
-        left: 30px;
-        color: var(--white);
-        font-size: 0.95rem;
-        z-index: 2;
-    }
-
-    .app-store-buttons {
-        display: flex;
-        gap: 12px;
-        margin-top: 12px;
-    }
-
-    .app-store-buttons img {
-        height: 36px;
-        cursor: pointer;
-        transition: var(--transition);
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-
-    .app-store-buttons img:hover {
-        transform: translateY(-2px);
-    }
-
-    /* 오른쪽 콘텐츠 영역 */
-    .right-content {
-        flex: 0 0 55%;
-        background-color: var(--white);
-        overflow-y: auto;
-        padding: 25px;
-        position: relative;
-    }
-
-    .right-content::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .right-content::-webkit-scrollbar-track {
-        background: var(--background-color);
-    }
-
-    .right-content::-webkit-scrollbar-thumb {
-        background-color: #DDD;
-        border-radius: 20px;
-    }
-
-    /* 헤더 영역 */
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 20px;
-        margin-bottom: 15px;
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .back-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background-color: var(--white);
-        color: var(--text-secondary);
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .back-button:hover {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-    }
-
-    .header-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: var(--text-color);
-        letter-spacing: -0.5px;
-    }
-
-    .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .notification-icon {
-        position: relative;
-        cursor: pointer;
-        font-size: 1.2rem;
-        color: var(--text-secondary);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition);
-    }
-
-    .notification-icon:hover {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background-color: var(--secondary-color);
-        color: white;
-        font-size: 0.7rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-    }
-
-    .profile-area {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-        padding: 6px 10px;
-        border-radius: var(--radius-md);
-        transition: var(--transition);
-    }
-
-    .profile-area:hover {
-        background-color: var(--primary-light);
-    }
-
-    .profile-pic {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--primary-color);
-    }
-
-    /* 탭 네비게이션 */
-    .tab-navigation {
-        display: flex;
-        position: relative;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 25px;
-    }
-
-    .tab {
-        flex: 1;
-        text-align: center;
-        padding: 15px 10px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: var(--transition);
-        position: relative;
-    }
-
-    .tab.active {
-        color: var(--primary-color);
-        font-weight: 600;
-    }
-
-    .tab-indicator {
-        position: absolute;
-        bottom: -1px;
-        height: 3px;
-        width: 25%;
-        background-color: var(--primary-color);
-        transition: transform 0.3s ease;
-    }
-
-    /* 선택된 탭에 따라 indicator 위치 변경 */
-    .tab:nth-child(1).active ~ .tab-indicator {
-        transform: translateX(0);
-    }
-
-    .tab:nth-child(2).active ~ .tab-indicator {
-        transform: translateX(100%);
-    }
-
-    .tab:nth-child(3).active ~ .tab-indicator {
-        transform: translateX(200%);
-    }
-
-    .tab:nth-child(4).active ~ .tab-indicator {
-        transform: translateX(300%);
-    }
-
-    /* 탭 컨텐츠 영역 */
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    /* 여행 코스 리스트 영역 */
-    .course-list-container {
-        margin-bottom: 80px;
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-color);
-    }
-
-    .view-all {
-        font-size: 0.9rem;
-        color: var(--primary-dark);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .view-all:hover {
-        color: var(--primary-color);
-    }
-
-    /* 검색 및 필터 영역 */
-    .search-filter-container {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        margin-bottom: 25px;
-    }
-
-    .search-box {
-        position: relative;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 12px 15px 12px 45px;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        font-size: 0.95rem;
-        transition: var(--transition);
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(14, 216, 213, 0.1);
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-light);
-        font-size: 1rem;
-    }
-
-    .filters-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .filter-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .filter-tag {
-        padding: 8px 15px;
-        background-color: var(--background-color);
-        border: none;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .filter-tag:hover, .filter-tag.active {
-        background-color: var(--primary-color);
-        color: var(--white);
-    }
-
-    .sort-options {
-        position: relative;
-    }
-
-    .sort-button {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        padding: 8px 15px;
-        background-color: var(--background-color);
-        border: none;
-        border-radius: var(--radius-md);
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .sort-button:hover {
-        background-color: var(--primary-light);
-    }
-
-    /* 코스 카드 그리드 */
-    .course-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-
-    .course-card {
-        background-color: var(--white);
-        border-radius: var(--radius-lg);
-        overflow: hidden;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--border-color);
-        transition: var(--transition);
-        cursor: pointer;
-    }
-
-    .course-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary-light);
-    }
-
-    .course-image-container {
-        position: relative;
-        height: 180px;
-        overflow: hidden;
-    }
-
-    .course-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
-    }
-
-    .course-card:hover .course-image {
-        transform: scale(1.05);
-    }
-
-    .course-badge {
-        position: absolute;
-        top: 15px;
-        left: 15px;
-        padding: 5px 10px;
-        background-color: var(--secondary-color);
-        color: var(--white);
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-radius: 15px;
-    }
-
-    .course-like {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        width: 32px;
-        height: 32px;
-        background-color: rgba(255, 255, 255, 0.8);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--text-light);
-        transition: var(--transition);
-    }
-
-    .course-like:hover, .course-like.active {
-        background-color: rgba(255, 255, 255, 0.95);
-        color: #FF6B6B;
-    }
-
-    .course-like.active i {
-        font-weight: 900;
-    }
-
-    .course-content {
-        padding: 15px;
-    }
-
-    .course-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-    }
-
-    .course-tag {
-        font-size: 0.75rem;
-        padding: 3px 8px;
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-        border-radius: 12px;
-    }
-
-    .course-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        height: 2.6em;
-    }
-
-    .course-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-    }
-
-    .course-meta {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .creator-info {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .creator-avatar {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    /* 페이지네이션 */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        margin-top: 40px;
-        gap: 10px;
-    }
-
-    .page-item {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--background-color);
-        border-radius: var(--radius-md);
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .page-item:hover {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-    }
-
-    .page-item.active {
-        background-color: var(--primary-color);
-        color: var(--white);
-        font-weight: 600;
-    }
-
-    .page-arrow {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: var(--white);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius-md);
-        color: var(--text-secondary);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .page-arrow:hover {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-        border-color: var(--primary-light);
-    }
-
-    .page-arrow.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    /* 빈 상태 메시지 */
-    .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-        text-align: center;
-        padding: 60px 0;
-        color: var(--text-light);
-    }
-
-    .empty-state i {
-        font-size: 3rem;
-        color: var(--primary-light);
-    }
-
-    .empty-state-title {
-        font-size: 1.3rem;
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .empty-state-text {
-        max-width: 300px;
-        margin: 0 auto;
-        color: var(--text-light);
-    }
-
-    /* 채팅방 생성 버튼 */
-    .create-chat {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 15px;
-        background-color: var(--primary-color);
-        color: var(--white);
-        border-radius: var(--radius-md);
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .create-chat:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-2px);
-    }
-
-    /* 네비게이션 바 */
-    .navbar {
-        display: flex;
-        justify-content: space-around;
-        background-color: var(--white);
-        padding: 16px 0;
-        border-top: 1px solid var(--border-color);
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-width: 1300px;
-        margin: 0 auto;
-        box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-        z-index: 100;
-    }
-
-    .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: var(--text-light);
-        font-size: 0.85rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .nav-item i {
-        font-size: 1.2rem;
-        margin-bottom: 5px;
-    }
-
-    .nav-item:hover:not(.active) {
-        color: var(--primary-dark);
-    }
-
-    .nav-item.active {
-        color: var(--primary-color);
-        font-weight: 600;
-    }
-
-    .center-add-button {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--white);
-        font-size: 1.4rem;
-        margin-top: -40px;
-        box-shadow: 0 4px 15px rgba(3, 139, 139, 0.3);
-        transition: var(--transition);
-    }
-
-    .center-add-button:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(3, 139, 139, 0.4);
-    }
-
-    /* 애니메이션 */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .course-card {
-        animation: fadeIn 0.5s ease-out;
-    }
-
-    .course-card:nth-child(1) { animation-delay: 0.1s; }
-    .course-card:nth-child(2) { animation-delay: 0.15s; }
-    .course-card:nth-child(3) { animation-delay: 0.2s; }
-    .course-card:nth-child(4) { animation-delay: 0.25s; }
-    .course-card:nth-child(5) { animation-delay: 0.3s; }
-    .course-card:nth-child(6) { animation-delay: 0.35s; }
-
-    /* 반응형 */
-    @media (max-width: 1200px) {
-        .container {
-            flex-direction: column;
-            height: auto;
-            min-height: 100vh;
-        }
-
-        .left-banner {
-            flex: 0 0 250px;
-        }
-
-        .right-content {
-            flex: 1;
-        }
-
-        .navbar {
-            display: flex;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .course-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .filters-container {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .sort-options {
-            align-self: flex-end;
-        }
-
-        .header {
-            padding-bottom: 15px;
-            margin-bottom: 15px;
-        }
-
-        .header-title {
-            font-size: 1.5rem;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .right-content {
-            padding: 15px;
-        }
-
-        .course-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .pagination {
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-    }
-</style>
-<body>
-<div class="container">
-    <!-- 왼쪽 배너 영역 -->
-    <div class="left-banner">
-        <div class="banner-overlay"></div>
-        <img src="/api/placeholder/800/1200" alt="여행 친구들" class="banner-image">
-        <div class="banner-text">
-            <h1>함께라면<br>못 갈 곳은<br>없어</h1>
-            <p>새로운 친구들과 함께하는 특별한 여행, 당신만의 모험을 시작하세요.</p>
-            <a href="#" class="banner-button">지금 시작하기</a>
-        </div>
-        <div class="app-download">
-            <p>앱을 다운로드하고<br>더 깊게 모험하세요!</p>
-            <div class="app-store-buttons">
-                <img src="/api/placeholder/120/40" alt="Google Play">
-                <img src="/api/placeholder/120/40" alt="App Store">
-            </div>
-        </div>
-        <img src="/api/placeholder/100/100" alt="QR 코드" class="qr-code">
-    </div>
-
-    <!-- 오른쪽 콘텐츠 영역 -->
-    <div class="right-content">
-        <!-- 헤더 -->
-        <div class="header">
-            <div class="header-left">
-                <div class="back-button" id="back-button">
-                    <i class="fas fa-arrow-left"></i>
-                </div>
-                <h2 class="header-title">TRIPSODA</h2>
-            </div>
-            <div class="header-actions">
-                <div class="notification-icon">
-                    <i class="far fa-bell"></i>
-                    <span class="notification-badge">3</span>
-                </div>
-                <div class="profile-area">
-                    <img src="/api/placeholder/36/36" alt="프로필" class="profile-pic">
-                    <span>김여행</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 탭 네비게이션 -->
-        <div class="tab-navigation">
-            <div class="tab" data-tab="posts">포스트</div>
-            <div class="tab active" data-tab="courses">추천 여행경로</div>
-            <div class="tab" data-tab="chats">채팅</div>
-            <div class="tab" data-tab="more">더보기</div>
-            <div class="tab-indicator"></div>
-        </div>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<th:block layout:fragment="style">
+    <link rel="stylesheet" th:href="@{/css/travel-list.css}">
+</th:block>
+
+<th:block layout:fragment="content">
 
         <!-- 여행 코스 콘텐츠 -->
         <div class="course-list-container tab-content active" id="courses-tab">
             <div class="section-header">
                 <h2 class="section-title">추천 여행 코스</h2>
-                <div class="view-all">
-                    더보기 <i class="fas fa-chevron-right"></i>
-                </div>
+                <button class="action-btn add-btn" onclick="addTravel();" title="여행경로 등록">
+                    여행 코스
+                    <i class="fa-solid fa-square-plus" style="margin-top: 2px;"></i>
+                </button>
             </div>
 
             <!-- 검색 및 필터 -->
             <div class="search-filter-container">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="여행 코스 검색...">
-                </div>
+                <form method="GET" action="/travel" class="search-box">
+                    <i class="fas fa-search search-icon" onclick="this.closest('form').submit();"></i>
+                    <input type="text" class="search-input" placeholder="여행 코스 검색..." name="keyword"
+                           th:value="${keyword}">
+                </form>
                 <div class="filters-container">
-                    <div class="filter-tags">
-                        <button class="filter-tag active">전체</button>
-                        <button class="filter-tag">국내여행</button>
-                        <button class="filter-tag">해외여행</button>
-                        <button class="filter-tag">가족여행</button>
-                        <button class="filter-tag">커플여행</button>
-                        <button class="filter-tag">맛집투어</button>
-                    </div>
-                    <div class="sort-options">
-                        <button class="sort-button">
-                            <i class="fas fa-sort"></i> 최신순
-                        </button>
-                    </div>
                 </div>
             </div>
 
             <!-- 코스 그리드 -->
             <div class="course-grid">
-                <!-- 코스 카드 1 -->
-                <div class="course-card" data-id="1">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="제주도 여행 코스" class="course-image">
-                        <div class="course-badge">인기</div>
-                        <div class="course-like active">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                    </div>
-                    <div class="course-content">
-                        <div class="course-tags">
-                            <div class="course-tag"># 국내여행</div>
-                            <div class="course-tag"># 제주도</div>
-                            <div class="course-tag"># 가족여행</div>
-                        </div>
-                        <h3 class="course-title">봄날의 제주, 꽃들 사이 숨은 명소 탐방</h3>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 5곳
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-eye"></i> 1,245
-                                </div>
-                            </div>
-                            <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>제주여행왕</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 코스 카드 2 -->
-                <div class="course-card" data-id="2">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="부산 핫플레이스" class="course-image">
-                        <div class="course-badge">신규</div>
+                <div class="course-card" th:each="route : ${routes}" th:data-id="${route.routeId}">
+                    <div class="course-image-container js-thumbnail-container" th:data-id="${route.routeId}">
                         <div class="course-like">
-                            <i class="far fa-heart"></i>
+                            <i class="far fa-heart"></i> <!-- 좋아요 여부 처리 필요 시 class 제어 -->
                         </div>
                     </div>
                     <div class="course-content">
                         <div class="course-tags">
-                            <div class="course-tag"># 국내여행</div>
-                            <div class="course-tag"># 부산</div>
-                            <div class="course-tag"># 맛집투어</div>
+                            <div class="course-tag" th:each="tag : ${route.tagNames}" th:text="'#' + ${tag}">#태그</div>
                         </div>
-                        <h3 class="course-title">부산 핫플레이스 총정리, 해운대에서 남포동까지</h3>
+                        <h3 class="course-title" th:text="${route.title}">제목</h3>
                         <div class="course-info">
                             <div class="course-meta">
                                 <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 7곳
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span th:text="${route.placeCount} + '곳'">0곳</span>
                                 </div>
                                 <div class="meta-item">
-                                    <i class="far fa-eye"></i> 987
+                                    <i class="far fa-eye"></i>
+                                    <span th:text="${route.views}">0</span>
                                 </div>
                             </div>
                             <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>부산러버</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 코스 카드 3 -->
-                <div class="course-card" data-id="3">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="방콕 여행" class="course-image">
-                        <div class="course-like">
-                            <i class="far fa-heart"></i>
-                        </div>
-                    </div>
-                    <div class="course-content">
-                        <div class="course-tags">
-                            <div class="course-tag"># 해외여행</div>
-                            <div class="course-tag"># 태국</div>
-                            <div class="course-tag"># 방콕</div>
-                        </div>
-                        <h3 class="course-title">방콕 3박 4일 완벽 일정, 현지인 맛집 탐방</h3>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 8곳
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-eye"></i> 1,056
-                                </div>
-                            </div>
-                            <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>동남아전문가</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 코스 카드 4 -->
-                <div class="course-card" data-id="4">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="경주 역사 여행" class="course-image">
-                        <div class="course-like active">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                    </div>
-                    <div class="course-content">
-                        <div class="course-tags">
-                            <div class="course-tag"># 국내여행</div>
-                            <div class="course-tag"># 경주</div>
-                            <div class="course-tag"># 역사탐방</div>
-                        </div>
-                        <h3 class="course-title">천년 고도 경주 역사 탐방, 불국사부터 첨성대까지</h3>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 6곳
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-eye"></i> 786
-                                </div>
-                            </div>
-                            <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>역사여행러</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 코스 카드 5 -->
-                <div class="course-card" data-id="5">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="도쿄 여행" class="course-image">
-                        <div class="course-badge">추천</div>
-                        <div class="course-like">
-                            <i class="far fa-heart"></i>
-                        </div>
-                    </div>
-                    <div class="course-content">
-                        <div class="course-tags">
-                            <div class="course-tag"># 해외여행</div>
-                            <div class="course-tag"># 일본</div>
-                            <div class="course-tag"># 도쿄</div>
-                        </div>
-                        <h3 class="course-title">도쿄 4박 5일 알짜 코스, 현지인처럼 즐기기</h3>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 10곳
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-eye"></i> 1,523
-                                </div>
-                            </div>
-                            <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>일본여행고수</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 코스 카드 6 -->
-                <div class="course-card" data-id="6">
-                    <div class="course-image-container">
-                        <img src="/api/placeholder/400/300" alt="강원도 드라이브 코스" class="course-image">
-                        <div class="course-like">
-                            <i class="far fa-heart"></i>
-                        </div>
-                    </div>
-                    <div class="course-content">
-                        <div class="course-tags">
-                            <div class="course-tag"># 국내여행</div>
-                            <div class="course-tag"># 강원도</div>
-                            <div class="course-tag"># 드라이브</div>
-                        </div>
-                        <h3 class="course-title">강원도 드라이브 코스 BEST, 동해안 바다와 함께</h3>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-map-marker-alt"></i> 5곳
-                                </div>
-                                <div class="meta-item">
-                                    <i class="far fa-eye"></i> 678
-                                </div>
-                            </div>
-                            <div class="creator-info">
-                                <img src="/api/placeholder/24/24" alt="작성자" class="creator-avatar">
-                                <span>드라이브매니아</span>
+                                <img th:src="@{/api/user/profile/{id}(id=${route.userId})}" alt="작성자" class="creator-avatar" />
+                                <span th:text="${route.userName}">작성자</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+
+
             <!-- 페이지네이션 -->
+<!--            <div class="pagination">-->
+<!--                <div class="page-arrow">-->
+<!--                    <i class="fas fa-chevron-left"></i>-->
+<!--                </div>-->
+<!--                <div class="page-item active">1</div>-->
+<!--                <div class="page-item">2</div>-->
+<!--                <div class="page-item">3</div>-->
+<!--                <div class="page-item">4</div>-->
+<!--                <div class="page-item">5</div>-->
+<!--                <div class="page-arrow">-->
+<!--                    <i class="fas fa-chevron-right"></i>-->
+<!--                </div>-->
+<!--            </div>-->
             <div class="pagination">
-                <div class="page-arrow">
+                <div class="page-arrow" th:if="${currentPage > 0}"
+                     th:attr="data-page=${currentPage - 1}">
                     <i class="fas fa-chevron-left"></i>
                 </div>
-                <div class="page-item active">1</div>
-                <div class="page-item">2</div>
-                <div class="page-item">3</div>
-                <div class="page-item">4</div>
-                <div class="page-item">5</div>
-                <div class="page-arrow">
+
+                <!-- 페이지 번호 버튼 -->
+                <div th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                     th:class="'page-item' + (pageNum == currentPage ? ' active' : '')"
+                     th:attr="data-page=${pageNum}"
+                     th:text="${pageNum + 1}">
+                </div>
+
+                <!-- 다음 페이지 화살표 -->
+                <div class="page-arrow" th:if="${currentPage < totalPages - 1}"
+                     th:attr="data-page=${currentPage + 1}">
                     <i class="fas fa-chevron-right"></i>
                 </div>
             </div>
@@ -1213,191 +149,262 @@
             </div>
         </div>
 
-        <!-- 네비게이션 바 (모바일용) -->
-        <div class="navbar">
-            <div class="nav-item">
-                <i class="fas fa-home"></i>
-                <span>커뮤니티</span>
-            </div>
-            <div class="nav-item active">
-                <i class="far fa-compass"></i>
-                <span>여행코스</span>
-            </div>
-            <div class="nav-item">
-                <div class="center-add-button">
-                    <i class="fas fa-plus"></i>
-                </div>
-            </div>
-            <div class="nav-item">
-                <i class="far fa-user"></i>
-                <span>내 프로필</span>
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-cog"></i>
-                <span>세팅</span>
-            </div>
-        </div>
-    </div>
-</div>
+    <script th:inline="javascript">
+        const loginUserId = [[${loginUserId}]];
+    </script>
 
-<script src="script.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 탭 네비게이션 처리
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const tabIndicator = document.querySelector('.tab-indicator');
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 탭 네비게이션 처리
+                const tabs = document.querySelectorAll('.tab');
+                const tabContents = document.querySelectorAll('.tab-content');
+                const tabIndicator = document.querySelector('.tab-indicator');
 
-        // 초기 인디케이터 위치 설정 (두번째 탭이 활성화되어 있으므로)
-        tabIndicator.style.transform = 'translateX(100%)';
+                // 초기 인디케이터 위치 설정 (두번째 탭이 활성화되어 있으므로)
+                tabIndicator.style.transform = 'translateX(100%)';
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                // 활성 탭 변경
-                tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // 활성 탭 변경
+                        tabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
 
-                // 탭 콘텐츠 표시/숨김
-                const tabId = this.getAttribute('data-tab');
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                    if (content.id === tabId + '-tab') {
-                        content.classList.add('active');
-                    }
+                        // 탭 콘텐츠 표시/숨김
+                        const tabId = this.getAttribute('data-tab');
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            if (content.id === tabId + '-tab') {
+                                content.classList.add('active');
+                            }
+                        });
+                    });
                 });
-            });
-        });
 
-        // 뒤로가기 버튼
-        const backButton = document.getElementById('back-button');
-        backButton.addEventListener('click', function() {
-            window.history.back();
-        });
+                // 뒤로가기 버튼
+                const backButton = document.getElementById('back-button');
+                backButton.addEventListener('click', function() {
+                    window.history.back();
+                });
 
-        // 좋아요 버튼 토글
-        const likeButtons = document.querySelectorAll('.course-like');
-        likeButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.stopPropagation(); // 카드 클릭 이벤트 중지
+                // 좋아요 버튼 토글
+                const likeButtons = document.querySelectorAll('.course-like');
+                likeButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 카드 클릭 이벤트 중지
 
-                const icon = this.querySelector('i');
+                        const icon = this.querySelector('i');
 
-                if (icon.classList.contains('far')) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    this.classList.add('active');
-                } else {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                    this.classList.remove('active');
-                }
-            });
-        });
-
-        // 필터 태그 토글
-        const filterTags = document.querySelectorAll('.filter-tag');
-        filterTags.forEach(tag => {
-            tag.addEventListener('click', function() {
-                filterTags.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                // 여기에 필터링 로직 추가 가능
-                // 예: 선택된 필터에 따라 코스 카드를 필터링
-            });
-        });
-
-        // 코스 카드 클릭 이벤트 (상세 페이지로 이동)
-        const courseCards = document.querySelectorAll('.course-card');
-        courseCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const courseId = this.getAttribute('data-id');
-                window.location.href = `course-detail.html?id=${courseId}`;
-            });
-        });
-
-        // 페이지네이션 클릭 이벤트
-        const pageItems = document.querySelectorAll('.page-item');
-        pageItems.forEach(item => {
-            item.addEventListener('click', function() {
-                pageItems.forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
-
-                // 실제로는 페이지 전환 로직 추가
-                // 예: 페이지 번호에 따라 새로운 코스 데이터 로드
-            });
-        });
-
-        // 정렬 옵션 클릭 이벤트 (실제로는 드롭다운 메뉴 구현 필요)
-        const sortButton = document.querySelector('.sort-button');
-        sortButton.addEventListener('click', function() {
-            // 정렬 드롭다운 메뉴 토글 로직 (예시)
-            alert('정렬 옵션: 최신순, 인기순, 조회순');
-
-            // 여기에 실제 정렬 기능 구현 가능
-        });
-
-        // 더보기 버튼 클릭 이벤트
-        const viewAllButtons = document.querySelectorAll('.view-all');
-        viewAllButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                // 부모 요소의 탭 ID 확인
-                const parentTabContent = this.closest('.tab-content');
-                if (parentTabContent) {
-                    const tabId = parentTabContent.id.replace('-tab', '');
-
-                    // 탭에 따라 다른 "더보기" 페이지로 이동
-                    if (tabId === 'courses') {
-                        window.location.href = 'all-courses.html';
-                    } else if (tabId === 'posts') {
-                        window.location.href = 'all-posts.html';
-                    } else if (tabId === 'chats') {
-                        window.location.href = 'all-chats.html';
-                    }
-                }
-            });
-        });
-
-        // 채팅방 생성 버튼 클릭 이벤트
-        const createChatBtn = document.getElementById('create-chat-btn');
-        if (createChatBtn) {
-            createChatBtn.addEventListener('click', function() {
-                alert('새 채팅방 생성 기능이 곧 추가될 예정입니다!');
-
-                // 여기에 채팅방 생성 모달 표시 로직 추가 가능
-            });
-        }
-
-        // 검색 기능
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-
-                // 여기에 검색 로직 추가 가능
-                // 예: 검색어와 일치하는 코스 카드만 표시
-
-                // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
-                if (searchTerm.length > 0) {
-                    courseCards.forEach(card => {
-                        const title = card.querySelector('.course-title').textContent.toLowerCase();
-                        const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
-
-                        // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
-                        if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
-                            card.style.display = 'block';
+                        if (icon.classList.contains('far')) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            this.classList.add('active');
                         } else {
-                            card.style.display = 'none';
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            this.classList.remove('active');
                         }
                     });
-                } else {
-                    // 검색어가 없으면 모두 표시
-                    courseCards.forEach(card => {
-                        card.style.display = 'block';
+                });
+
+                // 필터 태그 토글
+                const filterTags = document.querySelectorAll('.filter-tag');
+                filterTags.forEach(tag => {
+                    tag.addEventListener('click', function() {
+                        filterTags.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 여기에 필터링 로직 추가 가능
+                        // 예: 선택된 필터에 따라 코스 카드를 필터링
+                    });
+                });
+
+                // 코스 카드 클릭 이벤트 (상세 페이지로 이동)
+                const courseCards = document.querySelectorAll('.course-card');
+                courseCards.forEach(card => {
+                    card.addEventListener('click', function() {
+
+                        const courseId = this.getAttribute('data-id');
+
+                        fetch(`/api/travel/${courseId}/views`, {
+                            method: "PATCH"
+                        })
+                            .then(() => {
+                                window.location.href = `/travel/${courseId}`;
+                            })
+                            .catch(err => {
+                                // 실패하더라도 상세 페이지 이동
+                                window.location.href = `/travel/${courseId}`;
+                            });
+
+                    });
+                });
+
+                // 정렬 옵션 클릭 이벤트 (실제로는 드롭다운 메뉴 구현 필요)
+                const sortButton = document.querySelector('.sort-button');
+                sortButton.addEventListener('click', function() {
+                    // 정렬 드롭다운 메뉴 토글 로직 (예시)
+                    alert('정렬 옵션: 최신순, 인기순, 조회순');
+
+                    // 여기에 실제 정렬 기능 구현 가능
+                });
+
+                // 채팅방 생성 버튼 클릭 이벤트
+                const createChatBtn = document.getElementById('create-chat-btn');
+                if (createChatBtn) {
+                    createChatBtn.addEventListener('click', function() {
+                        alert('새 채팅방 생성 기능이 곧 추가될 예정입니다!');
+
+                        // 여기에 채팅방 생성 모달 표시 로직 추가 가능
                     });
                 }
+
+                // 검색 기능
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase();
+
+                        // 여기에 검색 로직 추가 가능
+                        // 예: 검색어와 일치하는 코스 카드만 표시
+
+                        // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
+                        if (searchTerm.length > 0) {
+                            courseCards.forEach(card => {
+                                const title = card.querySelector('.course-title').textContent.toLowerCase();
+                                const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
+
+                                // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
+                                if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                                    card.style.display = 'block';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            // 검색어가 없으면 모두 표시
+                            courseCards.forEach(card => {
+                                card.style.display = 'block';
+                            });
+                        }
+                    });
+                }
+
             });
-        }
-    });
-</script>
-</body>
+
+
+            //썸네일 출력
+            document.addEventListener('DOMContentLoaded', function () {
+                const thumbnailContainers = document.querySelectorAll('.js-thumbnail-container');
+
+                thumbnailContainers.forEach(container => {
+                    const routeId = container.dataset.id;
+
+                    // 썸네일 요청 → 실제 이미지 URL 받아오기
+                    fetch(`/api/travel/thumbnail?routeId=${routeId}`) //백틱 주의 없으면 이미지 로드 안됨!
+                        .then(res => res.json())
+                        .then(data => {
+                            // data.url은 다시 JSON을 주는 API임 → 다시 fetch
+                            return fetch(data.url);
+                        })
+                        .then(res => res.json())
+                        .then(photoData => {
+                            const img = document.createElement('img');
+                            img.src = photoData.url; // 실제 Google CDN 이미지 URL
+                            img.alt = '썸네일';
+                            img.className = 'course-image';
+
+                            // ✅ 이미지 로드 실패 시 fallback
+                            img.onerror = function () {
+                                this.onerror = null;
+                                this.src = '/images/default-thumbnail.jpg';
+                            };
+                            container.insertBefore(img, container.firstChild);
+                        })
+                        .catch(err => {
+                            console.error('썸네일 fetch 실패:', err);
+                            const fallback = document.createElement('img');
+                            fallback.src = '/images/default-thumbnail.jpg';
+                            fallback.alt = '기본 썸네일';
+                            fallback.className = 'course-image';
+                            container.insertBefore(fallback, container.firstChild);
+                        });
+                });
+            });
+
+            function addTravel() {
+                window.location.href = `/travel/add`;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const pageControls = document.querySelectorAll('.page-item, .page-arrow');
+
+                pageControls.forEach(item => {
+                    item.addEventListener('click', function () {
+                        const page = this.getAttribute('data-page');
+                        if (page !== null) {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('page', page);
+                            window.location.href = window.location.pathname + '?' + params.toString();
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+
+                const courseCards = document.querySelectorAll('.course-card');
+                courseCards.forEach(card => {
+                    card.addEventListener('click', function() {
+
+                        const courseId = this.getAttribute('data-id');
+
+                        fetch(`/api/travel/${courseId}/views`, {
+                            method: "PATCH"
+                        })
+                            .then(() => {
+                                window.location.href = `/travel/${courseId}`;
+                            })
+                            .catch(err => {
+                                // 실패하더라도 상세 페이지 이동
+                                window.location.href = `/travel/${courseId}`;
+                            });
+
+                    });
+                });
+
+                // 검색 기능
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase();
+
+                        // 여기에 검색 로직 추가 가능
+                        // 예: 검색어와 일치하는 코스 카드만 표시
+
+                        // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
+                        if (searchTerm.length > 0) {
+                            courseCards.forEach(card => {
+                                const title = card.querySelector('.course-title').textContent.toLowerCase();
+                                const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
+
+                                // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
+                                if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                                    card.style.display = 'block';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            // 검색어가 없으면 모두 표시
+                            courseCards.forEach(card => {
+                                card.style.display = 'block';
+                            });
+                        }
+                    });
+                }
+
+            });
+
+    </script>
+</th:block>
 </html>

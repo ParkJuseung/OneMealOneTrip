@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OneMealOneTrip</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" th:href="@{/css/travel-create.css}">
+</head>
+<body>
+<div class="container">
+
+  <!-- 오른쪽 콘텐츠 영역 -->
+  <div class="right-content">
+    <!-- 헤더 -->
+    <div class="header">
+      <div class="header-left">
+        <div class="back-button" id="back-button">
+          <i class="fas fa-arrow-left"></i>
+        </div>
+        <h2 class="header-title">여행 경로 계획</h2>
+      </div>
+      <div class="header-actions">
+        <div class="notification-icon">
+          <i class="far fa-bell"></i>
+        </div>
+        <div class="profile-area">
+          <img th:src="@{/images/default-profile.png}" alt="프로필" class="profile-pic">
+          <span th:text="${userNickname}">닉네임</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 여행 정보 입력 영역 -->
+    <div class="trip-info-inputs">
+      <div class="input-group">
+        <input type="text" id="trip-title" placeholder="여행 제목을 입력하세요">
+      </div>
+      <div class="input-group">
+        <textarea id="trip-description" placeholder="여행에 대한 설명을 입력하세요"></textarea>
+      </div>
+      <div class="input-group">
+        <label>태그</label>
+        <div class="tags-input-container" id="tags-container">
+          <input type="text" class="tags-input" id="tags-input" placeholder="태그 입력 후 Enter">
+        </div>
+      </div>
+    </div>
+
+    <!-- 장소 검색 영역 -->
+    <div class="search-area-outside">
+      <label for="search-box" class="search-label">장소 검색</label>
+      <input id="search-box" type="text" placeholder="방문할 장소명을 입력하세요">
+      <div id="search-results"></div>
+    </div>
+
+    <!-- 지도 영역 -->
+    <div class="map-container">
+      <div id="googleMap"></div>
+    </div>
+
+    <!-- 선택된 장소 목록 -->
+    <div class="selected-places">
+      <div class="selected-places-title">
+        <span>선택한 장소 목록</span>
+        <button class="clear-all-btn" id="clear-all">모두 지우기</button>
+      </div>
+      <ul class="place-list" id="place-list">
+        <!-- 장소 항목들이 여기에 동적으로 추가됩니다 -->
+      </ul>
+    </div>
+
+    <!-- 경로 정보 -->
+    <div class="route-info" id="route-info" style="display: none;">
+      <div class="route-info-title">경로 정보</div>
+      <div class="route-stats">
+        <div class="route-stat">
+          <div class="stat-value" id="total-distance">0 km</div>
+          <div class="stat-label">총 거리</div>
+        </div>
+        <div class="route-stat">
+          <div class="stat-value" id="total-time">0 분</div>
+          <div class="stat-label">예상 소요 시간</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 저장 및 취소 버튼 -->
+    <div class="action-buttons">
+      <button class="action-button save-button" id="save-trip">
+        <i class="fas fa-save"></i> 저장
+      </button>
+      <button class="action-button cancel-button" id="cancel-trip">
+        <i class="fas fa-times"></i> 취소
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 모달 -->
+<div class="photo-modal" id="photo-modal">
+  <div class="modal-content">
+    <span class="close-modal" id="close-modal">&times;</span>
+    <img src="/placeholder.svg" alt="장소 사진" class="modal-image" id="modal-image">
+  </div>
+</div>
+<div id="login-info" th:attr="data-user-id=${loginUserId}"></div>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM6flDj7toqktYW83oYswdJrH-xrEsz4U&libraries=places&callback=initMap" async defer></script>
+<script>
+  // 전역 변수 선언
+  let map;
+  let placesService;
+  let directionsService;
+  let directionsRenderer;
+  let markers = [];
+  let selectedPlaces = [];
+  let tags = [];
+  let routeSegments = []; // 각 구간별 정보를 저장할 배열
+  let polylines = []; // 경로 폴리라인을 저장할 배열
+  let totalDistance = 0;
+  let totalDuration = 0;
+
+  const loginUserId = document.getElementById('login-info').dataset.userId;
+
+  // 지도 초기화 함수
+  function initMap() {
+    // 지도 생성
+    map = new google.maps.Map(document.getElementById("googleMap"), {
+      center: { lat: 36.5, lng: 127.8 }, // 한국 중심
+      zoom: 7,
+      mapTypeControl: true,
+      fullscreenControl: true,
+      streetViewControl: true,
+      zoomControl: true
+    });
+    
+    // Places 서비스 초기화
+    placesService = new google.maps.places.PlacesService(map);
+    
+    // 경로 서비스 초기화
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true, // 기본 마커 숨기기
+      polylineOptions: {
+        strokeColor: '#4285F4', // 구글 맵스 블루
+        strokeOpacity: 0.8,
+        strokeWeight: 5
+      }
+    });
+    
+    // 검색 기능 초기화
+    initSearchBox();
+    
+    // 태그 입력 초기화
+    initTagsInput();
+    
+    // 이벤트 리스너 설정
+    setupEventListeners();
+  }
+
+  // 태그 입력 초기화
+  function initTagsInput() {
+    const tagsInput = $('#tags-input');
+    const tagsContainer = $('#tags-container');
+    
+    // Enter 키 입력 시 태그 추가
+    tagsInput.on('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        
+        const tagText = $(this).val().trim();
+        if (tagText && !tags.includes(tagText)) {
+          addTag(tagText);
+          $(this).val('');
+        }
+      }
+    });
+    
+    // 태그 추가 함수
+    function addTag(text) {
+      tags.push(text);
+      
+      const tagElement = $(`
+        <div class="tag-item">
+          ${text}
+          <span class="remove-tag">&times;</span>
+        </div>
+      `);
+      
+      // 태그 삭제 이벤트
+      tagElement.find('.remove-tag').on('click', function() {
+        const index = tags.indexOf(text);
+        if (index !== -1) {
+          tags.splice(index, 1);
+          tagElement.remove();
+        }
+      });
+      
+      tagsContainer.prepend(tagElement);
+    }
+
+  }
+
+  // 검색 상자 초기화
+  function initSearchBox() {
+    const searchBox = $('#search-box');
+    
+    // 검색어 입력 시 이벤트
+    searchBox.on('input', function() {
+      const query = $(this).val().trim();
+      
+      if (query.length > 1) {
+        // 장소 검색 요청
+        const request = {
+          query: query,
+          fields: ['name', 'geometry', 'formatted_address', 'place_id']
+        };
+        
+        placesService.findPlaceFromQuery(request, function(results, status) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            displaySearchResults(results);
+          }
+        });
+        
+        // 텍스트 검색 요청
+        placesService.textSearch({
+          query: query
+        }, function(results, status) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            displaySearchResults(results);
+          }
+        });
+      } else {
+        $('#search-results').hide();
+      }
+    });
+  }
+
+  // 검색 결과 표시
+  function displaySearchResults(places) {
+    const resultsContainer = $('#search-results');
+    resultsContainer.empty();
+    
+    if (places.length > 0) {
+      places.forEach(place => {
+        const resultItem = $('<div class="search-result-item"></div>');
+        const placeInfo = $('<div class="result-info"></div>');
+        
+        placeInfo.append(`<div class="result-name">${place.name}</div>`);
+        if (place.formatted_address) {
+          placeInfo.append(`<div class="result-address">${place.formatted_address}</div>`);
+        }
+        
+        const addButton = $('<button class="add-place-btn"><i class="fas fa-plus"></i></button>');
+        addButton.on('click', function(e) {
+          e.stopPropagation();
+          getPlaceDetails(place.place_id);
+          $('#search-results').hide();
+          $('#search-box').val('');
+        });
+        
+        resultItem.append(placeInfo);
+        resultItem.append(addButton);
+        resultsContainer.append(resultItem);
+      });
+      
+      resultsContainer.show();
+    } else {
+      resultsContainer.hide();
+    }
+  }
+
+  // 장소 상세 정보 가져오기
+  function getPlaceDetails(placeId) {
+    const request = {
+      placeId: placeId,
+      fields: [
+        'name', 'place_id', 'formatted_address', 'geometry', 'photos', 
+        'formatted_phone_number', 'website', 'rating', 'opening_hours',
+        'types', 'vicinity', 'international_phone_number', 'url'
+      ]
+    };
+    
+    placesService.getDetails(request, function(place, status) {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        addPlace(place);
+      }
+    });
+  }
+
+  // 장소 추가
+  function addPlace(place) {
+    // 이미 추가된 장소인지 확인
+    const isDuplicate = selectedPlaces.some(p => p.place_id === place.place_id);
+    if (isDuplicate) {
+      alert('이미 추가된 장소입니다.');
+      return;
+    }
+    
+    // 선택된 장소 배열에 추가
+    selectedPlaces.push(place);
+    
+    // 마커 추가
+    addMarker(place);
+    
+    // 장소 목록에 추가
+    const placeIndex = selectedPlaces.length;
+    addPlaceToList(place, placeIndex);
+    
+    // 경로 업데이트 (장소가 2개 이상일 때)
+    if (selectedPlaces.length >= 2) {
+      updateRoutes();
+    }
+  }
+
+  // 마커 추가
+  function addMarker(place) {
+    const markerIndex = markers.length + 1;
+    const isFirstMarker = markerIndex === 1;
+    const isLastMarker = markerIndex === selectedPlaces.length;
+    
+    // 마커 색상 설정 (첫 번째는 초록색, 마지막은 빨간색, 나머지는 파란색)
+    let markerColor = '#4285F4'; // 기본 파란색
+    if (isFirstMarker) {
+      markerColor = '#0ED8D5'; // 첫 번째 마커 (출발지)
+    } else if (isLastMarker) {
+      markerColor = '#FF5252'; // 마지막 마커 (도착지)
+    }
+    
+    const marker = new google.maps.Marker({
+      position: place.geometry.location,
+      map: map,
+      title: place.name,
+      animation: google.maps.Animation.DROP,
+      label: {
+        text: String(markerIndex),
+        color: 'white',
+        fontSize: '14px',
+        fontWeight: 'bold'
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: markerColor,
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 12
+      },
+      zIndex: 10
+    });
+    
+    // 마커 클릭 이벤트
+    marker.addListener('click', function() {
+      const infoWindow = new google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px; max-width: 300px;">
+            <h3 style="margin: 0 0 8px 0; color: #333;">${place.name}</h3>
+            <p style="margin: 0; color: #666;">${place.formatted_address || ''}</p>
+            ${place.rating ? `<p style="margin: 5px 0 0 0;"><strong>평점:</strong> ${place.rating} / 5</p>` : ''}
+          </div>
+        `
+      });
+      infoWindow.open(map, marker);
+    });
+    
+    markers.push({
+      marker: marker,
+      place: place
+    });
+    
+    // 지도 중심 이동
+    map.setCenter(place.geometry.location);
+    if (markers.length === 1) {
+      map.setZoom(13);
+    }
+    
+    // 마커 색상 업데이트 (이전 마지막 마커가 있다면 파란색으로 변경)
+    if (markers.length > 2) {
+      const previousLastMarker = markers[markers.length - 2].marker;
+      previousLastMarker.setIcon({
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: '#4285F4', // 파란색
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 12
+      });
+    }
+  }
+
+  // 장소 목록에 추가
+  function addPlaceToList(place, index) {
+    // 사진 URL 배열 생성 (최대 5개)
+    const photoUrls = [];
+    if (place.photos && place.photos.length > 0) {
+      const maxPhotos = Math.min(place.photos.length, 5);
+      for (let i = 0; i < maxPhotos; i++) {
+        photoUrls.push(place.photos[i].getUrl({ maxWidth: 500, maxHeight: 300 }));
+      }
+    }
+    
+    // 이전 장소와의 연결선 추가 (두 번째 장소부터)
+    let connectorHtml = '';
+    if (index > 1) {
+      connectorHtml = `
+        <div class="place-connector" id="connector-${index-2}-${index-1}">
+          <div class="connector-line"></div>
+          <div class="connector-info">
+            <i class="fas fa-route"></i>
+            <span>계산 중...</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 장소 항목 생성
+    const placeItem = $(`
+      ${connectorHtml}
+      <li class="place-item" data-place-id="${place.place_id}" data-index="${index - 1}">
+        <div class="place-header">
+          <div class="place-header-left">
+            <div class="place-number">${index}</div>
+            <div class="place-title">${place.name}</div>
+          </div>
+          <button class="remove-place-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="place-content">
+          <div class="place-photos">
+            ${photoUrls.length > 0 ? 
+              photoUrls.map(url => `<img src="${url}" alt="${place.name}" class="place-photo">`).join('') : 
+              '<div class="no-photos">사진이 없습니다</div>'
+            }
+          </div>
+          <div class="place-details">
+            <div class="detail-item">
+              <div class="detail-icon"><i class="fas fa-map-marker-alt"></i></div>
+              <div class="detail-text"><span class="detail-label">주소:</span> ${place.formatted_address || '정보 없음'}</div>
+            </div>
+            ${place.formatted_phone_number ? `
+              <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-phone"></i></div>
+                <div class="detail-text"><span class="detail-label">전화:</span> ${place.formatted_phone_number}</div>
+              </div>
+            ` : ''}
+            ${place.website ? `
+              <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-globe"></i></div>
+                <div class="detail-text"><span class="detail-label">웹사이트:</span> <a href="${place.website}" target="_blank">${place.website}</a></div>
+              </div>
+            ` : ''}
+            ${place.rating ? `
+              <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-star"></i></div>
+                <div class="detail-text"><span class="detail-label">평점:</span> ${place.rating} / 5</div>
+              </div>
+            ` : ''}
+            ${place.opening_hours ? `
+              <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-clock"></i></div>
+                <div class="detail-text"><span class="detail-label">영업 상태:</span> ${place.opening_hours.isOpen() ? '영업 중' : '영업 종료'}</div>
+              </div>
+            ` : ''}
+            ${place.url ? `
+              <div class="detail-item">
+                <div class="detail-icon"><i class="fas fa-map"></i></div>
+                <div class="detail-text"><span class="detail-label">Google Maps:</span> <a href="${place.url}" target="_blank">지도에서 보기</a></div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </li>
+    `);
+    
+    // 삭제 버튼 이벤트
+    placeItem.find('.remove-place-btn').on('click', function() {
+      removePlaceById(place.place_id);
+    });
+    
+    // 사진 클릭 이벤트
+    placeItem.find('.place-photo').on('click', function() {
+      const imgSrc = $(this).attr('src');
+      $('#modal-image').attr('src', imgSrc);
+      $('#photo-modal').css('display', 'flex');
+    });
+    
+    $('#place-list').append(placeItem);
+    
+    // 장소가 2개 이상이면 이전 장소와의 경로 계산
+    if (index > 1) {
+      calculateSegmentRoute(index - 2, index - 1);
+    }
+  }
+
+  // 모든 경로 업데이트
+  function updateRoutes() {
+    // 기존 폴리라인 제거
+    clearPolylines();
+
+    for (let i = 0; i < selectedPlaces.length - 1; i++) {
+      calculateSegmentRoute(i, i + 1);
+    }
+    
+    // 각 구간별 거리 계산
+    // const isTransit = true; // TRANSIT 사용 여부 조건화 가능
+
+    // if (isTransit) {
+    //   for (let i = 0; i < selectedPlaces.length - 1; i++) {
+    //     calculateSegmentRoute(i, i + 1);
+    //   }
+    // } else {
+    //
+    //   // 전체 경로 표시
+    //   calculateFullRoute();
+    //   for (let i = 0; i < selectedPlaces.length - 1; i++) {
+    //     calculateSegmentRoute(i, i + 1);
+    //   }
+    //
+    // }
+
+    // 지도 범위 조정
+    adjustMapBounds();
+  }
+
+  // 기존 폴리라인 제거
+  function clearPolylines() {
+    polylines.forEach(polyline => {
+      polyline.setMap(null);
+    });
+    polylines = [];
+  }
+
+  // 전체 경로 계산 및 표시
+  function calculateFullRoute() {
+    if (selectedPlaces.length < 2) {
+      directionsRenderer.setDirections({ routes: [] });
+      $('#route-info').hide();
+      return;
+    }
+    
+      const waypoints = selectedPlaces.slice(1, -1).map(place => ({
+      location: place.geometry.location,
+      stopover: true
+    }));
+    
+    const request = {
+      origin: selectedPlaces[0].geometry.location,
+      destination: selectedPlaces[selectedPlaces.length - 1].geometry.location,
+      waypoints: waypoints,
+      travelMode: google.maps.TravelMode.DRIVING,
+      optimizeWaypoints: false
+    };
+    
+    directionsService.route(request, function(result, status) {
+      if (status === google.maps.DirectionsStatus.OK) {
+        // 경로 표시
+        directionsRenderer.setDirections(result);
+        
+        // 총 거리 및 시간 계산
+        calculateTotalRouteInfo();
+      } else {
+        console.error('전체 경로 계산 실패:', status);
+        directionsRenderer.setDirections({ routes: [] });
+        
+        // 오류 메시지 표시
+        alert('경로를 계산할 수 없습니다. 다른 장소를 선택해 주세요.');
+      }
+    });
+  }
+
+  // 두 지점 간 경로 계산 (구간별)
+  function calculateSegmentRoute(fromIndex, toIndex) {
+    const origin = selectedPlaces[fromIndex];
+    const destination = selectedPlaces[toIndex];
+    
+    const request = {
+      origin: origin.geometry.location,
+      destination: destination.geometry.location,
+      travelMode: google.maps.TravelMode.DRIVING
+    };
+    
+    directionsService.route(request, function(result, status) {
+      if (status === google.maps.DirectionsStatus.OK) {
+        // 경로 정보 가져오기
+        const leg = result.routes[0].legs[0];
+        
+        // 구간 정보 저장
+        routeSegments[toIndex - 1] = {
+          from: origin.name,
+          to: destination.name,
+          distance: leg.distance,
+          duration: leg.duration
+        };
+
+        // 새로운 부분: 경로 시각화를 위해 polyline 직접 그림
+        const segmentPath = result.routes[0].overview_path;
+        const polyline = new google.maps.Polyline({
+          path: segmentPath,
+          strokeColor: '#4285F4',
+          strokeOpacity: 0.8,
+          strokeWeight: 5,
+          map: map
+        });
+
+        polylines.push(polyline);
+        
+        // 연결선 정보 업데이트
+        updateRouteSegmentInfo(fromIndex, toIndex);
+        
+        // 총 거리 및 시간 계산
+        calculateTotalRouteInfo();
+      } else {
+        console.error('구간 경로 계산 실패:', status);
+        
+        // 경로 계산 실패 시 사용자에게 알림
+        const connectorId = `connector-${fromIndex}-${toIndex}`;
+        const connectorEl = $(`#${connectorId}`);
+        
+        if (connectorEl.length) {
+          connectorEl.find('.connector-info span').html(
+            `경로를 찾을 수 없습니다`
+          );
+        }
+      }
+    });
+  }
+
+  // 장소 목록에 경로 정보 업데이트
+  function updateRouteSegmentInfo(fromIndex, toIndex) {
+    const segmentInfo = routeSegments[toIndex - 1];
+    if (!segmentInfo) return;
+    
+    const connectorId = `connector-${fromIndex}-${toIndex}`;
+    const connectorEl = $(`#${connectorId}`);
+    
+    if (connectorEl.length) {
+      connectorEl.find('.connector-info span').html(
+        `${segmentInfo.distance.text} · ${segmentInfo.duration.text}`
+      );
+    }
+  }
+
+  // 전체 경로 정보 계산 및 표시
+  function calculateTotalRouteInfo() {
+    if (selectedPlaces.length < 2) {
+      $('#route-info').hide();
+      return;
+    }
+    
+    totalDistance = 0;
+    totalDuration = 0;
+    
+    // 각 구간의 거리와 시간 합산
+    routeSegments.forEach(segment => {
+      if (segment && segment.distance && segment.duration) {
+        totalDistance += segment.distance.value;
+        totalDuration += segment.duration.value;
+      }
+    });
+    
+    // km 단위로 변환 (소수점 1자리)
+    const distanceInKm = (totalDistance / 1000).toFixed(1);
+    
+    // 시간과 분으로 변환
+    const hours = Math.floor(totalDuration / 3600);
+    const minutes = Math.floor((totalDuration % 3600) / 60);
+    
+    // 화면에 표시
+    $('#total-distance').text(`${distanceInKm} km`);
+    
+    if (hours > 0) {
+      $('#total-time').text(`${hours}시간 ${minutes}분`);
+    } else {
+      $('#total-time').text(`${minutes}분`);
+    }
+    
+    // 경로 정보 표시
+    $('#route-info').show();
+  }
+
+  // 지도 범위 조정
+  function adjustMapBounds() {
+    if (selectedPlaces.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    
+    selectedPlaces.forEach(place => {
+      bounds.extend(place.geometry.location);
+    });
+    
+    map.fitBounds(bounds);
+    
+    // 줌 레벨 제한 (너무 확대되는 것 방지)
+    const listener = google.maps.event.addListener(map, 'idle', function() {
+      if (map.getZoom() > 15) {
+        map.setZoom(15);
+      }
+      google.maps.event.removeListener(listener);
+    });
+  }
+
+  // 장소 ID로 삭제
+  function removePlaceById(placeId) {
+    // 선택된 장소 배열에서 제거
+    const index = selectedPlaces.findIndex(p => p.place_id === placeId);
+    if (index !== -1) {
+      selectedPlaces.splice(index, 1);
+      
+      // 마커 제거
+      if (markers[index]) {
+        markers[index].marker.setMap(null);
+        markers.splice(index, 1);
+      }
+      
+      // 마커 라벨 및 색상 업데이트
+      updateMarkers();
+      
+      // 목록에서 제거
+      $(`.place-item[data-place-id="${placeId}"]`).remove();
+      
+      // 연결선 제거
+      if (index > 0) {
+        $(`#connector-${index-1}-${index}`).remove();
+      }
+      if (index < selectedPlaces.length) {
+        $(`#connector-${index}-${index+1}`).remove();
+      }
+      
+      // 목록 번호 업데이트
+      updatePlaceNumbers();
+      
+      // 경로 업데이트
+      if (selectedPlaces.length >= 2) {
+        // 구간 정보 배열 업데이트
+        routeSegments.splice(index, 1);
+        if (index > 0 && index < selectedPlaces.length) {
+          routeSegments.splice(index - 1, 1);
+        }
+        
+        updateRoutes();
+      } else {
+        clearPolylines();
+        directionsRenderer.setDirections({ routes: [] });
+        $('#route-info').hide();
+      }
+    }
+  }
+
+  // 마커 업데이트
+  function updateMarkers() {
+    markers.forEach((markerObj, index) => {
+      const isFirstMarker = index === 0;
+      const isLastMarker = index === markers.length - 1;
+      
+      // 마커 색상 설정
+      let markerColor = '#4285F4'; // 기본 파란색
+      if (isFirstMarker) {
+        markerColor = '#0ED8D5'; // 첫 번째 마커 (출발지)
+      } else if (isLastMarker && markers.length > 1) {
+        markerColor = '#FF5252'; // 마지막 마커 (도착지)
+      }
+      
+      // 마커 아이콘 업데이트
+      markerObj.marker.setIcon({
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: markerColor,
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 2,
+        scale: 12
+      });
+      
+      // 마커 라벨 업데이트
+      markerObj.marker.setLabel({
+        text: String(index + 1),
+        color: 'white',
+        fontSize: '14px',
+        fontWeight: 'bold'
+      });
+    });
+  }
+
+  // 장소 목록 번호 업데이트
+  function updatePlaceNumbers() {
+    $('.place-item').each(function(index) {
+      $(this).find('.place-number').text(index + 1);
+      $(this).attr('data-index', index);
+      
+      // 연결선 ID 업데이트
+      if (index > 0) {
+        const connector = $(`#connector-${index-1}-${index}`);
+        if (connector.length) {
+          connector.attr('id', `connector-${index-1}-${index}`);
+        }
+      }
+    });
+  }
+
+  // 모든 장소 지우기
+  function clearAllPlaces() {
+    // 선택된 장소 배열 초기화
+    selectedPlaces = [];
+    
+    // 모든 마커 제거
+    markers.forEach(markerObj => {
+      markerObj.marker.setMap(null);
+    });
+    markers = [];
+    
+    // 경로 제거
+    clearPolylines();
+    directionsRenderer.setDirections({ routes: [] });
+    
+    // 구간 정보 초기화
+    routeSegments = [];
+    
+    // 목록 초기화
+    $('#place-list').empty();
+    
+    // 경로 정보 숨기기
+    $('#route-info').hide();
+    
+    // 총 거리 및 시간 초기화
+    totalDistance = 0;
+    totalDuration = 0;
+  }
+
+  // 여행 저장하기
+  function saveTrip() {
+    const title = $('#trip-title').val().trim();
+    const description = $('#trip-description').val().trim();
+    
+    if (!title) {
+      alert('여행 제목을 입력해주세요.');
+      return;
+    }
+    
+    if (selectedPlaces.length < 2) {
+      alert('최소 2개 이상의 장소를 선택해주세요.');
+      return;
+    }
+    
+    // 저장할 데이터
+    const travelData = {
+      userId: loginUserId,
+      title: title,
+      description: description,
+      totalDistance: parseFloat(totalDistance),
+      totalTime: parseInt(totalDuration),
+      tags: tags,
+      places: selectedPlaces.map((place, index) => ({
+        placeName: place.name,
+        address: place.formatted_address,
+        description: place.description || '',
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng(),
+        visitOrder: index + 1,
+        apiPlaceId: place.place_id
+      }))
+    };
+    
+    // AJAX 요청으로 서버에 저장
+    $.ajax({
+      url: '/api/travel',
+      type: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(travelData),
+      success: function(response) {
+        alert('여행 코스가 등록되었습니다.');
+        window.location.href = '/travel'; // 목록 페이지로 이동
+      },
+      error: function(xhr, status, error) {
+        alert('저장 중 오류가 발생했습니다: ' + error);
+      }
+    });
+  }
+
+  // 이벤트 리스너 설정
+  function setupEventListeners() {
+    // 문서 클릭 시 검색 결과 숨기기
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('#search-box, #search-results').length) {
+        $('#search-results').hide();
+      }
+    });
+    
+    // 모두 지우기 버튼
+    $('#clear-all').on('click', function() {
+      clearAllPlaces();
+    });
+    
+    // 뒤로가기 버튼
+    $('#back-button').on('click', function() {
+      window.history.back();
+    });
+    
+    // 모달 닫기
+    $('#close-modal').on('click', function() {
+       $('#photo-modal').hide();
+    });
+    
+    // 모달 외부 클릭 시 닫기
+    $('#photo-modal').on('click', function(e) {
+        if ($(e.target).is('#photo-modal')) {
+          $('#photo-modal').hide();
+        }
+    });
+    
+    // 저장 버튼
+    $('#save-trip').on('click', function() {
+      saveTrip();
+    });
+
+    // 취소 버튼
+    $('#cancel-trip').on('click', function() {
+      if (confirm('작성 중인 여행 계획을 취소하시겠습니까?')) {
+        window.history.back();
+      }
+    });
+  }
+</script>
+</body>
+</html>
