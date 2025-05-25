@@ -42,4 +42,9 @@ public class FileUploadService {
         return contentType != null &&
                (contentType.startsWith("image/jpeg") || contentType.startsWith("image/png"));
     }
+
+    // [S3 전환 시점]
+    // amazonS3.putObject(bucketName, key, file.getInputStream(), metadata);
+    // return amazonS3.getUrl(bucketName, key).toString();
+
 }

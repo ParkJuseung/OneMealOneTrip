@@ -25,6 +25,12 @@ spring:
     mode: HTML
     encoding: UTF-8
 
+  # 이미지 업로드 용량설정
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
   # ?? ?? ??
   devtools:
     restart:

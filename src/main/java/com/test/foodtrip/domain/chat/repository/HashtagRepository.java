@@ -1,7 +1,6 @@
 package com.test.foodtrip.domain.chat.repository;
 
 import com.test.foodtrip.domain.chat.entity.Hashtag;
-import org.codehaus.groovy.runtime.StreamGroovyMethods;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
