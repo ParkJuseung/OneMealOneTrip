@@ -1,5 +1,6 @@
 package com.test.foodtrip.config;
 
+import com.test.foodtrip.domain.user.service.SocialAuthenticationSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
