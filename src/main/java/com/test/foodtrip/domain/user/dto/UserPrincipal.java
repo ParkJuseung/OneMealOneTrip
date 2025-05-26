@@ -43,9 +43,7 @@ public class UserPrincipal implements OAuth2User {
     }
 
     // Getter 메서드들
-    public Long getUserId() {
-        return userId;
-    }
+    public Long getUserId() { return userId; }
 
     public String getNickname() {
         return nickname;

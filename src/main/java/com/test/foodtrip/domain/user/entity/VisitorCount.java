@@ -1,18 +1,16 @@
 package com.test.foodtrip.domain.user.entity;
 
 
+import lombok.*;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "VISITOR_COUNT")
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class VisitorCount {
 
     @Id
