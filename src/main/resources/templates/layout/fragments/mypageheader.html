@@ -7,7 +7,7 @@
 <div class="header" th:fragment="header">
     <div class="mypage-header">
         <!-- 뒤로가기 버튼 -->
-        <button id="back-to-posts" class="btn-back">← 뒤로가기</button>
+        <h2> <button id="back-to-posts" class="btn-back"> <i class="fas fa-arrow-left"></i></button>마이페이지</h2>
     </div>
     <div class="header-actions">
         <div class="top-icons">
@@ -20,12 +20,13 @@
         <!-- 인증된 사용자일 때 프로필 영역 표시 -->
         <div sec:authorize="isAuthenticated()" class="profile-dropdown">
             <button class="profile-area" onclick="toggleDropdown()">
-                <img th:if="${#authentication.principal.profileImage != null}"
-                     th:src="@{/images/profiles/{fn}(fn=${#authentication.principal.profileImage})}"
-                     alt="프로필" class="profile-pic"/>
-                <img th:if="${#authentication.principal.profileImage == null}"
+                <img th:if="${currentUser.profileImage != null}"
+                     th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                     class="profile-pic"/>
+                <img th:if="${currentUser.profileImage == null}"
                      src="/images/default-profile.png"
-                     alt="프로필" class="profile-pic"/>
+                     class="profile-pic"/>
+
                 <span class="profile-name" th:text="${#authentication.principal.nickname}">김여행</span>
                 <i class="fas fa-chevron-down dropdown-arrow"></i>
             </button>
