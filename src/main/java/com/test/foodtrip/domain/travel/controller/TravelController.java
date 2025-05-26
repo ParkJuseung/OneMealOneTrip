@@ -70,18 +70,14 @@ public class TravelController {
 
     @GetMapping("/travel/add")
     public String courseCreatePage(@AuthenticationPrincipal UserPrincipal loginUser, Model model) {
-        model.addAttribute("profileImage", loginUser.getProfileImage());
         model.addAttribute("loginUserId", loginUser.getUserId());
-        model.addAttribute("userNickname", loginUser.getNickname());
         return "travel/course-create";
     }
 
     @GetMapping("/travel/{routeId}/edit")
     public String editPage(@AuthenticationPrincipal UserPrincipal loginUser, @PathVariable Long routeId, Model model) {
         TravelRouteDTO dto = travelRouteService.getRouteDetail(routeId);
-        model.addAttribute("profileImage", loginUser.getProfileImage());
         model.addAttribute("loginUserId", loginUser.getUserId());
-        model.addAttribute("userNickname", loginUser.getNickname());
         model.addAttribute("route", dto);
         return "travel/course-update";
     }

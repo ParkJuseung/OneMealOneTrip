@@ -56,6 +56,7 @@ public class TravelRouteService {
                         .views(route.getViews())
                         .userId(route.getUser().getId())
                         .userName(route.getUser().getNickname())
+                        .profileImage(route.getUser().getProfileImage())
                         .tagNames(route.getTags().stream()
                                         .map(tagging -> tagging.getTag().getTagName())
                                         .collect(Collectors.toList()))
