@@ -63,8 +63,8 @@
         <label class="form-label">태그</label>
         <div class="tags-input-container" id="tagsContainer">
           <!-- 기존 태그들을 여기에 렌더링 -->
-          <div th:each="tag : ${dto.tags}" class="tag" th:data-tag="'#' + ${tag}"
-               th:text="'#' + ${tag}">
+          <div th:each="tag : ${dto.tags}" class="tag" th:data-tag="'#' + ${tag}">
+            <span th:text="'#' + ${tag}"></span>
             <div class="tag-close"><i class="fas fa-times"></i></div>
           </div>
           <input type="text" class="tag-input" id="tagInput" placeholder="태그를 입력하고 Enter 키를 누르세요">
@@ -414,7 +414,7 @@
           }
         });
 
-        // 숨겨진 input으로 태그 데이터 전송
+        // 숨겨진 input으로 태그 데이터 전송 (이 부분이 추가됨)
         $('input[name="tags"]').remove(); // 기존 태그 input 제거
         tags.forEach(tag => {
           $('<input>').attr({
@@ -423,6 +423,24 @@
             value: tag
           }).appendTo('#postForm');
         });
+
+        // 위치 정보 추가 (현재 표시된 위치 정보가 있는 경우) (이 부분이 추가됨)
+        if ($('#locationPreview').is(':visible')) {
+          const placeName = $('#locationPreview').find('.location-preview-name').text();
+          const placeAddress = $('#locationPreview').find('.location-preview-address').text();
+
+          $('<input>').attr({
+            type: 'hidden',
+            name: 'placeName',
+            value: placeName
+          }).appendTo('#postForm');
+
+          $('<input>').attr({
+            type: 'hidden',
+            name: 'placeAddress',
+            value: placeAddress
+          }).appendTo('#postForm');
+        }
 
         // 폼 제출 진행
         return true;
