@@ -109,5 +109,6 @@ public interface PostService {
     void modify(PostDTO dto);
     void remove(Long id);
     void increaseViewCount(Long id);
+    void modify(PostDTO dto, MultipartFile[] images, List<Integer> deleteImageIndexes);
 
 }

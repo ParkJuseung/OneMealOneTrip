@@ -20,8 +20,8 @@ public class TravelController {
     private final TravelRouteService travelRouteService;
 
     @GetMapping("/travel")
-    public String getCourseList(@RequestParam(defaultValue = "0") int page,
-                                @RequestParam(required = false) String keyword,
+    public String getCourseList(@RequestParam(name= "page", defaultValue = "0") int page,
+                                @RequestParam(name= "keyword", required = false) String keyword,
                                 Model model) {
 
         Page<TravelRouteListItemDTO> routes = travelRouteService.getPagedRouteList(page, 8, keyword);
@@ -75,7 +75,7 @@ public class TravelController {
     }
 
     @GetMapping("/travel/{routeId}/edit")
-    public String editPage(@AuthenticationPrincipal UserPrincipal loginUser, @PathVariable Long routeId, Model model) {
+    public String editPage(@AuthenticationPrincipal UserPrincipal loginUser, @PathVariable("routeId") Long routeId, Model model) {
         TravelRouteDTO dto = travelRouteService.getRouteDetail(routeId);
         model.addAttribute("loginUserId", loginUser.getUserId());
         model.addAttribute("route", dto);

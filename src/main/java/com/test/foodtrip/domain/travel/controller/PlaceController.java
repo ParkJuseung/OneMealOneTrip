@@ -19,7 +19,7 @@ public class PlaceController {
     private final GooglePlaceService googlePlaceService;
 
     @GetMapping("/photos")
-    public ResponseEntity<List<String>> getPlacePhotos(@RequestParam String placeId) {
+    public ResponseEntity<List<String>> getPlacePhotos(@RequestParam("placeId") String placeId) {
         List<String> photoUrls = googlePlaceService.getPhotoUrlsByPlaceId(placeId);
         return ResponseEntity.ok(photoUrls);
     }
@@ -28,7 +28,7 @@ public class PlaceController {
      * 첫 번째 사진만 반환 (썸네일 용)
      */
     @GetMapping("/photos/first")
-    public ResponseEntity<Map<String, String>> getFirstPhoto(@RequestParam String placeId) {
+    public ResponseEntity<Map<String, String>> getFirstPhoto(@RequestParam("placeId") String placeId) {
         List<String> urls = googlePlaceService.getPhotoUrlsByPlaceId(placeId);
         if (urls.isEmpty()) {
             return ResponseEntity.ok(Map.of("url", "/images/default-thumbnail.jpg"));
