@@ -39,18 +39,18 @@ public class TravelRouteRestController {
     }
 
     @GetMapping("/photos")
-    public ResponseEntity<List<String>> getPhotos(@RequestParam String placeId) {
+    public ResponseEntity<List<String>> getPhotos(@RequestParam("placdId") String placeId) {
         return ResponseEntity.ok(travelRouteService.getPhotoUrls(placeId));
     }
 
     @GetMapping("/thumbnail")
-    public ResponseEntity<Map<String, String>> getThumbnail(@RequestParam Long routeId) {
+    public ResponseEntity<Map<String, String>> getThumbnail(@RequestParam("routeId") Long routeId) {
         String imageUrl = travelRouteService.getThumbnailUrlByRouteId(routeId);
         return ResponseEntity.ok(Map.of("url", imageUrl));
     }
 
     @PatchMapping("/{routeId}/views")
-    public ResponseEntity<Void> increaseViews(@PathVariable Long routeId, HttpSession session) {
+    public ResponseEntity<Void> increaseViews(@PathVariable("routeId") Long routeId, HttpSession session) {
 
         // 1. 세션에서 방문한 routeId 목록 가져오기
         List<Long> viewed = (List<Long>) session.getAttribute("viewedRouteIds");
@@ -69,14 +69,14 @@ public class TravelRouteRestController {
     }
 
     @PutMapping("/{routeId}")
-    public ResponseEntity<Void> updateRoute(@PathVariable Long routeId,
+    public ResponseEntity<Void> updateRoute(@PathVariable("routeId") Long routeId,
                                             @RequestBody UpdateTravelRouteDTO dto) {
         travelRouteService.updateRoute(routeId, dto);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{routeId}")
-    public ResponseEntity<Void> deleteRoute(@PathVariable Long routeId) {
+    public ResponseEntity<Void> deleteRoute(@PathVariable("routeId") Long routeId) {
         travelRouteService.deleteRoute(routeId);
         return ResponseEntity.ok().build();
     }

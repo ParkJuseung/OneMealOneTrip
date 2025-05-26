@@ -194,7 +194,7 @@ public class PostController {
     }
 
     @PostMapping("/post/remove")
-    public String remove(Long id,
+    public String remove(@RequestParam("id") Long id,
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
