@@ -692,10 +692,15 @@
             </div>
 
             <div class="post-detail-author">
-                <img th:if="${author != null && author.profileImage != null}"
-                     th:src="${author.profileImage}"
-                     th:alt="${author.nickname}"
-                     class="author-avatar">
+                <img th:if="${currentUser.profileImage != null}"
+                     th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                     alt="프로필" class="profile-pic"
+                     style="width:28px; height:28px; object-fit:cover;"/>
+
+                <img th:if="${currentUser.profileImage == null}"
+                     src="/images/default-profile.png"
+                     alt="프로필" class="profile-pic"
+                     style="width:28px; height:28px; object-fit:cover;"/>
 
                 <div class="author-info">
                     <span class="author-name" th:text="${author != null ? author.nickname : '작성자'}">작성자</span>
@@ -721,7 +726,15 @@
 
         <!-- 댓글 입력 -->
         <div class="comment-input-container">
-            <img src="/api/placeholder/40/40" alt="내 프로필" class="comment-avatar">
+            <img th:if="${currentUser.profileImage != null}"
+                 th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                 alt="프로필" class="profile-pic"
+                 style="width:28px; height:28px; object-fit:cover;"/>
+
+            <img th:if="${currentUser.profileImage == null}"
+                 src="/images/default-profile.png"
+                 alt="프로필" class="profile-pic"
+                 style="width:28px; height:28px; object-fit:cover;"/>
             <div class="comment-input-wrapper">
                 <textarea class="comment-input" placeholder="댓글을 남겨보세요..." rows="3"></textarea>
                 <button class="comment-submit">등록</button>
