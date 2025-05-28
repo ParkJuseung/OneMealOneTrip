@@ -13,6 +13,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,8 +24,18 @@ public class GooglePlaceService {
     @Value("${google.api.key}")
     private String apiKey;
 
+    //캐시 추가
+    private final Map<String, List<String>> photoCache = new ConcurrentHashMap<>();
+
     public List<String> getPhotoUrlsByPlaceId(String placeId) {
+
+        //캐시에 존재하면 바로 반환
+        if (photoCache.containsKey(placeId)) {
+            return photoCache.get(placeId);
+        }
+
         List<String> photoUrls = new ArrayList<>();
+
         try {
             String placeDetailUrl = "https://maps.googleapis.com/maps/api/place/details/json?place_id="
                     + placeId + "&fields=photo&key=" + apiKey;
@@ -46,6 +58,9 @@ public class GooglePlaceService {
                     photoUrls.add(photoUrl);
                 }
             }
+
+            //성공 시 캐시에 저장
+            photoCache.put(placeId, photoUrls);
 
         } catch (Exception e) {
             e.printStackTrace();
