@@ -287,7 +287,10 @@
                     .then(photoUrls => {
                         console.log("▶ 응답: ", photoUrls);
                         if (!photoUrls.length) {
-                            container.innerText = '이미지 없음';
+                            container.innerHTML =
+                                `<div style="text-align: center; margin-top: 20px; padding: 15px;">
+                                    이미지 없음
+                                 </div>`;
                             return;
                         }
 
