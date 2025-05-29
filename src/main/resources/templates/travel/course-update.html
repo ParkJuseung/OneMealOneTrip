@@ -581,15 +581,25 @@
     });
   }
 
+  function isDomestic(location) {
+    const lat = location.lat();
+    const lng = location.lng();
+    // 한국 위경도 범위 (대략)
+    return lat >= 33 && lat <= 39 && lng >= 124 && lng <= 132;
+  }
+
   // 두 지점 간 경로 계산 (구간별)
   function calculateSegmentRoute(fromIndex, toIndex) {
     const origin = selectedPlaces[fromIndex];
     const destination = selectedPlaces[toIndex];
+
+    const isKorea = isDomestic(origin.geometry.location) && isDomestic(destination.geometry.location);
+    const travelMode = isKorea ? google.maps.TravelMode.TRANSIT : google.maps.TravelMode.DRIVING;
     
     const request = {
       origin: origin.geometry.location,
       destination: destination.geometry.location,
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode: travelMode
     };
     
     directionsService.route(request, function(result, status) {

@@ -104,6 +104,10 @@
     <script>
         let map;
 
+        function isKorea(lat, lng) {
+            return lat >= 33.0 && lat <= 38.7 && lng >= 124.0 && lng <= 131.0;
+        }
+
         function drawRoute() {
             if (!places || places.length < 2) {
                 console.warn("2개 이상의 장소가 필요합니다.");
@@ -151,49 +155,49 @@
                 return '#4285F4';                        // 중간 지점
             }
 
+            function isKorea(lat, lng) {
+                return lat >= 33.0 && lat <= 38.7 && lng >= 124.0 && lng <= 131.0;
+            }
+
             // 경로 요청
-            const origin = new google.maps.LatLng(places[0].latitude, places[0].longitude);
-            const destination = new google.maps.LatLng(places[places.length - 1].latitude, places[places.length - 1].longitude);
-            const waypoints = places.slice(1, -1).map(p => ({
-                location: new google.maps.LatLng(p.latitude, p.longitude),
-                stopover: true
-            }));
+            // 구간별 경로 요청
+            for (let i = 0; i < places.length - 1; i++) {
+                const from = new google.maps.LatLng(places[i].latitude, places[i].longitude);
+                const to = new google.maps.LatLng(places[i + 1].latitude, places[i + 1].longitude);
 
-            const request = {
-                origin: origin,
-                destination: destination,
-                waypoints: waypoints,
-                travelMode: google.maps.TravelMode.DRIVING
-            };
+                const allInKorea = isKorea(places[i].latitude, places[i].longitude) && isKorea(places[i + 1].latitude, places[i + 1].longitude);
+                const travelMode = allInKorea ? google.maps.TravelMode.TRANSIT : google.maps.TravelMode.DRIVING;
 
-            directionsService.route(request, function (result, status) {
-                if (status === google.maps.DirectionsStatus.OK) {
-                    // ✅ 성공 시 경로 표시
-                    const path = result.routes[0].overview_path;
-                    const polyline = new google.maps.Polyline({
-                        path: path,
-                        strokeColor: "#4285F4",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 5,
-                        map: map
-                    });
-                } else {
-                    console.warn("경로 요청 실패, fallback으로 단순 선 연결", status);
-                    const fallbackPath = places.map(p => ({
-                        lat: p.latitude,
-                        lng: p.longitude
-                    }));
-                    const fallbackLine = new google.maps.Polyline({
-                        path: fallbackPath,
-                        strokeColor: "#FF5252",
-                        strokeOpacity: 0.6,
-                        strokeWeight: 4,
-                        map: map
-                    });
-                }
+                directionsService.route({
+                    origin: from,
+                    destination: to,
+                    travelMode: travelMode
+                }, (result, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        const path = result.routes[0].overview_path;
+                        const polyline = new google.maps.Polyline({
+                            path: path,
+                            strokeColor: "#4285F4",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 5,
+                            map: map
+                        });
+                    } else {
+                        console.warn(`경로 요청 실패 (${i}→${i + 1}), fallback 선 표시`, status);
+                        const fallbackLine = new google.maps.Polyline({
+                            path: [from, to],
+                            strokeColor: "#FF5252",
+                            strokeOpacity: 0.6,
+                            strokeWeight: 4,
+                            map: map
+                        });
+                    }
 
-                map.fitBounds(bounds);
-            });
+                    bounds.extend(from);
+                    bounds.extend(to);
+                    map.fitBounds(bounds);
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', drawRoute);
@@ -285,7 +289,6 @@
                 fetch(`/api/place/photos?placeId=${placeId}`)
                     .then(res => res.json())
                     .then(photoUrls => {
-                        console.log("▶ 응답: ", photoUrls);
                         if (!photoUrls.length) {
                             container.innerHTML =
                                 `<div style="text-align: center; margin-top: 20px; padding: 15px;">
@@ -348,7 +351,6 @@
                         container.appendChild(wrapper);
                     })
                     .catch(err => {
-                        console.error("▶ API 오류:", err);
                         container.innerText = 'API 오류';
                     });
 

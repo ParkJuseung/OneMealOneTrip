@@ -573,23 +573,34 @@
     });
   }
 
+  function isKorea(lat, lng) {
+    return lat >= 33.0 && lat <= 38.7 && lng >= 124.0 && lng <= 131.0;
+  }
+
   // 두 지점 간 경로 계산 (구간별)
   function calculateSegmentRoute(fromIndex, toIndex) {
     const origin = selectedPlaces[fromIndex];
     const destination = selectedPlaces[toIndex];
-    
+
+    // 출발지와 도착지가 모두 한국에 있는지 확인
+    const originLoc = origin.geometry.location;
+    const destLoc = destination.geometry.location;
+
+    const travelMode = (
+            isKorea(originLoc.lat(), originLoc.lng()) &&
+            isKorea(destLoc.lat(), destLoc.lng())
+    ) ? google.maps.TravelMode.TRANSIT : google.maps.TravelMode.DRIVING;
+
     const request = {
-      origin: origin.geometry.location,
-      destination: destination.geometry.location,
-      travelMode: google.maps.TravelMode.DRIVING
+      origin: originLoc,
+      destination: destLoc,
+      travelMode: travelMode
     };
-    
+
     directionsService.route(request, function(result, status) {
       if (status === google.maps.DirectionsStatus.OK) {
-        // 경로 정보 가져오기
         const leg = result.routes[0].legs[0];
-        
-        // 구간 정보 저장
+
         routeSegments[toIndex - 1] = {
           from: origin.name,
           to: destination.name,
@@ -597,7 +608,6 @@
           duration: leg.duration
         };
 
-        // 새로운 부분: 경로 시각화를 위해 polyline 직접 그림
         const segmentPath = result.routes[0].overview_path;
         const polyline = new google.maps.Polyline({
           path: segmentPath,
@@ -608,24 +618,12 @@
         });
 
         polylines.push(polyline);
-        
-        // 연결선 정보 업데이트
         updateRouteSegmentInfo(fromIndex, toIndex);
-        
-        // 총 거리 및 시간 계산
         calculateTotalRouteInfo();
       } else {
         console.error('구간 경로 계산 실패:', status);
-        
-        // 경로 계산 실패 시 사용자에게 알림
         const connectorId = `connector-${fromIndex}-${toIndex}`;
-        const connectorEl = $(`#${connectorId}`);
-        
-        if (connectorEl.length) {
-          connectorEl.find('.connector-info span').html(
-            `경로를 찾을 수 없습니다`
-          );
-        }
+        $(`#${connectorId} .connector-info span`).text(`경로를 찾을 수 없습니다`);
       }
     });
   }
