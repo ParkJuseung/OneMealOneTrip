@@ -1,11 +1,11 @@
 <div align="center">
   <br />
-  <img src="https://user-images.githubusercontent.com/60915285/188914541-6cc0df3f-91a3-4edf-b0da-578263f5fae4.png" width="50%" />
+  <img src="https://github.com/user-attachments/assets/e4850170-8c28-4ea1-8647-7dcb7df5e982" width="50%" />
   <br />
 </div>
 
 <div align="center">
- <h3><b>같이집관 ⚽️</b></h3>
+ <h3><b>여행한끼</b></h3>
 실시간으로 사람들과 같이 스포츠 경기를 응원할 수 있는 화상 서비스<br><br>
   삼성 청년 SW 아카데미 공통 프로젝트 <b> - 우수 프로젝트 🏆</b><br>
   2022.07.11 ~ 2022.08.19
