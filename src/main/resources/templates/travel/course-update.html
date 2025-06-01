@@ -115,7 +115,7 @@
   const route = [[${route}]]; // route.title, route.description, route.tags[], route.places[]
 </script>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM6flDj7toqktYW83oYswdJrH-xrEsz4U&libraries=places&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNg0wn8JiwA7BeSeZ4AUxfKWPqLsDcPHc&libraries=places&callback=initMap" async defer></script>
 <script th:inline="javascript">
   // 전역 변수 선언
   let map;
@@ -157,8 +157,47 @@
     });
 
     // 3. 장소 복원
-    if (route.places) {
-      route.places.forEach((p) => {
+    // if (route.places) {
+    //   route.places.forEach((p) => {
+    //     placesService.getDetails({
+    //       placeId: p.apiPlaceId,
+    //       fields: [
+    //         'name', 'place_id', 'formatted_address', 'geometry', 'photos',
+    //         'formatted_phone_number', 'website', 'rating', 'opening_hours', 'url'
+    //       ]
+    //     }, function(place, status) {
+    //       if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+    //         selectedPlaces.push(place);
+    //         addMarker(place);
+    //         addPlaceToList(place, selectedPlaces.length);
+    //
+    //         if (selectedPlaces.length >= 2) {
+    //           updateRoutes();
+    //         }
+    //       } else {
+    //         console.error(`장소 ${p.placeName} 상세 정보 가져오기 실패:`, status);
+    //       }
+    //     });
+    //   });
+    // }
+
+    if (route.places && route.places.length > 0) {
+      restorePlacesSequentially();
+    }
+    
+    // 검색 기능 초기화
+    initSearchBox();
+    
+    // 태그 입력 초기화
+    initTagsInput();
+    
+    // 이벤트 리스너 설정
+    setupEventListeners();
+  }
+
+  async function restorePlacesSequentially() {
+    for (const p of route.places) {
+      await new Promise((resolve) => {
         placesService.getDetails({
           placeId: p.apiPlaceId,
           fields: [
@@ -170,25 +209,18 @@
             selectedPlaces.push(place);
             addMarker(place);
             addPlaceToList(place, selectedPlaces.length);
-
-            if (selectedPlaces.length >= 2) {
-              updateRoutes();
-            }
+            resolve();
           } else {
             console.error(`장소 ${p.placeName} 상세 정보 가져오기 실패:`, status);
+            resolve();
           }
         });
       });
     }
-    
-    // 검색 기능 초기화
-    initSearchBox();
-    
-    // 태그 입력 초기화
-    initTagsInput();
-    
-    // 이벤트 리스너 설정
-    setupEventListeners();
+
+    if (selectedPlaces.length >= 2) {
+      updateRoutes();
+    }
   }
     
     // 태그 추가 함수
