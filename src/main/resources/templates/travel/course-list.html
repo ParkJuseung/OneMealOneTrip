@@ -49,8 +49,10 @@
             <div class="course-grid" th:if="${routes != null and !routes.isEmpty()}">
                 <div class="course-card" th:each="route : ${routes}" th:data-id="${route.routeId}">
                     <div class="course-image-container js-thumbnail-container" th:data-id="${route.routeId}">
-                        <div class="course-like">
-                            <i class="far fa-heart"></i> <!-- 좋아요 여부 처리 필요 시 class 제어 -->
+                        <div class="course-like"
+                             th:data-id="${route.routeId}"
+                             th:classappend="${route.bookmarked} ? ' active' : ''">
+                            <i th:class="${route.bookmarked} ? 'fas fa-heart' : 'far fa-heart'"></i>
                         </div>
                     </div>
                     <div class="course-content">
@@ -421,6 +423,31 @@
                     });
                 }
 
+            });
+
+            document.querySelectorAll('.course-like').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('i');
+                    const routeId = this.dataset.id;
+
+                    fetch(`/api/travel/${routeId}/bookmark`, {
+                        method: 'POST',
+                        credentials: 'include' //세션 쿠키 전송
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.bookmarked) {
+                                icon.classList.remove('far');
+                                icon.classList.add('fas');
+                                this.classList.add('active');
+                            } else {
+                                icon.classList.remove('fas');
+                                icon.classList.add('far');
+                                this.classList.remove('active');
+                            }
+                        });
+                });
             });
 
     </script>
