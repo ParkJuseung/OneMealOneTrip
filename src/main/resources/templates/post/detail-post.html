@@ -436,165 +436,165 @@
 
         /* detail-post.html의 <style> 태그에 추가할 CSS */
 
-/* 게시글 이미지 컨테이너 */
-.post-detail-images {
-    margin: 20px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+        /* 게시글 이미지 컨테이너 */
+        .post-detail-images {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-/* 개별 이미지 컨테이너 */
-.post-detail-image {
-    position: relative;
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+        /* 개별 이미지 컨테이너 */
+        .post-detail-image {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-.post-detail-image:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
+        .post-detail-image:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
 
-/* 이미지 스타일 */
-.post-detail-image img {
-    width: 100%;
-    height: auto;
-    max-height: 500px;
-    object-fit: cover;
-    display: block;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
+        /* 이미지 스타일 */
+        .post-detail-image img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
 
-.post-detail-image img:hover {
-    transform: scale(1.02);
-}
+        .post-detail-image img:hover {
+            transform: scale(1.02);
+        }
 
-/* 이미지가 여러 개인 경우 그리드 레이아웃 */
-.post-detail-images.multiple-images {
-    display: grid;
-    gap: 12px;
-}
+        /* 이미지가 여러 개인 경우 그리드 레이아웃 */
+        .post-detail-images.multiple-images {
+            display: grid;
+            gap: 12px;
+        }
 
-/* 2개 이미지: 2열 그리드 */
-.post-detail-images.images-2 {
-    grid-template-columns: 1fr 1fr;
-}
+        /* 2개 이미지: 2열 그리드 */
+        .post-detail-images.images-2 {
+            grid-template-columns: 1fr 1fr;
+        }
 
-/* 3개 이미지: 첫 번째는 전체 너비, 나머지는 2열 */
-.post-detail-images.images-3 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-}
+        /* 3개 이미지: 첫 번째는 전체 너비, 나머지는 2열 */
+        .post-detail-images.images-3 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+        }
 
-.post-detail-images.images-3 .post-detail-image:first-child {
-    grid-column: 1 / -1;
-}
+        .post-detail-images.images-3 .post-detail-image:first-child {
+            grid-column: 1 / -1;
+        }
 
-/* 4개 이미지: 2x2 그리드 */
-.post-detail-images.images-4 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-}
+        /* 4개 이미지: 2x2 그리드 */
+        .post-detail-images.images-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+        }
 
-/* 5개 이미지: 첫 번째는 전체 너비, 나머지는 2x2 */
-.post-detail-images.images-5 {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
-}
+        /* 5개 이미지: 첫 번째는 전체 너비, 나머지는 2x2 */
+        .post-detail-images.images-5 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+        }
 
-.post-detail-images.images-5 .post-detail-image:first-child {
-    grid-column: 1 / -1;
-}
+        .post-detail-images.images-5 .post-detail-image:first-child {
+            grid-column: 1 / -1;
+        }
 
-/* 이미지 로딩 상태 */
-.post-detail-image.loading {
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-}
+        /* 이미지 로딩 상태 */
+        .post-detail-image.loading {
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
 
-.post-detail-image.loading::before {
-    content: "🖼️ 이미지 로딩 중...";
-    color: #666;
-    font-size: 14px;
-}
+        .post-detail-image.loading::before {
+            content: "🖼️ 이미지 로딩 중...";
+            color: #666;
+            font-size: 14px;
+        }
 
-/* 이미지 로드 실패 상태 */
-.post-detail-image img[src=""],
-.post-detail-image img:not([src]) {
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-    color: #666;
-}
+        /* 이미지 로드 실패 상태 */
+        .post-detail-image img[src=""],
+        .post-detail-image img:not([src]) {
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: #666;
+        }
 
-.post-detail-image img[src=""]:before,
-.post-detail-image img:not([src]):before {
-    content: "❌ 이미지를 불러올 수 없습니다";
-}
+        .post-detail-image img[src=""]:before,
+        .post-detail-image img:not([src]):before {
+            content: "❌ 이미지를 불러올 수 없습니다";
+        }
 
-/* 이미지 개수 표시 (5개 이상인 경우) */
-.post-detail-image.more-indicator {
-    position: relative;
-}
+        /* 이미지 개수 표시 (5개 이상인 경우) */
+        .post-detail-image.more-indicator {
+            position: relative;
+        }
 
-.post-detail-image.more-indicator::after {
-    content: attr(data-more-count);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-}
+        .post-detail-image.more-indicator::after {
+            content: attr(data-more-count);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-    .post-detail-images.images-2,
-    .post-detail-images.images-3,
-    .post-detail-images.images-4,
-    .post-detail-images.images-5 {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-    }
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .post-detail-images.images-2,
+            .post-detail-images.images-3,
+            .post-detail-images.images-4,
+            .post-detail-images.images-5 {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
 
-    .post-detail-images.images-3 .post-detail-image:first-child,
-    .post-detail-images.images-5 .post-detail-image:first-child {
-        grid-column: 1;
-    }
+            .post-detail-images.images-3 .post-detail-image:first-child,
+            .post-detail-images.images-5 .post-detail-image:first-child {
+                grid-column: 1;
+            }
 
-    .post-detail-image img {
-        max-height: 300px;
-    }
-}
+            .post-detail-image img {
+                max-height: 300px;
+            }
+        }
 
-@media (max-width: 480px) {
-    .post-detail-images {
-        margin: 16px 0;
-        gap: 8px;
-    }
+        @media (max-width: 480px) {
+            .post-detail-images {
+                margin: 16px 0;
+                gap: 8px;
+            }
 
-    .post-detail-image {
-        border-radius: 8px;
-    }
+            .post-detail-image {
+                border-radius: 8px;
+            }
 
-    .post-detail-image img {
-        max-height: 250px;
-    }
-}
+            .post-detail-image img {
+                max-height: 250px;
+            }
+        }
     </style>
 </th:block>
 <body>
@@ -758,62 +758,75 @@
 
 
     <script>
-        // detail-post.html의 script 태그에 추가할 JavaScript
+        // 이미지 경로 처리 함수
+        function getProfileImageUrl(profileImage) {
+            if (!profileImage) {
+                return '/images/default-profile.png'; // 기본 이미지 경로
+            }
 
-$(document).ready(function () {
-    // 이미지 그리드 레이아웃 설정
-    setupImageLayout();
+            // 이미 전체 URL인 경우 (http://, https:// 등으로 시작하는 경우)
+            if (profileImage.startsWith('http')) {
+                return profileImage;
+            }
 
-    // 이미지 클릭 모달 기능
-    setupImageModal();
-});
-
-/**
- * 이미지 개수에 따른 그리드 레이아웃 설정
- */
-function setupImageLayout() {
-    const imagesContainer = $('.post-detail-images');
-    const imageCount = imagesContainer.find('.post-detail-image').length;
-
-    if (imageCount > 1) {
-        imagesContainer.addClass('multiple-images');
-        imagesContainer.addClass(`images-${Math.min(imageCount, 5)}`);
-
-        // 5개 이상인 경우 마지막 이미지에 "+n" 표시
-        if (imageCount > 5) {
-            const lastVisibleImage = imagesContainer.find('.post-detail-image').eq(4);
-            const remainingCount = imageCount - 4;
-            lastVisibleImage.addClass('more-indicator');
-            lastVisibleImage.attr('data-more-count', `+${remainingCount}`);
-
-            // 5번째 이후 이미지들 숨기기
-            imagesContainer.find('.post-detail-image').slice(5).hide();
+            // 그 외의 경우는 프로필 이미지 경로에 추가
+            return `/images/profiles/${profileImage}`;
         }
-    }
-}
 
-/**
- * 이미지 클릭 시 모달 표시 기능
- */
-function setupImageModal() {
-    // 이미지 클릭 이벤트
-    $('.post-detail-image img').on('click', function() {
-        const imageSrc = $(this).attr('src');
-        const imageAlt = $(this).attr('alt') || '게시글 이미지';
+        $(document).ready(function () {
+            // 이미지 그리드 레이아웃 설정
+            setupImageLayout();
 
-        showImageModal(imageSrc, imageAlt);
-    });
-}
+            // 이미지 클릭 모달 기능
+            setupImageModal();
+        });
 
-/**
- * 이미지 모달 표시
- */
-function showImageModal(imageSrc, imageAlt) {
-    // 기존 모달 제거
-    $('.image-modal').remove();
+        /**
+         * 이미지 개수에 따른 그리드 레이아웃 설정
+         */
+        function setupImageLayout() {
+            const imagesContainer = $('.post-detail-images');
+            const imageCount = imagesContainer.find('.post-detail-image').length;
 
-    // 모달 HTML 생성
-    const modalHtml = `
+            if (imageCount > 1) {
+                imagesContainer.addClass('multiple-images');
+                imagesContainer.addClass(`images-${Math.min(imageCount, 5)}`);
+
+                // 5개 이상인 경우 마지막 이미지에 "+n" 표시
+                if (imageCount > 5) {
+                    const lastVisibleImage = imagesContainer.find('.post-detail-image').eq(4);
+                    const remainingCount = imageCount - 4;
+                    lastVisibleImage.addClass('more-indicator');
+                    lastVisibleImage.attr('data-more-count', `+${remainingCount}`);
+
+                    // 5번째 이후 이미지들 숨기기
+                    imagesContainer.find('.post-detail-image').slice(5).hide();
+                }
+            }
+        }
+
+        /**
+         * 이미지 클릭 시 모달 표시 기능
+         */
+        function setupImageModal() {
+            // 이미지 클릭 이벤트
+            $('.post-detail-image img').on('click', function () {
+                const imageSrc = $(this).attr('src');
+                const imageAlt = $(this).attr('alt') || '게시글 이미지';
+
+                showImageModal(imageSrc, imageAlt);
+            });
+        }
+
+        /**
+         * 이미지 모달 표시
+         */
+        function showImageModal(imageSrc, imageAlt) {
+            // 기존 모달 제거
+            $('.image-modal').remove();
+
+            // 모달 HTML 생성
+            const modalHtml = `
         <div class="image-modal" style="
             position: fixed;
             top: 0;
@@ -867,54 +880,54 @@ function showImageModal(imageSrc, imageAlt) {
         </div>
     `;
 
-    // 모달을 body에 추가
-    $('body').append(modalHtml);
+            // 모달을 body에 추가
+            $('body').append(modalHtml);
 
-    // 페이드인 효과
-    setTimeout(() => {
-        $('.image-modal').css('opacity', '1');
-    }, 10);
+            // 페이드인 효과
+            setTimeout(() => {
+                $('.image-modal').css('opacity', '1');
+            }, 10);
 
-    // 스크롤 방지
-    $('body').css('overflow', 'hidden');
+            // 스크롤 방지
+            $('body').css('overflow', 'hidden');
 
-    // 모달 닫기 이벤트
-    $('.image-modal').on('click', function(e) {
-        if (e.target === this || $(e.target).hasClass('modal-close')) {
-            closeImageModal();
+            // 모달 닫기 이벤트
+            $('.image-modal').on('click', function (e) {
+                if (e.target === this || $(e.target).hasClass('modal-close')) {
+                    closeImageModal();
+                }
+            });
+
+            // ESC 키로 모달 닫기
+            $(document).on('keydown.imageModal', function (e) {
+                if (e.keyCode === 27) {
+                    closeImageModal();
+                }
+            });
         }
-    });
 
-    // ESC 키로 모달 닫기
-    $(document).on('keydown.imageModal', function(e) {
-        if (e.keyCode === 27) {
-            closeImageModal();
+        /**
+         * 이미지 모달 닫기
+         */
+        function closeImageModal() {
+            $('.image-modal').css('opacity', '0');
+
+            setTimeout(() => {
+                $('.image-modal').remove();
+                $('body').css('overflow', 'auto');
+                $(document).off('keydown.imageModal');
+            }, 300);
         }
-    });
-}
 
-/**
- * 이미지 모달 닫기
- */
-function closeImageModal() {
-    $('.image-modal').css('opacity', '0');
-
-    setTimeout(() => {
-        $('.image-modal').remove();
-        $('body').css('overflow', 'auto');
-        $(document).off('keydown.imageModal');
-    }, 300);
-}
-
-/**
- * 이미지 로드 에러 처리
- */
-$('.post-detail-image img').on('error', function() {
-    console.warn('이미지 로드 실패:', $(this).data('original-src') || $(this).attr('src'));
-    $(this).hide(); // 이미지를 숨김
-    // 또는 부모 요소도 숨기고 싶다면
-    // $(this).closest('.post-detail-image').hide();
-});
+        /**
+         * 이미지 로드 에러 처리
+         */
+        $('.post-detail-image img').on('error', function () {
+            console.warn('이미지 로드 실패:', $(this).data('original-src') || $(this).attr('src'));
+            $(this).hide(); // 이미지를 숨김
+            // 또는 부모 요소도 숨기고 싶다면
+            // $(this).closest('.post-detail-image').hide();
+        });
 
 
     </script>
@@ -928,7 +941,7 @@ $('.post-detail-image img').on('error', function() {
         // Google Maps 초기화
         function initMap() {
             // 기본 위치 (서울)
-            const defaultLocation = { lat: 37.5665, lng: 126.9780 };
+            const defaultLocation = {lat: 37.5665, lng: 126.9780};
 
             // 지도 생성
             map = new google.maps.Map(document.getElementById("map"), {
@@ -1077,7 +1090,7 @@ $('.post-detail-image img').on('error', function() {
         }
 
         // Google Maps API 로드 오류 처리
-        window.gm_authFailure = function() {
+        window.gm_authFailure = function () {
             console.error('Google Maps API 인증 실패');
             document.getElementById('place-name').textContent = 'Google Maps API 인증 오류';
             document.getElementById('place-address').textContent = 'API 키를 확인해주세요.';
@@ -1236,6 +1249,7 @@ $('.post-detail-image img').on('error', function() {
                     await this.loadComments();
                 },
 
+
                 // 더보기 버튼 상태 업데이트
                 updateMoreButton() {
                     const moreButton = $('#showMoreBtn');
@@ -1325,7 +1339,7 @@ $('.post-detail-image img').on('error', function() {
                     let html = `
     <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
     ${comment.userProfileImage ?
-                        `<img src="${comment.userProfileImage}" alt="${comment.userNickname}" class="comment-avatar">` :
+                        `<img src="${getProfileImageUrl(comment.userProfileImage)}" alt="${comment.userNickname}" class="comment-avatar">` :
                         '<div class="comment-avatar-placeholder"></div>'
                     }
     <div class="comment-content">
@@ -1542,8 +1556,8 @@ $('.post-detail-image img').on('error', function() {
 
                     let html = `
                         <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
-                            <img src="${reply.userProfileImage || '/api/placeholder/32/32'}"
-                                 alt="${reply.userNickname}" class="comment-avatar">
+                            <img src="${getProfileImageUrl(reply.userProfileImage)}"
+     alt="${reply.userNickname}" class="comment-avatar">
                             <div class="comment-content">
                                 <div class="comment-header">
                                     <div class="comment-header-left">
@@ -1935,7 +1949,7 @@ $('.post-detail-image img').on('error', function() {
             // ===== 포스트 기능들 =====
 
             // 수정된 포스트 수정 기능 - modify 페이지로 이동
-            window.editPost = function() {
+            window.editPost = function () {
                 const postId = [[${dto.id}]];
                 // modify 페이지로 이동
                 window.location.href = `/post/modify/${postId}`;
@@ -2020,7 +2034,7 @@ $('.post-detail-image img').on('error', function() {
         });
 
         // 엔터키로 답글 작성
-        $(document).on('keypress', '.reply-input', function(e) {
+        $(document).on('keypress', '.reply-input', function (e) {
             if (e.which === 13 && !e.shiftKey) {
                 e.preventDefault();
                 const parentId = $(this).closest('.reply-input-container').attr('id').replace('reply-input-', '');
