@@ -34,49 +34,50 @@
 `HTML`  <br>
 `CSS`  <br>
 `JavaScript` <br>
-`Node.js 16.16.0` <br>
-`Vue 3.2.13` <br>
-`Pinia 2.0.14`  <br>
-`Vuetify 3.0.0.Beta` <br>
+`JQuery` <br>
+`Thymeleaf` <br><br>
+
 
 ### BE
-`Java 8`  <br>
-`Spring Boot 2.7.2`  <br>
-`Gradle 7.5` <br>
-`JPA 2.7.2`  <br>
-`MySQL 8.0.29` <br>
-`Swagger2 3.0.0` <br>
-`Openvidu 2.22` <br>
+`Java 17`  <br>
+`Spring Boot 3.1`  <br>
+`Gradle` <br>
+`JPA`  <br>
+`MyBatis` <br>
+`Oracle 18c` <br>
+`Swagger2` <br><br>
+
 
 ### CI/CD
 `AWS EC2`  <br>
-`Ubuntu 20.0.4 LTS` <br>
-`Docker 20.10.17`  <br>
-`Jenkins 2.346.2`  <br>
-`Nginx 1.23.1`  <br>
-`Nginx-rmtp 1.18.0` <br>
+`Docker`  <br>
+`Docker-compose` <br><br>
+
 
 ### 버전/이슈 관리
 
-`Jira` <br>
-`GitLab` <br>
-`Sourcetree` <br>
+`Git` <br>
+`Github` <br><br>
+
 
 ### TOOL
 
 `Postman` <br>
-`Figma` <br>
+`Excalidraw` <br><br>
+
 
 ### 협업
 
-`Cisco Webex Meetings` <br>
-`Mattermost` <br>
-`Notion` <br>
+`Discord` <br>
+`Notion` <br><br>
+
 
 ### IDE
 
 `Visual Studio Code` <br>
-`IntelliJ`
+`InteliJ` <br>
+`STS4` <br><br>
+
 
 <br><br>
 
@@ -88,67 +89,44 @@
 
 ### 1. 소셜로그인
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544140-0e26ce69-2191-4abf-a5df-54f915a86d72.gif">
-일반 로그인 및 카카오 로그인이 가능합니다.
+네이버, 구글, 카카오 소셜 로그인을 제공합니다.
 
 <br><br>
         
-### 2. 응원방
+### 2. 포스팅
 <img width="700" src="https://user-images.githubusercontent.com/60915285/223932054-64bbdda6-03de-4ba4-a044-32875e6ba8fa.gif">
-다같이 경기 화면을 보면서 화상으로 응원할 수 있습니다.<br>
-방장이 응원가를 재생하면, 참가자들은 실시간으로 해당 응원가를 들을 수 있습니다.
+추천하고 싶은 여행 장소나 맛집을 공유할 수 있습니다. <br>
+사용자들에게 Google API를 통해 더 정확한 위치 정보를 제공하며, 해시태그나 사진을 통해 정보를 더 효과적으로 전달할 수 있습니다.
 
 <br><br>
 
-### 3. 응원방 - 전광판
+### 3. 여행경로
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544287-de42403c-4c30-48b5-93bf-dbb20486d092.gif">
-외부 축구 API를 사용하여 실시간으로 경기중인 경기의 정보를 가져옵니다.<br>
-경기 스코어와 골 정보를 확인할 수 있습니다.
+추천하고싶은 여행 경로를 사용자들에게 추천할 수 있습니다. <br>
+GooGle API를 통해 정확한 위치를 제공하며 Pin과 경로 표시를 통해 효율적인 여행 경로를 확인할 수 있습니다.
 
 <br><br>
 
-### 4. 응원방 - 승부예측
+### 4. 마이페이지
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544282-23bd0402-7276-4a07-8508-fc2be2691ec6.gif">
-승부예측 시스템은 경기 시작 전부터 경기 10분까지 예측할 수 있습니다.<br>
-보유하고 있는 포인트(공)를 원하는 만큼 원하는 팀에 걸 수 있으며, 경기가 종료되면 결과에 따라 배당만큼 돌려받게됩니다.
+자세한 나의 정보를 표시하는 페이지입니다.<br>
+회원 정보 수정, 탈퇴가 가능하며 자기소개, 내가 쓴 글, 방명록 등을 확인할 수있습니다. 
 
 <br><br>
 
-### 5. 응원방 - 강제퇴장
+### 5. 채팅
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544280-2bf99a41-5bda-40bd-b92e-63248777c0c1.gif">
-방장은 방의 참가자들을 강퇴시킬 수 있는 권한을 가지고 있습니다.
+비슷한 취미나 성향을 가진 사람끼리 테스트를 할 수 있습니다.<br>
 
 <br><br>
 
-### 6. 응원방 - 채팅
+### 6. 관리자
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544288-b9496177-6e94-4ed5-a95b-9f2f0904e9c1.gif">
 방의 모든 참가자들은 채팅 기능을 사용할 수 있습니다.<br>
 여기에는 비속어 필터링이 존재하여, 비속어가 섞인 채팅을 보내게 되면 '[삭제된 메세지]' 라고 대체되어 보내집니다.
 
 <br><br>
-  
-### 7. 경기 일정 및 결과
-<img width="700" src="https://user-images.githubusercontent.com/60915285/189544710-06188f36-3d1a-47c9-bc9e-5debb37c3906.gif">
-리그별/월별 경기 일정을 제공합니다.<br>
-종료된 경기는 경기에 대한 결과를 제공합니다.
 
-<br><br>
-
-
-### 8. 경기 일정 - 오늘의 경기
-<img width="700" src="https://user-images.githubusercontent.com/60915285/189544711-ebf86e6e-6c1f-4581-90ee-54cedf9592a3.gif">
-오늘 있을 경기들을 리그별로 제공합니다.
-
-<br><br>
-
-        
-### 9. 커뮤니티
-<img width="700" src="https://user-images.githubusercontent.com/60915285/189544846-7c464775-a072-4dd8-ad3c-b0568909ae49.gif">
-![커뮤니티 글작성]()
-리그별 분류를 가진 커뮤니티가 있습니다.<br>
-오른쪽 위에는 최신 스포츠 뉴스를 제공하고 (네이버 뉴스 api), 아래에는 오늘의 경기를 제공합니다.<br>
-왼쪽 사이드바 아래에는 명예의 전당(포인트 랭킹)을 제공합니다.
-
-<br><br>
 
 
 ## 프로젝트 산출물 📝
