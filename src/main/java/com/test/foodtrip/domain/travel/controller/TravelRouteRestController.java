@@ -3,6 +3,7 @@ package com.test.foodtrip.domain.travel.controller;
 import com.test.foodtrip.domain.travel.dto.CreateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.dto.UpdateTravelRouteDTO;
 import com.test.foodtrip.domain.travel.service.TravelRouteService;
+import com.test.foodtrip.domain.user.dto.UserDTO;
 import com.test.foodtrip.domain.user.dto.UserPrincipal;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,18 +41,18 @@ public class TravelRouteRestController {
     }
 
     @GetMapping("/photos")
-    public ResponseEntity<List<String>> getPhotos(@RequestParam String placeId) {
+    public ResponseEntity<List<String>> getPhotos(@RequestParam("placdId") String placeId) {
         return ResponseEntity.ok(travelRouteService.getPhotoUrls(placeId));
     }
 
     @GetMapping("/thumbnail")
-    public ResponseEntity<Map<String, String>> getThumbnail(@RequestParam Long routeId) {
+    public ResponseEntity<Map<String, String>> getThumbnail(@RequestParam("routeId") Long routeId) {
         String imageUrl = travelRouteService.getThumbnailUrlByRouteId(routeId);
         return ResponseEntity.ok(Map.of("url", imageUrl));
     }
 
     @PatchMapping("/{routeId}/views")
-    public ResponseEntity<Void> increaseViews(@PathVariable Long routeId, HttpSession session) {
+    public ResponseEntity<Void> increaseViews(@PathVariable("routeId") Long routeId, HttpSession session) {
 
         // 1. 세션에서 방문한 routeId 목록 가져오기
         List<Long> viewed = (List<Long>) session.getAttribute("viewedRouteIds");
@@ -69,16 +71,33 @@ public class TravelRouteRestController {
     }
 
     @PutMapping("/{routeId}")
-    public ResponseEntity<Void> updateRoute(@PathVariable Long routeId,
+    public ResponseEntity<Void> updateRoute(@PathVariable("routeId") Long routeId,
                                             @RequestBody UpdateTravelRouteDTO dto) {
         travelRouteService.updateRoute(routeId, dto);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{routeId}")
-    public ResponseEntity<Void> deleteRoute(@PathVariable Long routeId) {
+    public ResponseEntity<Void> deleteRoute(@PathVariable("routeId") Long routeId) {
         travelRouteService.deleteRoute(routeId);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{routeId}/bookmark")
+    public ResponseEntity<Map<String, Object>> toggleBookmark(@PathVariable("routeId") Long routeId,
+                                                              HttpSession session) {
+        Long userId = (Long) session.getAttribute("user_id");
+        if (userId == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        boolean bookmarked = travelRouteService.toggleBookmark(routeId, userId);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("bookmarked", bookmarked);
+        return ResponseEntity.ok(result);
     }
 
 }

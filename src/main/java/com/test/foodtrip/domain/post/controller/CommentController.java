@@ -30,7 +30,7 @@ public class CommentController {
     // 댓글 목록 조회 (페이징) - 로그인 불필요 (읽기 권한)
     @GetMapping("/post/{postId}")
     public ResponseEntity<ApiResponse<PageResultDTO<CommentDTO, Comment>>> getComments(
-            @PathVariable Long postId,
+    		@PathVariable("postId") Long postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
@@ -68,7 +68,7 @@ public class CommentController {
     // 댓글 수정 - 로그인 필요
     @PutMapping("/{commentId}")
     public ResponseEntity<ApiResponse<CommentDTO>> updateComment(
-            @PathVariable Long commentId,
+    		@PathVariable("commentId") Long commentId,
             @RequestBody CommentUpdateRequest request,
             HttpSession session) {
         try {
@@ -94,7 +94,7 @@ public class CommentController {
     // 댓글 삭제 - 로그인 필요
     @DeleteMapping("/{commentId}")
     public ResponseEntity<ApiResponse<String>> deleteComment(
-            @PathVariable Long commentId,
+    		@PathVariable("commentId") Long commentId,
             HttpSession session) {
         try {
             if (!isLoggedIn(session)) {
@@ -119,7 +119,7 @@ public class CommentController {
     // 댓글 좋아요/싫어요 - 로그인 필요
     @PostMapping("/{commentId}/reaction")
     public ResponseEntity<ApiResponse<CommentReactionResultDTO>> toggleReaction(
-            @PathVariable Long commentId,
+    		@PathVariable("commentId") Long commentId,
             @RequestBody CommentReactionRequest request,
             HttpSession session) {
         try {
@@ -141,7 +141,7 @@ public class CommentController {
 
     // 댓글 통계 (좋아요/싫어요 수) - 로그인 불필요
     @GetMapping("/{commentId}/statistics")
-    public ResponseEntity<ApiResponse<CommentStatisticsDTO>> getCommentStatistics(@PathVariable Long commentId) {
+    public ResponseEntity<ApiResponse<CommentStatisticsDTO>> getCommentStatistics(@PathVariable("commentId") Long commentId) {
         try {
             CommentStatisticsDTO statistics = commentService.getCommentStatistics(commentId);
             return ResponseEntity.ok(ApiResponse.success(statistics));
@@ -153,7 +153,7 @@ public class CommentController {
 
     // 인기 댓글 조회 (좋아요 5개 이상) - 로그인 불필요
     @GetMapping("/post/{postId}/popular")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getPopularComments(@PathVariable Long postId) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPopularComments(@PathVariable("postId") Long postId) {
         try {
             var popularComments = commentService.getPopularComments(postId);
             var totalComments = commentService.getTotalCommentCount(postId);
@@ -171,7 +171,7 @@ public class CommentController {
 
     // 대댓글 조회 - 로그인 불필요
     @GetMapping("/{parentCommentId}/replies")
-    public ResponseEntity<ApiResponse<java.util.List<CommentDTO>>> getReplies(@PathVariable Long parentCommentId) {
+    public ResponseEntity<ApiResponse<java.util.List<CommentDTO>>> getReplies( @PathVariable("parentCommentId") Long parentCommentId) {
         try {
             var replies = commentService.getReplies(parentCommentId);
             return ResponseEntity.ok(ApiResponse.success(replies));
@@ -183,7 +183,7 @@ public class CommentController {
 
     // 댓글 단건 조회 - 로그인 불필요
     @GetMapping("/{commentId}")
-    public ResponseEntity<ApiResponse<CommentDTO>> getComment(@PathVariable Long commentId) {
+    public ResponseEntity<ApiResponse<CommentDTO>> getComment(@PathVariable("commentId") Long commentId) {
         try {
             CommentDTO comment = commentService.getComment(commentId);
             return ResponseEntity.ok(ApiResponse.success(comment));

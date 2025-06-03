@@ -17,8 +17,12 @@
         <!-- 인증된 사용자일 때 프로필 영역 표시 -->
         <div sec:authorize="isAuthenticated()" class="profile-dropdown">
             <button class="profile-area" onclick="toggleDropdown()">
-                <img th:src="${#authentication.principal.profileImage != null ? #authentication.principal.profileImage : '/api/placeholder/36/36'}"
-                     alt="프로필" class="profile-pic">
+                <img th:if="${currentUser.profileImage != null}"
+                     th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                     class="profile-pic"/>
+                <img th:if="${currentUser.profileImage == null}"
+                     src="/images/default-profile.png"
+                     class="profile-pic"/>
                 <span class="profile-name" th:text="${#authentication.principal.nickname}">김여행</span>
                 <i class="fas fa-chevron-down dropdown-arrow"></i>
             </button>

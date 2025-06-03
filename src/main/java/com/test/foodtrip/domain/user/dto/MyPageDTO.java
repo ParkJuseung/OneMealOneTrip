@@ -10,7 +10,10 @@ import java.util.List;
 //import com.test.foodtrip.domain.post.dto.PostDTO;
 //import com.test.foodtrip.domain.post.dto.CommentDTO;
 import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
+import org.springframework.format.annotation.DateTimeFormat;
 //import com.test.foodtrip.domain.user.dto.TravelBucketDTO;
+import org.springframework.web.multipart.MultipartFile;
+
 
 /**
  * 마이페이지에 보여줄 회원 정보 DTO
@@ -19,6 +22,7 @@ import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter @Setter
 public class MyPageDTO {
 
     /** PK */
@@ -40,6 +44,7 @@ public class MyPageDTO {
     private String gender;
 
     /** 생년월일 */
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     /** 연락처 */
@@ -51,8 +56,14 @@ public class MyPageDTO {
     /** 한 줄 소개(인사말) */
     private String greeting;
 
-    /** 프로필 이미지 경로 */
+    /** (폼에서) 전송된 이미지 파일을 받을 프로퍼티 */
+    private MultipartFile profileImageFile;
+
+    /** 저장된 파일명(또는 URL)을 받을 필드 */
     private String profileImage;
+
+    /** 프로필 삭제 요청 플래그 */
+    private boolean removeProfileImage;
 
     /** 역할 (기본값 "USER") */
     private String role;

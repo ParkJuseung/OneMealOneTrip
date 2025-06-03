@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Data
@@ -41,5 +42,8 @@ public class SignupDTO {
     @Size(max = 100, message = "인사말은 100자 이하로 입력해주세요.")
     private String greeting;
 
-    private MultipartFile profileImage;
+    private MultipartFile profileImageFile;
+
+    // 저장된 파일명(혹은 URL)을 담을 필드
+    private String profileImage;
 }

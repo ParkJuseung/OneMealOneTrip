@@ -2,19 +2,18 @@ package com.test.foodtrip.domain.travel.entity;
 
 
 import com.test.foodtrip.domain.user.entity.User;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "RouteBookmark", uniqueConstraints = {
+@Table(name = "ROUTEBOOKMARK", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"route_id", "user_id"})
 })
-@Getter @Setter
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class RouteBookmark {
 
     @Id

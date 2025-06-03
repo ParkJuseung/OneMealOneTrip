@@ -99,10 +99,14 @@
         const places = [[${route.places}]];
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM6flDj7toqktYW83oYswdJrH-xrEsz4U"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNg0wn8JiwA7BeSeZ4AUxfKWPqLsDcPHc&libraries=places"></script>
 
     <script>
         let map;
+
+        function isKorea(lat, lng) {
+            return lat >= 33.0 && lat <= 38.7 && lng >= 124.0 && lng <= 131.0;
+        }
 
         function drawRoute() {
             if (!places || places.length < 2) {
@@ -151,71 +155,55 @@
                 return '#4285F4';                        // 중간 지점
             }
 
+            function isKorea(lat, lng) {
+                return lat >= 33.0 && lat <= 38.7 && lng >= 124.0 && lng <= 131.0;
+            }
+
             // 경로 요청
-            const origin = new google.maps.LatLng(places[0].latitude, places[0].longitude);
-            const destination = new google.maps.LatLng(places[places.length - 1].latitude, places[places.length - 1].longitude);
-            const waypoints = places.slice(1, -1).map(p => ({
-                location: new google.maps.LatLng(p.latitude, p.longitude),
-                stopover: true
-            }));
+            // 구간별 경로 요청
+            for (let i = 0; i < places.length - 1; i++) {
+                const from = new google.maps.LatLng(places[i].latitude, places[i].longitude);
+                const to = new google.maps.LatLng(places[i + 1].latitude, places[i + 1].longitude);
 
-            const request = {
-                origin: origin,
-                destination: destination,
-                waypoints: waypoints,
-                travelMode: google.maps.TravelMode.DRIVING
-            };
+                const allInKorea = isKorea(places[i].latitude, places[i].longitude) && isKorea(places[i + 1].latitude, places[i + 1].longitude);
+                const travelMode = allInKorea ? google.maps.TravelMode.TRANSIT : google.maps.TravelMode.DRIVING;
 
-            directionsService.route(request, function (result, status) {
-                if (status === google.maps.DirectionsStatus.OK) {
-                    // ✅ 성공 시 경로 표시
-                    const path = result.routes[0].overview_path;
-                    const polyline = new google.maps.Polyline({
-                        path: path,
-                        strokeColor: "#4285F4",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 5,
-                        map: map
-                    });
-                } else {
-                    console.warn("경로 요청 실패, fallback으로 단순 선 연결", status);
-                    const fallbackPath = places.map(p => ({
-                        lat: p.latitude,
-                        lng: p.longitude
-                    }));
-                    const fallbackLine = new google.maps.Polyline({
-                        path: fallbackPath,
-                        strokeColor: "#FF5252",
-                        strokeOpacity: 0.6,
-                        strokeWeight: 4,
-                        map: map
-                    });
-                }
+                directionsService.route({
+                    origin: from,
+                    destination: to,
+                    travelMode: travelMode
+                }, (result, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        const path = result.routes[0].overview_path;
+                        const polyline = new google.maps.Polyline({
+                            path: path,
+                            strokeColor: "#4285F4",
+                            strokeOpacity: 0.8,
+                            strokeWeight: 5,
+                            map: map
+                        });
+                    } else {
+                        console.warn(`경로 요청 실패 (${i}→${i + 1}), fallback 선 표시`, status);
+                        const fallbackLine = new google.maps.Polyline({
+                            path: [from, to],
+                            strokeColor: "#FF5252",
+                            strokeOpacity: 0.6,
+                            strokeWeight: 4,
+                            map: map
+                        });
+                    }
 
-                map.fitBounds(bounds);
-            });
+                    bounds.extend(from);
+                    bounds.extend(to);
+                    map.fitBounds(bounds);
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', drawRoute);
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAM6flDj7toqktYW83oYswdJrH-xrEsz4U&libraries=places"></script>
-
     <script>
-
-        function myMap() {
-            var mapOptions = {
-                center: {lat: 35.96550, lng: 128.0684}, // 기본 위치의 지정(서울)
-                zoom: 7
-            };
-
-            var map = new google.maps.Map(
-                document.getElementById("googleMap")
-                , mapOptions);
-        }
-
-        myMap();
-
 
         document.addEventListener('DOMContentLoaded', function () {
             // 뒤로가기 버튼
@@ -292,15 +280,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             const cards = document.querySelectorAll('.place-card');
 
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
+                setTimeout(() => {
                 const placeId = card.dataset.placeId;
                 const container = card.querySelector('.js-photo-container');
+                const reviewsContainer = card.querySelector('.place-reviews');
 
                 fetch(`/api/place/photos?placeId=${placeId}`)
                     .then(res => res.json())
                     .then(photoUrls => {
                         if (!photoUrls.length) {
-                            container.innerText = '이미지 없음';
+                            container.innerHTML =
+                                `<div style="text-align: center; margin-top: 20px; padding: 15px;">
+                                    이미지 없음
+                                 </div>`;
                             return;
                         }
 
@@ -358,13 +351,10 @@
                         container.appendChild(wrapper);
                     })
                     .catch(err => {
-                        console.error(err);
                         container.innerText = 'API 오류';
                     });
 
                 // 리뷰 표시 로직
-                const reviewsContainer = card.querySelector('.place-reviews');
-
                 const service = new google.maps.places.PlacesService(document.createElement('div'));
 
                 service.getDetails({
@@ -375,25 +365,26 @@
                         let html = '<h4>리뷰</h4>';
                         place.reviews.slice(0, 3).forEach(review => {
                             html += `
-                <div class="review-item">
-                    <div class="review-header">
-                        <span class="review-author">${review.author_name}</span>
-                        <span class="review-rating">${review.rating}★</span>
-                    </div>
-                    <div class="review-text">${review.text}</div>
-                </div>
-            `;
-                        });
-                        reviewsContainer.innerHTML = html;
-                    } else {
+                                    <div class="review-item">
+                                        <div class="review-header">
+                                            <span class="review-author">${review.author_name}</span>
+                                            <span class="review-rating">${review.rating}★</span>
+                                        </div>
+                                        <div class="review-text">${review.text}</div>
+                                    </div>
+                                `;
+                            });
+                            reviewsContainer.innerHTML = html;
+                        } else {
                         reviewsContainer.innerHTML = `
-            <div class="review-item">
-                <div class="review-text" style="text-align: center;">리뷰가 없습니다.</div>
-            </div>
-        `;
-                    }
-                });
+                                <div class="review-item">
+                                    <div class="review-text" style="text-align: center;">리뷰가 없습니다.</div>
+                                </div>
+                            `;
+                        }
+                    });
 
+                }, index * 300); //요청 간 300ms 간격
             });
         });
 

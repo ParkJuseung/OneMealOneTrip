@@ -1,20 +1,19 @@
 package com.test.foodtrip.domain.user.entity;
 
-
+import lombok.*;  // lombok import
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "FOLLOW", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"follower_id", "following_id"})
 })
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+// ↓ 빌더용 생성자와 어노테이션 추가
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Follow {
 
     @Id
