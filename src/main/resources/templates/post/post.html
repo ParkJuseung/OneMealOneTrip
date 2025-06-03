@@ -133,16 +133,16 @@
                 </p>
                 <div class="post-meta">
                     <div class="post-author">
-                        <img th:if="${currentUser.profileImage != null}"
-                             th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                        <img th:if="${dto.authorProfileImage != null}"
+                             th:src="@{/images/profiles/{fn}(fn=${dto.authorProfileImage})}"
                              alt="프로필" class="profile-pic"
                              style="width:28px; height:28px; object-fit:cover;"/>
 
-                        <img th:if="${currentUser.profileImage == null}"
+                        <img th:if="${dto.authorProfileImage == null}"
                              src="/images/default-profile.png"
                              alt="프로필" class="profile-pic"
                              style="width:28px; height:28px; object-fit:cover;"/>
-                        <span>20대 여행자</span>
+                        <span th:text="${dto.authorNickname}">작성자</span>
                     </div>
                     <span class="post-date">[[${dto.elapsedTime}]]</span>
                 </div>
