@@ -8,9 +8,8 @@
   <link rel="stylesheet" th:href="@{/css/post-create.css}">
 
   <!-- Google Maps JavaScript API 추가 (Geocoding API도 포함) -->
-  <script th:src="@{'https://maps.googleapis.com/maps/api/js'(key=${apiKey}, libraries='places', callback='initLocationSearch')}"
-          async defer>
-  </script>
+  <script th:src="@{'https://maps.googleapis.com/maps/api/js'(key=${apiKey}, libraries='places', callback='initLocationSearch', loading='async')}"
+          async defer></script>
 
   <style>
 
@@ -762,7 +761,9 @@
             <button type="button" id="searchLocationBtn" class="location-search-btn">검색</button>
           </div>
           <div class="location-dropdown" id="locationDropdown"></div>
+
           <div class="location-preview" id="locationPreview" th:style="${dto?.placeName != null} ? 'display: block;' : 'display: none;'">
+            <img src="/api/placeholder/500/200" alt="위치 지도" class="location-preview-map">
             <div class="location-preview-header">
               <i class="fas fa-map-marker-alt" style="font-size: 24px; color: #007bff; margin-right: 12px;"></i>
               <div class="location-preview-info">

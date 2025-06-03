@@ -181,7 +181,8 @@ public class PostController {
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          Model model) {
-        model.addAttribute("apiKey", apiKey);
+
+
         // 로그인 체크
         if (!isLoggedIn(session)) {
             return "redirect:/login?error=login_required";
@@ -214,6 +215,7 @@ public class PostController {
 
             model.addAttribute("dto", dto);
             model.addAttribute("requestDTO", requestDTO);
+            model.addAttribute("apiKey", apiKey);
 
             System.out.println("=== Model에 데이터 추가 완료 ===");
             System.out.println("템플릿 반환: post/modify-post");
