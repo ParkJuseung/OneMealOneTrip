@@ -25,7 +25,7 @@ public class ChatRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "chat_room_seq")
-    @SequenceGenerator(name = "chat_room_seq", sequenceName = "chat_room_seq", allocationSize = 1)
+    @SequenceGenerator(name = "chat_room_seq", sequenceName = "CHAT_ROOM_SEQ", allocationSize = 1)
     @Column(name = "chatroom_id")
     private Long id;
 
