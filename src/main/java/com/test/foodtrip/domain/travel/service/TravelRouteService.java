@@ -158,11 +158,15 @@ public class TravelRouteService {
                     if (apiPlaceId == null || apiPlaceId.isBlank()) {
                         return "/images/default-thumbnail.jpg";
                     }
-                    return "/api/place/photos/first?placeId=" + apiPlaceId;
+
+                    List<String> references = googlePlaceService.getPhotoReferences(apiPlaceId);
+                    if (references.isEmpty()) {
+                        return "/images/default-thumbnail.jpg";
+                    }
+
+                    return "/api/place/photo-proxy?photoReference=" + references.get(0);
                 })
-                .orElseGet(() -> {
-                    return "/images/default-thumbnail.jpg";
-                });
+                .orElse("/images/default-thumbnail.jpg");
     }
 
     @Transactional
