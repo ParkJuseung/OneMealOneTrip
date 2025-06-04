@@ -13,6 +13,7 @@ import com.test.foodtrip.domain.post.repository.PostTagRepository;
 import com.test.foodtrip.domain.post.repository.PostTaggingRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import com.test.foodtrip.common.aws.S3Service;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,6 +39,7 @@ public class PostServiceImpl implements PostService {
     private final PostTagRepository postTagRepository;
     private final PostTaggingRepository postTaggingRepository;
     private final PostImageRepository postImageRepository;
+    private final S3Service s3Service;
 
     @Transactional
     @Override
@@ -50,57 +49,62 @@ public class PostServiceImpl implements PostService {
             throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
         }
 
-        // 🔍 디버깅: 받은 이미지 개수 확인
-        System.out.println("=== 이미지 업로드 디버깅 ===");
-        System.out.println("전달받은 이미지 배열: " + (images != null ? images.length : "null"));
-
-        if (images != null) {
-            for (int i = 0; i < images.length; i++) {
-                MultipartFile image = images[i];
-                System.out.println("이미지 " + i + ": " +
-                        "파일명=" + image.getOriginalFilename() +
-                        ", 크기=" + image.getSize() +
-                        ", 비어있음=" + image.isEmpty());
-            }
-        }
+        System.out.println("=== 게시글 생성 시작 ===");
+        System.out.println("DTO 이미지 URL 개수: " + (dto.getImageUrls() != null ? dto.getImageUrls().size() : 0));
+        System.out.println("전달받은 MultipartFile 배열: " + (images != null ? images.length : "null"));
 
         Post post = dtoToEntity(dto, currentUser);
 
-        // ✅ 이미지 저장 및 연관 PostImage 등록 (개선된 로그)
-        if (images != null && images.length > 0) {
+        // S3 URL 기반 이미지 처리 (Controller에서 이미 S3에 업로드됨)
+        if (dto.getImageUrls() != null && !dto.getImageUrls().isEmpty()) {
+            System.out.println("=== S3 URL 기반 이미지 처리 시작 ===");
+
+            for (int i = 0; i < dto.getImageUrls().size(); i++) {
+                String imageUrl = dto.getImageUrls().get(i);
+                PostImage postImage = new PostImage();
+                postImage.setImageUrl(imageUrl);
+                postImage.setImageOrder(i);
+                post.addImage(postImage);
+
+                System.out.println("S3 이미지 URL 추가: " + imageUrl + " (순서: " + i + ")");
+            }
+
+            System.out.println("총 추가된 이미지 수: " + dto.getImageUrls().size());
+        }
+
+        // 기존 MultipartFile 처리 (하위 호환성 - 빈 배열이 아닌 경우)
+        else if (images != null && images.length > 0) {
+            System.out.println("=== 기존 MultipartFile 처리 (하위 호환성) ===");
+
             int savedImageCount = 0;
             for (int i = 0; i < images.length; i++) {
                 MultipartFile image = images[i];
-                System.out.println("처리 중인 이미지 " + i + ": " + image.getOriginalFilename());
-
                 if (!image.isEmpty()) {
                     try {
-                        String imageUrl = saveImage(image);
+                        // S3에 업로드
+                        String imageUrl = s3Service.upload(image, "posts");
                         PostImage postImage = new PostImage();
                         postImage.setImageUrl(imageUrl);
                         postImage.setImageOrder(i);
                         post.addImage(postImage);
                         savedImageCount++;
 
-                        System.out.println("✅ 이미지 " + i + " 저장 성공: " + imageUrl);
+                        System.out.println("MultipartFile S3 업로드 성공: " + imageUrl);
                     } catch (IOException e) {
-                        System.err.println("❌ 이미지 " + i + " 저장 실패: " + e.getMessage());
+                        System.err.println("MultipartFile S3 업로드 실패: " + e.getMessage());
                         throw new RuntimeException("이미지 저장 실패: " + e.getMessage());
                     }
-                } else {
-                    System.out.println("⚠️ 이미지 " + i + "는 비어있어서 건너뜀");
                 }
             }
-            System.out.println("총 저장된 이미지 수: " + savedImageCount);
+            System.out.println("MultipartFile로 저장된 이미지 수: " + savedImageCount);
         }
 
-        // Post 저장 전 이미지 개수 확인
-        System.out.println("Post에 연결된 이미지 수: " + post.getImages().size());
+        System.out.println("Post에 연결된 최종 이미지 수: " + post.getImages().size());
 
         postRepository.save(post);
-        System.out.println("✅ 게시글 저장 완료 ID: " + post.getId());
+        System.out.println("게시글 저장 완료 ID: " + post.getId());
 
-        // ✅ 태그 저장
+        // 태그 저장
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
             saveTagsOptimized(post, dto.getTags());
         }
@@ -108,53 +112,37 @@ public class PostServiceImpl implements PostService {
         return post.getId();
     }
 
-    /**
-     * 로컬에 이미지 저장 후 URL 반환
-     */
-    private String saveImage(MultipartFile file) throws IOException {
-        String uploadDir = System.getProperty("user.dir") + "/uploads/";
-        String originalFilename = file.getOriginalFilename();
-        String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
-
-        Path path = Paths.get(uploadDir + uniqueFilename);
-
-        Files.createDirectories(path.getParent()); // 폴더 없으면 생성
-        file.transferTo(path.toFile());
-
-        return "/uploads/" + uniqueFilename; // 브라우저 접근용 경로
-    }
-
     @Override
     @Transactional
     public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO) {
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
 
-        // ✅ 1단계: 기본 Post 정보만 페이징 조회
+        // 1단계: 기본 Post 정보만 페이징 조회
         Page<Post> result = postRepository.findAll(pageable);
 
         if (result.isEmpty()) {
             return new PageResultDTO<>(result, entity -> new PostDTO());
         }
 
-        // ✅ 2단계: 해당 페이지의 모든 Post ID 수집
+        // 2단계: 해당 페이지의 모든 Post ID 수집
         List<Long> postIds = result.getContent().stream()
                 .map(Post::getId)
                 .collect(Collectors.toList());
 
-        // ✅ 3단계: 모든 태그 정보를 한번에 조회 (N+1 해결!)
+        // 3단계: 모든 태그 정보를 한번에 조회 (N+1 해결)
         List<Object[]> tagResults = postTaggingRepository.findTagsByPostIds(postIds);
 
-        // ✅ 4단계: Post ID별로 태그를 그룹핑
+        // 4단계: Post ID별로 태그를 그룹핑
         Map<Long, List<String>> tagsMap = tagResults.stream()
                 .collect(Collectors.groupingBy(
                         arr -> (Long) arr[0], // Post ID
                         Collectors.mapping(arr -> (String) arr[1], Collectors.toList()) // Tag Text
                 ));
 
-        // 🔧 추가: 모든 이미지 정보를 한번에 조회 (N+1 해결!)
+        // 추가: 모든 이미지 정보를 한번에 조회 (N+1 해결)
         List<PostImage> imageResults = postImageRepository.findByPostIdIn(postIds);
 
-        // 🔧 추가: Post ID별로 이미지를 그룹핑
+        // 추가: Post ID별로 이미지를 그룹핑
         Map<Long, List<PostImage>> imagesMap = imageResults.stream()
                 .collect(Collectors.groupingBy(
                         image -> image.getPost().getId(),
@@ -162,13 +150,13 @@ public class PostServiceImpl implements PostService {
                 ));
 
         Function<Post, PostDTO> fn = (entity -> {
-            PostDTO dto = entityToDto(entity); // ✅ 수정된 인터페이스 메서드 사용
+            PostDTO dto = entityToDto(entity);
 
-            // ✅ 미리 조회한 태그 정보로 오버라이드 (추가 쿼리 없음!)
+            // 미리 조회한 태그 정보로 오버라이드 (추가 쿼리 없음)
             List<String> tags = tagsMap.getOrDefault(entity.getId(), Collections.emptyList());
             dto.setTags(tags);
 
-            // 🔧 추가: 미리 조회한 이미지 정보로 오버라이드 (추가 쿼리 없음!)
+            // 추가: 미리 조회한 이미지 정보로 오버라이드 (추가 쿼리 없음)
             List<PostImage> images = imagesMap.getOrDefault(entity.getId(), Collections.emptyList());
             List<String> imageUrls = images.stream()
                     .sorted(Comparator.comparing(PostImage::getImageOrder)) // 순서대로 정렬
@@ -187,7 +175,7 @@ public class PostServiceImpl implements PostService {
         System.out.println("=== 게시글 조회 시작 ===");
         System.out.println("조회할 게시글 ID: " + id);
 
-        // 🔧 수정: 이미지와 함께 조회하도록 변경
+        // 수정: 이미지와 함께 조회하도록 변경
         Optional<Post> result = postRepository.findByIdWithImages(id);
 
         if (result.isPresent()) {
@@ -222,7 +210,7 @@ public class PostServiceImpl implements PostService {
 
             return dto;
         } else {
-            System.out.println("❌ 게시글을 찾을 수 없음: " + id);
+            System.out.println("게시글을 찾을 수 없음: " + id);
         }
         return null;
     }
@@ -254,7 +242,7 @@ public class PostServiceImpl implements PostService {
 
             postRepository.save(post);
 
-            // ✅ 최적화된 태그 업데이트
+            // 최적화된 태그 업데이트
             updatePostTagsOptimized(post, dto.getTags());
         }
     }
@@ -262,7 +250,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void modify(PostDTO dto, MultipartFile[] images, List<Integer> deleteImageIndexes) {
-        Optional<Post> result = postRepository.findByIdWithImages(dto.getId()); // 이미지도 함께 조회
+        Optional<Post> result = postRepository.findByIdWithImages(dto.getId());
         if (result.isPresent()) {
             Post post = result.get();
 
@@ -277,6 +265,9 @@ public class PostServiceImpl implements PostService {
                 throw new IllegalStateException("게시글을 수정할 권한이 없습니다.");
             }
 
+            System.out.println("=== 게시글 수정 시작 ===");
+            System.out.println("DTO 이미지 URL 개수: " + (dto.getImageUrls() != null ? dto.getImageUrls().size() : 0));
+
             // 기본 정보 수정
             post.setTitle(dto.getTitle());
             post.setContent(dto.getContent());
@@ -286,37 +277,67 @@ public class PostServiceImpl implements PostService {
             post.setPlaceAddress(dto.getPlaceAddress());
             post.setPlaceId(dto.getPlaceId());
 
-            // 🔧 기존 이미지 삭제 처리 (인덱스 기반)
-            if (deleteImageIndexes != null && !deleteImageIndexes.isEmpty()) {
-                List<PostImage> currentImages = new ArrayList<>(post.getImages());
+            // S3 URL 기반 이미지 업데이트 (Controller에서 이미 처리됨)
+            if (dto.getImageUrls() != null) {
+                System.out.println("=== S3 URL 기반 이미지 업데이트 ===");
 
-                // 인덱스를 내림차순으로 정렬해서 삭제 (인덱스 변화 방지)
-                Collections.sort(deleteImageIndexes, Collections.reverseOrder());
+                // 기존 이미지 모두 삭제
+                List<PostImage> existingImages = new ArrayList<>(post.getImages());
+                for (PostImage existingImage : existingImages) {
+                    post.getImages().remove(existingImage);
+                    postImageRepository.delete(existingImage);
+                    System.out.println("기존 이미지 제거: " + existingImage.getImageUrl());
+                }
 
-                for (Integer index : deleteImageIndexes) {
-                    if (index >= 0 && index < currentImages.size()) {
-                        PostImage imageToDelete = currentImages.get(index);
+                // 새 이미지 URL들로 교체
+                for (int i = 0; i < dto.getImageUrls().size(); i++) {
+                    String imageUrl = dto.getImageUrls().get(i);
+                    PostImage postImage = new PostImage();
+                    postImage.setImageUrl(imageUrl);
+                    postImage.setImageOrder(i);
+                    post.addImage(postImage);
+                    System.out.println("새 이미지 추가: " + imageUrl + " (순서: " + i + ")");
+                }
 
-                        // 파일 시스템에서 실제 파일 삭제
-                        deleteImageFile(imageToDelete.getImageUrl());
+                System.out.println("최종 이미지 수: " + post.getImages().size());
+            }
 
-                        // DB에서 이미지 삭제
-                        post.getImages().remove(imageToDelete);
-                        postImageRepository.delete(imageToDelete);
+            // 기존 MultipartFile 처리 (하위 호환성 - Controller에서 이미 S3 처리했으면 빈 배열)
+            else if (images != null && images.length > 0) {
+                System.out.println("=== 기존 MultipartFile 처리 (하위 호환성) ===");
 
-                        System.out.println("기존 이미지 삭제: " + imageToDelete.getImageUrl());
+                // 기존 이미지 삭제 처리 (인덱스 기반)
+                if (deleteImageIndexes != null && !deleteImageIndexes.isEmpty()) {
+                    List<PostImage> currentImages = new ArrayList<>(post.getImages());
+                    Collections.sort(deleteImageIndexes, Collections.reverseOrder());
+
+                    for (Integer index : deleteImageIndexes) {
+                        if (index >= 0 && index < currentImages.size()) {
+                            PostImage imageToDelete = currentImages.get(index);
+
+                            // S3에서 파일 삭제
+                            try {
+                                String fileName = s3Service.extractFileNameFromUrl(imageToDelete.getImageUrl());
+                                s3Service.deleteFile(fileName);
+                                System.out.println("S3 파일 삭제 성공: " + fileName);
+                            } catch (Exception e) {
+                                System.err.println("S3 파일 삭제 실패: " + e.getMessage());
+                            }
+
+                            post.getImages().remove(imageToDelete);
+                            postImageRepository.delete(imageToDelete);
+                            System.out.println("기존 이미지 삭제: " + imageToDelete.getImageUrl());
+                        }
+                    }
+
+                    // 남은 이미지들의 순서 재정렬
+                    List<PostImage> remainingImages = new ArrayList<>(post.getImages());
+                    for (int i = 0; i < remainingImages.size(); i++) {
+                        remainingImages.get(i).setImageOrder(i);
                     }
                 }
 
-                // 남은 이미지들의 순서 재정렬
-                List<PostImage> remainingImages = new ArrayList<>(post.getImages());
-                for (int i = 0; i < remainingImages.size(); i++) {
-                    remainingImages.get(i).setImageOrder(i);
-                }
-            }
-
-            // 🔧 새 이미지 추가 처리
-            if (images != null && images.length > 0) {
+                // 새 이미지 추가 처리
                 int currentMaxOrder = post.getImages().stream()
                         .mapToInt(PostImage::getImageOrder)
                         .max()
@@ -327,14 +348,14 @@ public class PostServiceImpl implements PostService {
                     MultipartFile image = images[i];
                     if (!image.isEmpty()) {
                         try {
-                            String imageUrl = saveImage(image);
+                            String imageUrl = s3Service.upload(image, "posts");
                             PostImage postImage = new PostImage();
                             postImage.setImageUrl(imageUrl);
                             postImage.setImageOrder(currentMaxOrder + addedCount + 1);
                             post.addImage(postImage);
                             addedCount++;
 
-                            System.out.println("새 이미지 추가: " + imageUrl);
+                            System.out.println("새 이미지 S3 업로드: " + imageUrl);
                         } catch (IOException e) {
                             throw new RuntimeException("이미지 저장 실패: " + e.getMessage());
                         }
@@ -352,25 +373,10 @@ public class PostServiceImpl implements PostService {
         }
     }
 
-    // 파일 삭제 헬퍼 메서드 (기존에 없다면 추가)
-    private void deleteImageFile(String imageUrl) {
-        try {
-            if (imageUrl != null && imageUrl.startsWith("/uploads/")) {
-                String filename = imageUrl.substring("/uploads/".length());
-                String uploadDir = System.getProperty("user.dir") + "/uploads/";
-                Path path = Paths.get(uploadDir + filename);
-                Files.deleteIfExists(path);
-                System.out.println("파일 시스템에서 이미지 삭제: " + path);
-            }
-        } catch (IOException e) {
-            System.err.println("이미지 파일 삭제 실패: " + e.getMessage());
-        }
-    }
-
     @Override
     @Transactional
     public void remove(Long id) {
-        Optional<Post> result = postRepository.findById(id);
+        Optional<Post> result = postRepository.findByIdWithImages(id);
         if (result.isPresent()) {
             Post post = result.get();
 
@@ -386,8 +392,24 @@ public class PostServiceImpl implements PostService {
                 throw new IllegalStateException("게시글을 삭제할 권한이 없습니다.");
             }
 
+            // 관련된 S3 이미지들 삭제
+            if (post.getImages() != null && !post.getImages().isEmpty()) {
+                System.out.println("=== 게시글 삭제 시 S3 이미지 삭제 ===");
+
+                for (PostImage postImage : post.getImages()) {
+                    try {
+                        String fileName = s3Service.extractFileNameFromUrl(postImage.getImageUrl());
+                        s3Service.deleteFile(fileName);
+                        System.out.println("S3 파일 삭제 성공: " + fileName + " (URL: " + postImage.getImageUrl() + ")");
+                    } catch (Exception e) {
+                        System.err.println("S3 파일 삭제 실패: " + e.getMessage());
+                    }
+                }
+            }
+
             // 태그 관계도 함께 삭제됨 (CASCADE)
             postRepository.deleteById(id);
+            System.out.println("게시글 삭제 완료 - ID: " + id);
         }
     }
 
@@ -402,10 +424,10 @@ public class PostServiceImpl implements PostService {
         }
     }
 
-    // ========== 최적화된 헬퍼 메서드들 ==========
+    // 최적화된 헬퍼 메서드들
 
     /**
-     * ✅ 태그 저장 최적화 - 배치 처리로 N+1 해결
+     * 태그 저장 최적화 - 배치 처리로 N+1 해결
      */
     private void saveTagsOptimized(Post post, List<String> tagTexts) {
         System.out.println("=== 태그 저장 시작 (최적화) ===");
@@ -431,14 +453,14 @@ public class PostServiceImpl implements PostService {
         System.out.println("정리된 태그들: " + cleanTagTexts);
 
         try {
-            // ✅ 2단계: 기존 태그들 일괄 조회 (N+1 방지!)
+            // 2단계: 기존 태그들 일괄 조회 (N+1 방지)
             List<PostTag> existingTags = postTagRepository.findAllByTagTextIn(cleanTagTexts);
             Map<String, PostTag> tagMap = existingTags.stream()
                     .collect(Collectors.toMap(PostTag::getTagText, Function.identity()));
 
             System.out.println("기존 태그 개수: " + existingTags.size());
 
-            // ✅ 3단계: 새로운 태그들 생성
+            // 3단계: 새로운 태그들 생성
             List<PostTag> newTags = cleanTagTexts.stream()
                     .filter(tagText -> !tagMap.containsKey(tagText))
                     .map(PostTag::new)
@@ -450,7 +472,7 @@ public class PostServiceImpl implements PostService {
                 savedNewTags.forEach(tag -> tagMap.put(tag.getTagText(), tag));
             }
 
-            // ✅ 4단계: PostTagging 일괄 생성
+            // 4단계: PostTagging 일괄 생성
             List<PostTagging> postTaggings = cleanTagTexts.stream()
                     .map(tagText -> {
                         PostTag postTag = tagMap.get(tagText);
@@ -472,7 +494,7 @@ public class PostServiceImpl implements PostService {
     }
 
     /**
-     * ✅ 태그 업데이트 최적화
+     * 태그 업데이트 최적화
      */
     private void updatePostTagsOptimized(Post post, List<String> newTags) {
         // 기존 태그 삭제
