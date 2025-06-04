@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.chat.service;
 
+import com.test.foodtrip.common.aws.S3Service;
 import com.test.foodtrip.domain.chat.dto.*;
 import com.test.foodtrip.domain.chat.entity.*;
 import jakarta.persistence.EntityManager;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatRoomService {
 
+    private final S3Service s3Service;
     private final FileUploadService fileUploadService;
 
     private final ChatRoomRepository chatRoomRepository;
@@ -101,9 +104,11 @@ public class ChatRoomService {
             if (!fileUploadService.isImageFile(thumbnailFile)) {
                 throw new IllegalArgumentException("업로드 실패: 지원하지 않는 파일 형식입니다. jpg 또는 png만 허용됩니다.");
             }
-            // ✅ [S3 전환 가능 지점 #1]
-            thumbnailUrl = fileUploadService.saveFile(thumbnailFile, "chatroom");
-            // 위 로직은 추후 S3Service.saveFile(...)로 교체될 수 있음
+            try {
+                thumbnailUrl = s3Service.upload(thumbnailFile, "chatroom");
+            } catch (IOException e) {
+                throw new RuntimeException("S3 업로드 중 오류 발생", e);
+            }
         }
 
         // 2. 채팅방 생성
@@ -268,10 +273,12 @@ public class ChatRoomService {
             if (!fileUploadService.isImageFile(thumbnailImage)) {
                 throw new IllegalArgumentException("업로드 실패: 지원하지 않는 파일 형식입니다. jpg 또는 png만 허용됩니다.");
             }
-            // ✅ [S3 전환 가능 지점 #2]
-            String newUrl = fileUploadService.saveFile(thumbnailImage, "chatroom");
-            // S3 업로드 후 반환된 public URL도 그대로 저장 가능
-            chatRoom.updateThumbnailImageUrl(newUrl);
+            try {
+                String newUrl = s3Service.upload(thumbnailImage, "chatroom");
+                chatRoom.updateThumbnailImageUrl(newUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("S3 업로드 중 오류 발생", e);
+            }
         }
     }
 
