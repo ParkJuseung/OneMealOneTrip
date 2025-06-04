@@ -31,6 +31,9 @@ public class PostDTO {
     private Integer likeCount;
     private Integer commentCount;
 
+    private String authorNickname;
+    private String authorProfileImage;
+
     public String getElapsedTime() {
         LocalDateTime now = LocalDateTime.now();
         long days = ChronoUnit.DAYS.between(this.createdAt.toLocalDate(), now.toLocalDate());

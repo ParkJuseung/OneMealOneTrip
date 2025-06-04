@@ -10,6 +10,7 @@ import com.test.foodtrip.domain.user.repository.UserRepository;
 import com.test.foodtrip.domain.user.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,10 @@ import java.util.Optional;
 @Controller
 @Log4j2
 public class PostController {
+
+    @Value("${google.maps.key}")
+    private String apiKey;
+
 
     private final PostService postService;
     private final UserRepository userRepository;
@@ -42,6 +47,7 @@ public class PostController {
 
         PageResultDTO<PostDTO, Post> result = postService.getList(pageRequestDTO);
         model.addAttribute("result", result);
+        model.addAttribute("apiKey", apiKey);
 
         return "post/post";
     }
@@ -54,6 +60,7 @@ public class PostController {
         String placeId = dto.getPlaceId();
         model.addAttribute("dto", dto);
 
+
         // 게시글 작성자 정보 조회하여 모델에 추가
         if (dto.getUserId() != null) {
             Optional<User> authorOpt = userRepository.findById(dto.getUserId());
@@ -65,11 +72,13 @@ public class PostController {
 
 
         model.addAttribute("placeId", placeId);
+        model.addAttribute("apiKey", apiKey);
         return "post/detail-post";
     }
 
     @GetMapping("/post/create")
     public String create(HttpSession session, Model model) {
+        model.addAttribute("apiKey", apiKey);
         // 로그인 체크
         if (!isLoggedIn(session)) {
             return "redirect:/login?error=login_required";
@@ -172,6 +181,8 @@ public class PostController {
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          Model model) {
+
+
         // 로그인 체크
         if (!isLoggedIn(session)) {
             return "redirect:/login?error=login_required";
@@ -204,6 +215,7 @@ public class PostController {
 
             model.addAttribute("dto", dto);
             model.addAttribute("requestDTO", requestDTO);
+            model.addAttribute("apiKey", apiKey);
 
             System.out.println("=== Model에 데이터 추가 완료 ===");
             System.out.println("템플릿 반환: post/modify-post");

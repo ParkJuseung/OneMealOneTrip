@@ -8,11 +8,328 @@
   <link rel="stylesheet" th:href="@{/css/post-create.css}">
 
   <!-- Google Maps JavaScript API 추가 (Geocoding API도 포함) -->
-  <script async defer
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE&libraries=places&callback=initLocationSearch">
-  </script>
+  <script th:src="@{'https://maps.googleapis.com/maps/api/js'(key=${apiKey}, libraries='places', callback='initLocationSearch', loading='async')}"
+          async defer></script>
 
   <style>
+
+    /* 개선된 이미지 업로드 컨테이너 */
+    .image-upload-container {
+      width: 100% !important;
+    }
+
+    /* 이미지 미리보기 영역 스타일 */
+    .image-preview-area {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      gap: 12px !important;
+      align-items: flex-start !important;
+      min-height: 120px !important;
+      padding: 12px !important;
+      border: 2px dashed #e2e8f0 !important;
+      border-radius: 12px !important;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%) !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .image-preview-area:hover {
+      border-color: #0ED8D5 !important;
+      background: linear-gradient(135deg, #f0fffe 0%, #ffffff 100%) !important;
+    }
+
+    /* 이미지 미리보기 아이템 스타일 */
+    .image-preview-item {
+      position: relative !important;
+      width: 90px !important;
+      height: 90px !important;
+      margin: 0 !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      flex: 0 0 auto !important;
+      background: white !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .image-preview-item:hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 0 8px 25px rgba(14, 216, 213, 0.15) !important;
+    }
+
+    /* 이미지 자체 스타일 */
+    .image-preview-img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      transition: transform 0.3s ease !important;
+    }
+
+    .image-preview-item:hover .image-preview-img {
+      transform: scale(1.03) !important;
+    }
+
+    /* 파일 정보 스타일 */
+    .image-file-info {
+      position: absolute !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.3), transparent) !important;
+      color: white !important;
+      padding: 12px 8px 6px !important;
+      border-radius: 0 0 10px 10px !important;
+      opacity: 0 !important;
+      transform: translateY(8px) !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .image-preview-item:hover .image-file-info {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+
+    .file-name {
+      font-weight: 600 !important;
+      margin-bottom: 2px !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      color: white !important;
+      font-size: 11px !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .file-size {
+      opacity: 0.9 !important;
+      font-size: 9px !important;
+      color: #e8f4fd !important;
+      font-weight: 500 !important;
+    }
+
+    /* 삭제 버튼 스타일 */
+    .image-preview-remove {
+      position: absolute !important;
+      top: 6px !important;
+      right: 6px !important;
+      width: 22px !important;
+      height: 22px !important;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52) !important;
+      color: white !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      z-index: 10 !important;
+      font-size: 10px !important;
+      opacity: 0 !important;
+      transform: scale(0.8) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3) !important;
+    }
+
+    .image-preview-item:hover .image-preview-remove {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+    }
+
+    .image-preview-remove:hover {
+      background: linear-gradient(135deg, #ff5252, #f44336) !important;
+      transform: scale(1.1) !important;
+      box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4) !important;
+    }
+
+    /* 이미지 추가 버튼 스타일 */
+    .image-upload-btn {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 90px !important;
+      height: 90px !important;
+      border: 2px dashed #0ED8D5 !important;
+      border-radius: 8px !important;
+      background: linear-gradient(135deg, #ffffff, #f8fffe) !important;
+      color: #0ED8D5 !important;
+      cursor: pointer !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      position: relative !important;
+      overflow: hidden !important;
+      flex-shrink: 0 !important;
+    }
+
+    .image-upload-btn::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: -100% !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: linear-gradient(90deg, transparent, rgba(14, 216, 213, 0.1), transparent) !important;
+      transition: left 0.5s ease !important;
+    }
+
+    .image-upload-btn:hover::before {
+      left: 100% !important;
+    }
+
+    .image-upload-btn:hover {
+      background: linear-gradient(135deg, #f0fffe, #ffffff) !important;
+      border-color: #0BC5C2 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(14, 216, 213, 0.2) !important;
+    }
+
+    .image-upload-btn i {
+      font-size: 16px !important;
+      margin-bottom: 4px !important;
+      transition: transform 0.3s ease !important;
+    }
+
+    .image-upload-btn:hover i {
+      transform: scale(1.1) !important;
+    }
+
+    .image-upload-btn span {
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.3px !important;
+    }
+
+    /* 기존 이미지 스타일 */
+    .existing-images {
+      margin-bottom: 20px !important;
+      padding: 16px !important;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%) !important;
+      border-radius: 12px !important;
+      border: 1px solid #e2e8f0 !important;
+    }
+
+    .existing-image-item {
+      position: relative !important;
+      display: inline-block !important;
+      margin-right: 12px !important;
+      margin-bottom: 12px !important;
+      width: 90px !important;
+      height: 90px !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      transition: all 0.3s ease !important;
+      background: white !important;
+    }
+
+    .existing-image-item:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .existing-image-checkbox {
+      position: absolute !important;
+      top: 6px !important;
+      left: 6px !important;
+      width: 18px !important;
+      height: 18px !important;
+      z-index: 10 !important;
+      accent-color: #ff6b6b !important;
+      cursor: pointer !important;
+    }
+
+    .existing-image-label {
+      position: absolute !important;
+      top: 6px !important;
+      left: 28px !important;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9)) !important;
+      backdrop-filter: blur(8px) !important;
+      padding: 3px 8px !important;
+      border-radius: 6px !important;
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      color: #ff6b6b !important;
+      z-index: 10 !important;
+      cursor: pointer !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .existing-image-label:hover {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52) !important;
+      color: white !important;
+      transform: scale(1.05) !important;
+    }
+
+    .existing-image-item.to-delete {
+      opacity: 0.6 !important;
+      transform: scale(0.95) !important;
+    }
+
+    .existing-image-item.to-delete .image-preview-img {
+      filter: grayscale(100%) brightness(0.8) !important;
+    }
+
+    .existing-image-item.to-delete::after {
+      content: '' !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: linear-gradient(45deg, transparent 40%, rgba(255, 107, 107, 0.3) 50%, transparent 60%) !important;
+      pointer-events: none !important;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .image-preview-area {
+        gap: 8px !important;
+        padding: 10px !important;
+      }
+
+      .image-preview-item,
+      .existing-image-item {
+        width: 80px !important;
+        height: 80px !important;
+      }
+
+      .image-upload-btn i {
+        font-size: 14px !important;
+      }
+
+      .image-upload-btn span {
+        font-size: 9px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .image-preview-area {
+        gap: 6px !important;
+        padding: 8px !important;
+      }
+
+      .image-preview-item,
+      .existing-image-item {
+        width: calc(50% - 3px) !important;
+        height: 70px !important;
+      }
+
+      .file-name {
+        font-size: 9px !important;
+      }
+
+      .file-size {
+        font-size: 7px !important;
+      }
+
+      .image-upload-btn i {
+        font-size: 12px !important;
+      }
+
+      .image-upload-btn span {
+        font-size: 8px !important;
+      }
+    }
+
     /* 위치 검색 드롭다운 스타일 */
     .location-search-container {
       position: relative;
@@ -444,7 +761,9 @@
             <button type="button" id="searchLocationBtn" class="location-search-btn">검색</button>
           </div>
           <div class="location-dropdown" id="locationDropdown"></div>
+
           <div class="location-preview" id="locationPreview" th:style="${dto?.placeName != null} ? 'display: block;' : 'display: none;'">
+            <img src="/api/placeholder/500/200" alt="위치 지도" class="location-preview-map">
             <div class="location-preview-header">
               <i class="fas fa-map-marker-alt" style="font-size: 24px; color: #007bff; margin-right: 12px;"></i>
               <div class="location-preview-info">
@@ -479,6 +798,7 @@
     let currentSelectedIndex = -1;
     let isGoogleMapsInitialized = false;
     let allSelectedFiles = [];
+    const apiKey = '[[${apiKey}]]';
 
     // Google Maps API 초기화 함수 (전역으로 정의)
     window.initLocationSearch = function() {
@@ -1078,7 +1398,7 @@
               `zoom=15&` +
               `size=500x200&` +
               `markers=color:red%7C${lat},${lng}&` +
-              `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+              `key=${apiKey}`;
 
       $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
     }
@@ -1089,7 +1409,7 @@
               `zoom=15&` +
               `size=500x200&` +
               `markers=color:red%7Cplace_id:${placeId}&` +
-              `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+              `key=${apiKey}`;
 
       $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
     }
@@ -1101,7 +1421,7 @@
               `zoom=15&` +
               `size=500x200&` +
               `markers=color:red%7C${encodedAddress}&` +
-              `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+              `key=${apiKey}`;
 
       $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
     }

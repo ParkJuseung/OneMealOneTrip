@@ -8,11 +8,193 @@
     <link rel="stylesheet" th:href="@{/css/post-create.css}">
 
     <!-- Google Maps JavaScript API 추가 (Geocoding API도 포함) -->
-    <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE&libraries=places&callback=initLocationSearch">
+    <script th:src="@{'https://maps.googleapis.com/maps/api/js'(key=${apiKey}, libraries='places', callback='initLocationSearch')}"
+            async defer>
     </script>
 
+
     <style>
+        /* 기본 레이아웃 */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-hint {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 개선된 이미지 업로드 컨테이너 */
+        .image-upload-container {
+            width: 100% !important;
+        }
+
+        /* 이미지 미리보기 영역 스타일 */
+        .image-preview-area {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 15px !important;
+            min-height: 120px !important;
+            padding: 16px !important;
+            border: 2px dashed #ddd !important;
+            border-radius: 12px !important;
+            background-color: #fafafa !important;
+        }
+
+        .image-preview-area:hover {
+            border-color: #0ED8D5 !important;
+        }
+
+        /* 이미지 미리보기 아이템 스타일 */
+        .image-preview-item {
+            position: relative !important;
+            width: 150px !important;
+            height: 150px !important;
+            margin: 0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            flex: 0 0 auto !important;
+        }
+
+        .image-preview-item:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* 이미지 자체 스타일 */
+        .image-preview-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* 파일 정보 스타일 */
+        .image-file-info {
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent) !important;
+            color: white !important;
+            padding: 15px 10px 8px !important;
+        }
+
+        .file-name {
+            font-weight: 500 !important;
+            margin-bottom: 2px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            color: white !important;
+        }
+
+        .file-size {
+            opacity: 0.8 !important;
+            font-size: 10px !important;
+            color: white !important;
+        }
+
+        /* 삭제 버튼 스타일 */
+        .image-preview-remove {
+            position: absolute !important;
+            top: 8px !important;
+            right: 8px !important;
+            width: 24px !important;
+            height: 24px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #e74c3c !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
+        }
+
+        .image-preview-remove:hover {
+            background: #e74c3c !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* 이미지 추가 버튼 스타일 */
+        .image-upload-btn {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            border: 2px dashed #0ED8D5 !important;
+            border-radius: 8px !important;
+            background: white !important;
+            color: #0ED8D5 !important;
+            cursor: pointer !important;
+        }
+
+        .image-upload-btn:hover {
+            background: #f0fffe !important;
+            border-color: #0BC5C2 !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(14, 216, 213, 0.2) !important;
+        }
+
+        .image-upload-btn i {
+            font-size: 24px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .image-upload-btn span {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .image-preview-area {
+                gap: 10px !important;
+            }
+
+            .image-preview-item,
+            .image-upload-btn {
+                width: 130px !important;
+                height: 130px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .image-preview-item,
+            .image-upload-btn {
+                width: calc(50% - 5px) !important;
+                height: 120px !important;
+            }
+        }
+
+        /* 에러 메시지 */
+        .form-error {
+            display: none;
+            margin-top: 8px;
+            color: #e74c3c;
+            font-size: 12px;
+        }
+
+        /* 데모용 스타일 */
+        .demo-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
         /* 위치 검색 드롭다운 스타일 */
         .location-search-container {
             position: relative;
@@ -344,19 +526,23 @@
                 <div class="form-error" id="contentError">내용을 입력해주세요</div>
             </div>
 
-            <!-- 이미지 업로드 -->
+            <!-- 이미지 업로드 영역 HTML 수정 -->
             <div class="form-group">
                 <label class="form-label">이미지</label>
                 <span class="form-hint">최대 5장까지 업로드 가능합니다. (jpg, png, gif 형식, 각 5MB 이하)</span>
                 <div class="image-upload-container">
                     <div class="image-preview-area" id="imagePreviewArea">
-                        <label for="imageUpload" class="image-upload-btn">
-                            <i class="fas fa-plus"></i>
-                            <span>이미지 추가</span>
-                        </label>
+                        <!-- 여기에 이미지 미리보기가 동적으로 추가됩니다 -->
+
+                        <!-- 이미지 추가 버튼을 별도의 div로 감싸서 미리보기 아이템처럼 만듭니다 -->
+                        <div class="image-preview-item upload-btn-container">
+                            <label for="imageUpload" class="image-upload-btn">
+                                <i class="fas fa-plus"></i>
+                                <span>이미지 추가</span>
+                            </label>
+                        </div>
                     </div>
-                    <input type="file" id="imageUpload" name="imageFiles" accept="image/jpeg, image/png, image/gif" style="display: none;"
-                           multiple>
+                    <input type="file" id="imageUpload" name="imageFiles" accept="image/jpeg, image/png, image/gif" style="display: none;" multiple>
                 </div>
                 <div class="form-error" id="imageError">이미지는 최대 5장까지 업로드 가능합니다</div>
             </div>
@@ -397,6 +583,8 @@
         </form>
     </div>
 
+
+
     <script>
         // Google Maps API 관련 변수들
         let map;
@@ -404,6 +592,7 @@
         let geocoder;
         let currentSelectedIndex = -1;
         let isGoogleMapsInitialized = false;
+        const apiKey = '[[${apiKey}]]';
 
         // 🔧 새로운 방식: 실제 파일들을 저장할 전역 변수
         let allSelectedFiles = [];
@@ -624,25 +813,25 @@
                 });
             }
 
-            // 간단한 이미지 미리보기 생성
+            // 이미지 미리보기 생성 함수 수정
             function createSimpleImagePreview(file, index) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     const imagePreview = $(`
-                        <div class="image-preview-item" data-file-index="${index}">
-                            <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
-                            <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
-                                <i class="fas fa-times"></i>
-                            </div>
-                            <div class="image-file-info">
-                                <div class="file-name">${file.name}</div>
-                                <div class="file-size">${formatFileSize(file.size)}</div>
-                            </div>
-                        </div>
-                    `);
+            <div class="image-preview-item" data-file-index="${index}">
+                <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
+                <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="image-file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+        `);
 
-                    // 이미지 추가 버튼 앞에 삽입
-                    imagePreview.insertBefore($('.image-upload-btn').parent());
+                    // 중요: 이미지 추가 버튼 앞에 삽입
+                    $('.upload-btn-container').before(imagePreview);
                 };
                 reader.readAsDataURL(file);
             }
@@ -978,7 +1167,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7C${lat},${lng}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -990,7 +1179,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7Cplace_id:${placeId}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -1003,7 +1192,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7C${encodedAddress}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -1134,10 +1323,10 @@
             $('#imageError').hide();
         }
 
-        // 🔧 전역 함수들 (jQuery ready 밖에서 정의해야 HTML onclick에서 접근 가능)
+        // 전체 미리보기 재구성 함수 수정
         function redrawAllPreviews() {
-            // 기존 미리보기들 제거 (업로드 버튼 제외)
-            $('.image-preview-item').not(':has(.image-upload-btn)').remove();
+            // 기존 미리보기 항목 제거 (추가 버튼 제외)
+            $('.image-preview-item').not('.upload-btn-container').remove();
 
             // 모든 파일에 대해 미리보기 생성
             allSelectedFiles.forEach((file, index) => {
@@ -1145,26 +1334,37 @@
             });
         }
 
+        // 이미지 미리보기 생성 함수 개선
         function createSimpleImagePreview(file, index) {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const imagePreview = $(`
-                    <div class="image-preview-item" data-file-index="${index}">
-                        <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
-                        <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
-                            <i class="fas fa-times"></i>
-                        </div>
-                        <div class="image-file-info">
-                            <div class="file-name">${file.name}</div>
-                            <div class="file-size">${formatFileSize(file.size)}</div>
-                        </div>
-                    </div>
-                `);
+            <div class="image-preview-item" data-file-index="${index}">
+                <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
+                <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="image-file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+        `);
 
                 // 이미지 추가 버튼 앞에 삽입
                 imagePreview.insertBefore($('.image-upload-btn').parent());
             };
             reader.readAsDataURL(file);
+        }
+
+        window.redrawAllPreviews = function() {
+            // 기존 미리보기들 제거 (업로드 버튼 제외)
+            $('.image-preview-item').not(':has(.image-upload-btn)').remove();
+
+            // 모든 파일에 대해 미리보기 생성
+            allSelectedFiles.forEach((file, index) => {
+                createSimpleImagePreview(file, index);
+            });
         }
 
         function updateHiddenFileInputs() {
@@ -1204,6 +1404,8 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+
+        window.createSimpleImagePreview = createSimpleImagePreview;
     </script>
 </th:block>
 </body>
