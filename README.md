@@ -6,12 +6,11 @@
 
 <div align="center">
  <h3><b>여행한끼</b></h3>
-실시간으로 사람들과 같이 스포츠 경기를 응원할 수 있는 화상 서비스<br><br>
-  삼성 청년 SW 아카데미 공통 프로젝트 <b> - 우수 프로젝트 🏆</b><br>
-  2022.07.11 ~ 2022.08.19
+여행과 맛집 정보를 나누고, 실시간 채팅으로 소통하는 커뮤니티 서비스<br><br>
+  2025.05.07 ~ 2025.05.23
   <br><br>
 
-  [Notion](https://sunset-offer-934.notion.site/5fed7156282141f1b50c59e557fa04b6)  |  [UCC](https://www.youtube.com/watch?v=-wafC3AMRKM)
+  [Notion](https://friendly-sternum-f92.notion.site/19da6b30f99980ad8530e8e65396a025?pvs=74)  |  [UCC]()
 
 </div>
 <br/>
