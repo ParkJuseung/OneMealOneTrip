@@ -83,7 +83,7 @@ public class GooglePlaceService {
 
         try {
             String placeDetailUrl = "https://maps.googleapis.com/maps/api/place/details/json?place_id="
-                    + placeId + "&fields=photo&key=" + apiKey;
+                    + placeId + "&fields=photos&key=" + apiKey;
 
             HttpURLConnection conn = (HttpURLConnection) new URL(placeDetailUrl).openConnection();
             conn.setRequestMethod("GET");
