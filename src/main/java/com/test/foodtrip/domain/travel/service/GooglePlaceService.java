@@ -1,10 +1,13 @@
 package com.test.foodtrip.domain.travel.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -26,6 +29,38 @@ public class GooglePlaceService {
 
     //캐시 추가
     private final Map<String, List<String>> photoCache = new ConcurrentHashMap<>();
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    public List<String> getPhotoReferences(String placeId) {
+        String url = "https://maps.googleapis.com/maps/api/place/details/json"
+                + "?place_id=" + placeId
+                + "&fields=photos"
+                + "&key=" + apiKey;
+
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        List<String> references = new ArrayList<>();
+
+        JsonNode photos = response.getBody().path("result").path("photos");
+        if (photos.isArray()) {
+            for (JsonNode photo : photos) {
+                String ref = photo.path("photo_reference").asText();
+                if (!ref.isEmpty()) {
+                    references.add(ref);
+                }
+            }
+        }
+        return references;
+    }
+
+    public byte[] getPhotoImage(String photoReference) {
+        String photoUrl = "https://maps.googleapis.com/maps/api/place/photo"
+                + "?maxwidth=500"
+                + "&photo_reference=" + photoReference
+                + "&key=" + apiKey;
+
+        return restTemplate.getForObject(photoUrl, byte[].class);
+    }
 
     public List<String> getPhotoUrlsByPlaceId(String placeId) {
 

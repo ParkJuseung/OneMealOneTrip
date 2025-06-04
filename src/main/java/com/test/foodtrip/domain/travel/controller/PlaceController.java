@@ -2,6 +2,7 @@ package com.test.foodtrip.domain.travel.controller;
 
 import com.test.foodtrip.domain.travel.service.GooglePlaceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +20,9 @@ public class PlaceController {
     private final GooglePlaceService googlePlaceService;
 
     @GetMapping("/photos")
-    public ResponseEntity<List<String>> getPlacePhotos(@RequestParam("placeId") String placeId) {
-        List<String> photoUrls = googlePlaceService.getPhotoUrlsByPlaceId(placeId);
-        return ResponseEntity.ok(photoUrls);
+    public ResponseEntity<List<String>> getPhotoUrls(@RequestParam String placeId) {
+        List<String> references = googlePlaceService.getPhotoReferences(placeId);
+        return ResponseEntity.ok(references);
     }
 
     /**
@@ -34,6 +35,16 @@ public class PlaceController {
             return ResponseEntity.ok(Map.of("url", "/images/default-thumbnail.jpg"));
         }
         return ResponseEntity.ok(Map.of("url", urls.get(0)));
+    }
+
+    // 프록시로 이미지 직접 전달
+    @GetMapping("/photo-proxy")
+    public ResponseEntity<byte[]> proxyPhoto(@RequestParam String photoReference) {
+        byte[] image = googlePlaceService.getPhotoImage(photoReference);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(image);
     }
 
 }
