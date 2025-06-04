@@ -286,6 +286,7 @@
                 const container = card.querySelector('.js-photo-container');
                 const reviewsContainer = card.querySelector('.place-reviews');
 
+
                     fetch(`/api/place/photos?placeId=${placeId}`)
                         .then(res => res.json())
                         .then(photoReferences => {
@@ -303,6 +304,7 @@
 
                             const track = document.createElement('div');
                             track.className = 'carousel-track';
+
 
                             photoReferences.forEach(photoReference => {
                                 const img = document.createElement('img');
@@ -324,6 +326,7 @@
                         // 슬라이드 이동 처리
                         let currentIndex = 0;
                         const slideWidth = 265;
+                        const totalSlides = photoReferences.length;
 
                         prevBtn.addEventListener('click', () => {
                             if (currentIndex > 0) {
@@ -336,7 +339,7 @@
                         });
 
                         nextBtn.addEventListener('click', () => {
-                            if (currentIndex < photoUrls.length - 1) {
+                            if (currentIndex < totalSlides - 1) {
                                 currentIndex++;
                                 track.scrollTo({
                                     left: currentIndex * slideWidth,

@@ -59,7 +59,17 @@ public class GooglePlaceService {
                 + "&photo_reference=" + photoReference
                 + "&key=" + apiKey;
 
-        return restTemplate.getForObject(photoUrl, byte[].class);
+        System.out.println("📸 photoReference: " + photoReference);
+        System.out.println("📸 요청 URL: " + photoUrl);
+
+        try {
+            byte[] image = restTemplate.getForObject(photoUrl, byte[].class);
+            System.out.println("✅ 사진 바이트 수: " + (image != null ? image.length : "null"));
+            return image;
+        } catch (Exception e) {
+            System.err.println("❌ 사진 요청 실패: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            return new byte[0]; // 또는 null 반환도 가능
+        }
     }
 
     public List<String> getPhotoUrlsByPlaceId(String placeId) {
