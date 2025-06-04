@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<th:block layout:fragment="style">
+    <link rel="stylesheet" th:href="@{/css/travel-list.css}">
+</th:block>
+
+<th:block layout:fragment="content">
+
+
+
+
+
+        <!-- 여행 코스 콘텐츠 -->
+        <div class="course-list-container tab-content active" id="courses-tab">
+            <div class="section-header">
+                <h2 class="section-title">추천 여행 코스</h2>
+                <button class="action-btn add-btn" onclick="addTravel();" title="여행경로 등록">
+                    여행 코스
+                    <i class="fa-solid fa-square-plus" style="margin-top: 2px;"></i>
+                </button>
+            </div>
+
+
+            <!-- 탭 네비게이션 -->
+            <div class="tab-navigation">
+                <div class="tab active" data-tab="all" onclick="location.href='/post'">포스트</div>
+                <div class="tab" data-tab="companion" onclick="location.href='/travel'">추천 여행경로</div>
+                <div class="tab" data-tab="post" onclick="location.href='/chat'">채팅</div>
+                <div class="tab" data-tab="explorer"></div>
+                <div class="tab-indicator"></div>
+            </div>
+
+            <!-- 검색 및 필터 -->
+            <div class="search-filter-container">
+                <form method="GET" action="/travel" class="search-box">
+                    <i class="fas fa-search search-icon" onclick="this.closest('form').submit();"></i>
+                    <input type="text" class="search-input" placeholder="여행 코스 검색..." name="keyword"
+                           th:value="${keyword}">
+                </form>
+                <div class="filters-container">
+                </div>
+            </div>
+
+            <!-- 코스 그리드 -->
+            <div class="course-grid" th:if="${routes != null and !routes.isEmpty()}">
+                <div class="course-card" th:each="route : ${routes}" th:data-id="${route.routeId}">
+                    <div class="course-image-container js-thumbnail-container" th:data-id="${route.routeId}">
+                        <div class="course-like"
+                             th:data-id="${route.routeId}"
+                             th:classappend="${route.bookmarked} ? ' active' : ''">
+                            <i th:class="${route.bookmarked} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                        </div>
+                    </div>
+                    <div class="course-content">
+                        <div class="course-tags">
+                            <div class="course-tag" th:each="tag : ${route.tagNames}" th:text="'#' + ${tag}">#태그</div>
+                        </div>
+                        <h3 class="course-title" th:text="${route.title}">제목</h3>
+                        <div class="course-info">
+                            <div class="course-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span th:text="${route.placeCount} + '곳'">0곳</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="far fa-eye"></i>
+                                    <span th:text="${route.views}">0</span>
+                                </div>
+                            </div>
+                            <div class="creator-info">
+                                <img th:src="${route.profileImage != null ? route.profileImage : '/images/default-profile.png'}" alt="작성자" class="creator-avatar" />
+                                <span th:text="${route.userName}">작성자</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-state" th:if="${routes == null or routes.isEmpty()}">
+                <i class="fas fa-route"></i>
+                <div class="empty-state-title">검색 결과가 없습니다.</div>
+                <p class="empty-state-text">다른 키워드로 검색해보세요.</p>
+            </div>
+
+
+            <!-- 페이지네이션 -->
+<!--            <div class="pagination">-->
+<!--                <div class="page-arrow">-->
+<!--                    <i class="fas fa-chevron-left"></i>-->
+<!--                </div>-->
+<!--                <div class="page-item active">1</div>-->
+<!--                <div class="page-item">2</div>-->
+<!--                <div class="page-item">3</div>-->
+<!--                <div class="page-item">4</div>-->
+<!--                <div class="page-item">5</div>-->
+<!--                <div class="page-arrow">-->
+<!--                    <i class="fas fa-chevron-right"></i>-->
+<!--                </div>-->
+<!--            </div>-->
+            <div class="pagination" th:if="${totalPages > 1 and routes != null and !routes.isEmpty()}">
+                <div class="page-arrow" th:if="${currentPage > 0}"
+                     th:attr="data-page=${currentPage - 1}">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+
+                <!-- 페이지 번호 버튼 -->
+                <div th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                     th:class="'page-item' + (pageNum == currentPage ? ' active' : '')"
+                     th:attr="data-page=${pageNum}"
+                     th:text="${pageNum + 1}">
+                </div>
+
+                <!-- 다음 페이지 화살표 -->
+                <div class="page-arrow" th:if="${currentPage < totalPages - 1}"
+                     th:attr="data-page=${currentPage + 1}">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 포스트 탭 콘텐츠 - 기본적으로 숨겨짐 -->
+        <div class="tab-content" id="posts-tab">
+            <div class="section-header">
+                <h2 class="section-title">최신 포스트</h2>
+                <div class="view-all">
+                    더보기 <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <!-- 여기에 포스트 목록 콘텐츠 추가 예정 -->
+            <div class="empty-state">
+                <i class="far fa-newspaper"></i>
+                <div class="empty-state-title">포스트 콘텐츠 준비 중</div>
+                <p class="empty-state-text">여행 포스트 콘텐츠가 곧 제공될 예정입니다!</p>
+            </div>
+        </div>
+
+        <!-- 채팅 탭 콘텐츠 - 기본적으로 숨겨짐 -->
+        <div class="tab-content" id="chats-tab">
+            <div class="section-header">
+                <h2 class="section-title">채팅방 목록</h2>
+                <div class="create-chat" id="create-chat-btn">
+                    <i class="fas fa-plus"></i> 새 채팅방
+                </div>
+            </div>
+
+            <!-- 여기에 채팅방 목록 콘텐츠 추가 예정 -->
+            <div class="empty-state">
+                <i class="far fa-comment-dots"></i>
+                <div class="empty-state-title">채팅 콘텐츠 준비 중</div>
+                <p class="empty-state-text">여행 채팅 기능이 곧 제공될 예정입니다!</p>
+            </div>
+        </div>
+
+        <!-- 더보기 탭 콘텐츠 - 기본적으로 숨겨짐 -->
+        <div class="tab-content" id="more-tab">
+            <div class="section-header">
+                <h2 class="section-title">더 많은 기능</h2>
+            </div>
+
+            <!-- 여기에 더보기 콘텐츠 추가 예정 -->
+            <div class="empty-state">
+                <i class="fas fa-ellipsis-h"></i>
+                <div class="empty-state-title">추가 기능 준비 중</div>
+                <p class="empty-state-text">더 많은 기능이 곧 제공될 예정입니다!</p>
+            </div>
+        </div>
+
+    <script th:inline="javascript">
+        const loginUserId = [[${loginUserId}]];
+    </script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 탭 네비게이션 처리
+                const tabs = document.querySelectorAll('.tab');
+                const tabContents = document.querySelectorAll('.tab-content');
+                const tabIndicator = document.querySelector('.tab-indicator');
+
+                // 초기 인디케이터 위치 설정 (두번째 탭이 활성화되어 있으므로)
+                tabIndicator.style.transform = 'translateX(100%)';
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // 활성 탭 변경
+                        tabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 탭 콘텐츠 표시/숨김
+                        const tabId = this.getAttribute('data-tab');
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            if (content.id === tabId + '-tab') {
+                                content.classList.add('active');
+                            }
+                        });
+                    });
+                });
+
+                // 뒤로가기 버튼
+                const backButton = document.getElementById('back-button');
+                backButton.addEventListener('click', function() {
+                    window.history.back();
+                });
+
+                // 좋아요 버튼 토글
+                const likeButtons = document.querySelectorAll('.course-like');
+                likeButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 카드 클릭 이벤트 중지
+
+                        const icon = this.querySelector('i');
+
+                        if (icon.classList.contains('far')) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            this.classList.add('active');
+                        } else {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            this.classList.remove('active');
+                        }
+                    });
+                });
+
+                // 필터 태그 토글
+                const filterTags = document.querySelectorAll('.filter-tag');
+                filterTags.forEach(tag => {
+                    tag.addEventListener('click', function() {
+                        filterTags.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // 여기에 필터링 로직 추가 가능
+                        // 예: 선택된 필터에 따라 코스 카드를 필터링
+                    });
+                });
+
+                // 코스 카드 클릭 이벤트 (상세 페이지로 이동)
+                const courseCards = document.querySelectorAll('.course-card');
+                courseCards.forEach(card => {
+                    card.addEventListener('click', function() {
+
+                        const courseId = this.getAttribute('data-id');
+
+                        fetch(`/api/travel/${courseId}/views`, {
+                            method: "PATCH"
+                        })
+                            .then(() => {
+                                window.location.href = `/travel/${courseId}`;
+                            })
+                            .catch(err => {
+                                // 실패하더라도 상세 페이지 이동
+                                window.location.href = `/travel/${courseId}`;
+                            });
+
+                    });
+                });
+
+                // 정렬 옵션 클릭 이벤트 (실제로는 드롭다운 메뉴 구현 필요)
+                const sortButton = document.querySelector('.sort-button');
+                sortButton.addEventListener('click', function() {
+                    // 정렬 드롭다운 메뉴 토글 로직 (예시)
+                    alert('정렬 옵션: 최신순, 인기순, 조회순');
+
+                    // 여기에 실제 정렬 기능 구현 가능
+                });
+
+                // 채팅방 생성 버튼 클릭 이벤트
+                const createChatBtn = document.getElementById('create-chat-btn');
+                if (createChatBtn) {
+                    createChatBtn.addEventListener('click', function() {
+                        alert('새 채팅방 생성 기능이 곧 추가될 예정입니다!');
+
+                        // 여기에 채팅방 생성 모달 표시 로직 추가 가능
+                    });
+                }
+
+                // 검색 기능
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase();
+
+                        // 여기에 검색 로직 추가 가능
+                        // 예: 검색어와 일치하는 코스 카드만 표시
+
+                        // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
+                        if (searchTerm.length > 0) {
+                            courseCards.forEach(card => {
+                                const title = card.querySelector('.course-title').textContent.toLowerCase();
+                                const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
+
+                                // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
+                                if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                                    card.style.display = 'block';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            // 검색어가 없으면 모두 표시
+                            courseCards.forEach(card => {
+                                card.style.display = 'block';
+                            });
+                        }
+                    });
+                }
+
+            });
+
+
+            //썸네일 출력
+            document.addEventListener('DOMContentLoaded', function () {
+                const thumbnailContainers = document.querySelectorAll('.js-thumbnail-container');
+
+                thumbnailContainers.forEach(container => {
+                    const routeId = container.dataset.id;
+
+                    // 썸네일 요청 → 실제 이미지 URL 받아오기
+                    fetch(`/api/travel/thumbnail?routeId=${routeId}`) //백틱 주의 없으면 이미지 로드 안됨!
+                        .then(res => res.json())
+                        .then(data => {
+                            // data.url은 다시 JSON을 주는 API임 → 다시 fetch
+                            return fetch(data.url);
+                        })
+                        .then(res => res.json())
+                        .then(photoData => {
+                            const img = document.createElement('img');
+                            img.src = photoData.url; // 실제 Google CDN 이미지 URL
+                            img.alt = '썸네일';
+                            img.className = 'course-image';
+
+                            // ✅ 이미지 로드 실패 시 fallback
+                            img.onerror = function () {
+                                this.onerror = null;
+                                this.src = '/images/default-thumbnail.jpg';
+                            };
+                            container.insertBefore(img, container.firstChild);
+                        })
+                        .catch(err => {
+                            console.error('썸네일 fetch 실패:', err);
+                            const fallback = document.createElement('img');
+                            fallback.src = '/images/default-thumbnail.jpg';
+                            fallback.alt = '기본 썸네일';
+                            fallback.className = 'course-image';
+                            container.insertBefore(fallback, container.firstChild);
+                        });
+                });
+            });
+
+            function addTravel() {
+                window.location.href = `/travel/add`;
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const pageControls = document.querySelectorAll('.page-item, .page-arrow');
+
+                pageControls.forEach(item => {
+                    item.addEventListener('click', function () {
+                        const page = this.getAttribute('data-page');
+                        if (page !== null) {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('page', page);
+                            window.location.href = window.location.pathname + '?' + params.toString();
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+
+                const courseCards = document.querySelectorAll('.course-card');
+                courseCards.forEach(card => {
+                    card.addEventListener('click', function() {
+
+                        const courseId = this.getAttribute('data-id');
+
+                        fetch(`/api/travel/${courseId}/views`, {
+                            method: "PATCH"
+                        })
+                            .then(() => {
+                                window.location.href = `/travel/${courseId}`;
+                            })
+                            .catch(err => {
+                                // 실패하더라도 상세 페이지 이동
+                                window.location.href = `/travel/${courseId}`;
+                            });
+
+                    });
+                });
+
+                // 검색 기능
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        const searchTerm = this.value.toLowerCase();
+
+                        // 여기에 검색 로직 추가 가능
+                        // 예: 검색어와 일치하는 코스 카드만 표시
+
+                        // 간단한 프론트엔드 검색 구현 (실제로는 서버에서 처리하는 것이 좋음)
+                        if (searchTerm.length > 0) {
+                            courseCards.forEach(card => {
+                                const title = card.querySelector('.course-title').textContent.toLowerCase();
+                                const tags = Array.from(card.querySelectorAll('.course-tag')).map(tag => tag.textContent.toLowerCase());
+
+                                // 제목이나 태그에 검색어가 포함되어 있으면 표시, 아니면 숨김
+                                if (title.includes(searchTerm) || tags.some(tag => tag.includes(searchTerm))) {
+                                    card.style.display = 'block';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            });
+                        } else {
+                            // 검색어가 없으면 모두 표시
+                            courseCards.forEach(card => {
+                                card.style.display = 'block';
+                            });
+                        }
+                    });
+                }
+
+            });
+
+            document.querySelectorAll('.course-like').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('i');
+                    const routeId = this.dataset.id;
+
+                    fetch(`/api/travel/${routeId}/bookmark`, {
+                        method: 'POST',
+                        credentials: 'include' //세션 쿠키 전송
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.bookmarked) {
+                                icon.classList.remove('far');
+                                icon.classList.add('fas');
+                                this.classList.add('active');
+                            } else {
+                                icon.classList.remove('fas');
+                                icon.classList.add('far');
+                                this.classList.remove('active');
+                            }
+                        });
+                });
+            });
+
+    </script>
+</th:block>
+</html>

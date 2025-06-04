@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+
+<th:block layout:fragment="style">
+    <link rel="stylesheet" th:href="@{/css/post-detail.css}">
+    <style>
+        /* 기본 댓글 스타일 */
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 10px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 대댓글 스타일 - 핵심 수정 부분 */
+        .reply-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0 12px 52px; /* 왼쪽 여백으로 들여쓰기 */
+            margin-left: 0; /* 기존 margin-left 제거 */
+            border-left: none; /* 기존 border-left 제거 */
+            position: relative;
+            background-color: #f8f9fa; /* 구분을 위한 배경색 */
+            border-radius: 8px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* 대댓글 표시 아이콘 */
+        .reply-item::before {
+            content: '↳';
+            position: absolute;
+            left: 20px;
+            top: 15px;
+            color: #666;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* 대댓글의 아바타 크기 조정 */
+        .reply-item .comment-avatar {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* 댓글 헤더 */
+        .comment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .comment-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .comment-date {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 댓글 내용 */
+        .comment-text-container {
+            margin-bottom: 10px;
+        }
+
+        .comment-text {
+            line-height: 1.5;
+            color: #333;
+            font-size: 14px;
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        /* 댓글 액션 버튼들 */
+        .comment-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .comment-action {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #666;
+            font-size: 12px;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            background: none;
+        }
+
+        .comment-action:hover {
+            color: #333;
+            background-color: #f0f0f0;
+        }
+
+        .comment-action.active {
+            color: #e91e63;
+        }
+
+        .comment-action i {
+            font-size: 14px;
+        }
+
+        /* 대댓글 입력 컨테이너 */
+        .reply-input-container {
+            margin-top: 10px;
+            margin-left: 52px; /* 댓글과 동일한 들여쓰기 */
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .reply-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .reply-input {
+            flex: 1;
+            min-height: 60px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+            background-color: white;
+        }
+
+        .reply-submit, .reply-cancel {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .reply-submit {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .reply-submit:hover {
+            background-color: #0056b3;
+        }
+
+        .reply-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .reply-cancel:hover {
+            background-color: #545b62;
+        }
+
+        /* 답글 목록 컨테이너 */
+        .replies-container {
+            margin-top: 8px;
+        }
+
+        /* 수정/삭제 버튼 */
+        .comment-edit-delete {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .comment-edit-btn, .comment-delete-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .comment-edit-btn:hover {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .comment-delete-btn:hover {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        /* 댓글 수정 폼 */
+        .comment-edit-form {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .comment-edit-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .comment-edit-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .comment-save-btn, .comment-cancel-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .comment-save-btn {
+            background-color: #1976d2;
+            color: white;
+        }
+
+        .comment-save-btn:hover {
+            background-color: #1565c0;
+        }
+
+        .comment-cancel-btn {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+
+        .comment-cancel-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* 삭제된 댓글 스타일 */
+        .comment-deleted {
+            opacity: 0.7;
+            background-color: #f9f9f9;
+        }
+
+        .comment-deleted .comment-text {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* 블라인드 처리된 댓글 스타일 */
+        .comment-blinded {
+            background-color: #f5f5f5;
+            opacity: 0.8;
+        }
+
+        .comment-blinded .comment-text {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* 위치 정보 스타일 추가 */
+        .location-info {
+            margin: 20px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .location-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .location-header i {
+            color: #dc3545;
+            font-size: 16px;
+        }
+
+        .location-map {
+            position: relative;
+        }
+
+        #map {
+            border: none;
+            display: block;
+        }
+
+        .location-details {
+            padding: 16px;
+        }
+
+        .location-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .location-address {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .reply-item {
+                padding-left: 40px;
+            }
+
+            .reply-input-container {
+                margin-left: 40px;
+            }
+
+            .reply-item::before {
+                left: 16px;
+            }
+
+            .comment-actions {
+                gap: 12px;
+            }
+
+            .comment-action {
+                font-size: 11px;
+                padding: 3px 6px;
+            }
+
+            .location-details {
+                padding: 12px;
+            }
+
+            .location-name {
+                font-size: 15px;
+            }
+
+            .location-address {
+                font-size: 13px;
+            }
+
+            #map {
+                height: 180px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .reply-item {
+                padding-left: 32px;
+            }
+
+            .reply-input-container {
+                margin-left: 32px;
+            }
+
+            .reply-item::before {
+                left: 12px;
+                font-size: 14px;
+            }
+
+            .comment-avatar {
+                width: 36px;
+                height: 36px;
+            }
+
+            .reply-item .comment-avatar {
+                width: 28px;
+                height: 28px;
+            }
+
+            .location-header {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            .location-details {
+                padding: 10px 12px;
+            }
+
+            #map {
+                height: 160px !important;
+            }
+        }
+
+
+        /* detail-post.html의 <style> 태그에 추가할 CSS */
+
+        /* 게시글 이미지 컨테이너 */
+        .post-detail-images {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 개별 이미지 컨테이너 */
+        .post-detail-image {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .post-detail-image:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 이미지 스타일 */
+        .post-detail-image img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .post-detail-image img:hover {
+            transform: scale(1.02);
+        }
+
+        /* 이미지가 여러 개인 경우 그리드 레이아웃 */
+        .post-detail-images.multiple-images {
+            display: grid;
+            gap: 12px;
+        }
+
+        /* 2개 이미지: 2열 그리드 */
+        .post-detail-images.images-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        /* 3개 이미지: 첫 번째는 전체 너비, 나머지는 2열 */
+        .post-detail-images.images-3 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+        }
+
+        .post-detail-images.images-3 .post-detail-image:first-child {
+            grid-column: 1 / -1;
+        }
+
+        /* 4개 이미지: 2x2 그리드 */
+        .post-detail-images.images-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+        }
+
+        /* 5개 이미지: 첫 번째는 전체 너비, 나머지는 2x2 */
+        .post-detail-images.images-5 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto auto;
+        }
+
+        .post-detail-images.images-5 .post-detail-image:first-child {
+            grid-column: 1 / -1;
+        }
+
+        /* 이미지 로딩 상태 */
+        .post-detail-image.loading {
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        .post-detail-image.loading::before {
+            content: "🖼️ 이미지 로딩 중...";
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 이미지 로드 실패 상태 */
+        .post-detail-image img[src=""],
+        .post-detail-image img:not([src]) {
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: #666;
+        }
+
+        .post-detail-image img[src=""]:before,
+        .post-detail-image img:not([src]):before {
+            content: "❌ 이미지를 불러올 수 없습니다";
+        }
+
+        /* 이미지 개수 표시 (5개 이상인 경우) */
+        .post-detail-image.more-indicator {
+            position: relative;
+        }
+
+        .post-detail-image.more-indicator::after {
+            content: attr(data-more-count);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .post-detail-images.images-2,
+            .post-detail-images.images-3,
+            .post-detail-images.images-4,
+            .post-detail-images.images-5 {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+
+            .post-detail-images.images-3 .post-detail-image:first-child,
+            .post-detail-images.images-5 .post-detail-image:first-child {
+                grid-column: 1;
+            }
+
+            .post-detail-image img {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .post-detail-images {
+                margin: 16px 0;
+                gap: 8px;
+            }
+
+            .post-detail-image {
+                border-radius: 8px;
+            }
+
+            .post-detail-image img {
+                max-height: 250px;
+            }
+        }
+    </style>
+</th:block>
+<body>
+<th:block layout:fragment="content">
+
+    <!-- 게시글 상세 헤더 -->
+    <div class="post-detail-header">
+        <div class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i>
+            <span>뒤로 가기</span>
+        </div>
+        <div class="post-detail-actions">
+            <div class="action-button like-button" id="likeButton">
+                <i class="far fa-heart"></i>
+                <span>좋아요</span>
+            </div>
+            <div class="action-button bookmark-button" id="bookmarkButton">
+                <i class="far fa-bookmark"></i>
+                <span>저장</span>
+            </div>
+            <div class="action-button">
+                <i class="fas fa-share-alt"></i>
+                <span>공유</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게시글 상세 콘텐츠 -->
+    <div class="post-detail-container" id="post-detail" th:data-post-id="${dto.id}">
+
+        <div class="post-detail-header-info">
+            <div class="category-badge">일반 게시물</div>
+            <div class="post-info">
+                <span>조회 [[${dto.viewCount}]]</span>
+                <div class="post-info-divider"></div>
+                <span th:text="${#temporals.format(dto.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+            </div>
+        </div>
+        <div class="post-detail-content">
+            <!-- 개선된 제목 섹션 (제목과 액션 버튼을 같은 행에 배치) -->
+            <div class="post-title-section">
+                <h1 class="post-detail-title">[[${dto.title}]]</h1>
+                <!-- 작성자인 경우에만 수정/삭제 버튼 표시 -->
+                <div class="post-actions-inline" th:if="${session.user_id == dto.userId}">
+                    <button class="action-btn edit-btn" onclick="editPost()" title="게시글 수정">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deletePost()" title="게시글 삭제">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 📈 수정: 태그 섹션 - 안전한 조건 추가 -->
+            <div class="post-detail-tags" th:if="${dto.tags != null and !dto.tags.isEmpty()}">
+                <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
+            </div>
+
+            <!-- 게시글 본문 -->
+            <p class="post-detail-description">
+                [[${dto.content}]]
+            </p>
+
+            <!-- 📈 수정: 이미지 섹션 - 디버깅 정보 추가 -->
+            <div class="post-detail-images" th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
+
+                <!-- 실제 이미지 표시 -->
+                <div class="post-detail-image" th:each="imageUrl : ${dto.imageUrls}">
+                    <img th:src="${imageUrl}" th:alt="'게시글 이미지 ' + ${imageUrlStat.index + 1}"
+                         onerror="console.error('이미지 로드 실패:', this.src); this.style.border='2px solid red';">
+                </div>
+            </div>
+
+            <!-- 📈 수정: 위치 정보 - placeId 기반으로 지도 표시 -->
+            <div class="location-info" th:if="${placeId != null and !#strings.isEmpty(placeId)}">
+                <div class="location-header">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>위치 정보</span>
+                </div>
+                <div class="location-map">
+                    <div id="map" style="width: 100%; height: 200px;"></div>
+                </div>
+                <div class="location-details">
+                    <div class="location-name" id="place-name">위치를 불러오는 중...</div>
+                    <div class="location-address" id="place-address">주소를 불러오는 중...</div>
+                </div>
+            </div>
+
+            <div class="post-detail-author">
+                <img th:if="${currentUser.profileImage != null}"
+                     th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                     alt="프로필" class="profile-pic"
+                     style="width:28px; height:28px; object-fit:cover;"/>
+
+                <img th:if="${currentUser.profileImage == null}"
+                     src="/images/default-profile.png"
+                     alt="프로필" class="profile-pic"
+                     style="width:28px; height:28px; object-fit:cover;"/>
+
+                <div class="author-info">
+                    <span class="author-name" th:text="${author != null ? author.nickname : '작성자'}">작성자</span>
+                    <span class="author-bio"
+                          th:text="${author != null && author.greeting != null ? author.greeting : '자기소개가 없습니다.'}">자기소개가 없습니다.</span>
+                </div>
+                <button class="follow-button" id="followButton"
+                        th:if="${session.user_id != null && session.user_id != dto.userId}">팔로우
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="comments-section">
+        <div class="comments-header">
+            <div class="comments-title">댓글 <span class="comments-count">0</span></div>
+            <div class="comments-sort">
+                <span>최신순</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+
+        <!-- 댓글 입력 -->
+        <div class="comment-input-container">
+            <img th:if="${currentUser.profileImage != null}"
+                 th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                 alt="프로필" class="profile-pic"
+                 style="width:28px; height:28px; object-fit:cover;"/>
+
+            <img th:if="${currentUser.profileImage == null}"
+                 src="/images/default-profile.png"
+                 alt="프로필" class="profile-pic"
+                 style="width:28px; height:28px; object-fit:cover;"/>
+            <div class="comment-input-wrapper">
+                <textarea class="comment-input" placeholder="댓글을 남겨보세요..." rows="3"></textarea>
+                <button class="comment-submit">등록</button>
+            </div>
+        </div>
+
+        <!-- 댓글 목록 -->
+        <div class="comments-list">
+        </div>
+
+        <button class="show-more-comments" id="showMoreBtn">
+            댓글 더보기
+        </button>
+    </div>
+
+    <!-- 관련 게시글 -->
+    <div class="related-posts">
+        <h3 class="related-posts-header">관련 게시글</h3>
+        <div class="related-posts-list">
+            <!-- 관련 게시글들이 여기에 표시됩니다 -->
+        </div>
+    </div>
+
+    <!-- 토스트 메시지용 컨테이너 -->
+    <div id="toast" class="toast-message"></div>
+
+    <!-- 스크립트 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+
+    <script>
+        // 이미지 경로 처리 함수
+        function getProfileImageUrl(profileImage) {
+            if (!profileImage) {
+                return '/images/default-profile.png'; // 기본 이미지 경로
+            }
+
+            // 이미 전체 URL인 경우 (http://, https:// 등으로 시작하는 경우)
+            if (profileImage.startsWith('http')) {
+                return profileImage;
+            }
+
+            // 그 외의 경우는 프로필 이미지 경로에 추가
+            return `/images/profiles/${profileImage}`;
+        }
+
+        $(document).ready(function () {
+            // 이미지 그리드 레이아웃 설정
+            setupImageLayout();
+
+            // 이미지 클릭 모달 기능
+            setupImageModal();
+        });
+
+        /**
+         * 이미지 개수에 따른 그리드 레이아웃 설정
+         */
+        function setupImageLayout() {
+            const imagesContainer = $('.post-detail-images');
+            const imageCount = imagesContainer.find('.post-detail-image').length;
+
+            if (imageCount > 1) {
+                imagesContainer.addClass('multiple-images');
+                imagesContainer.addClass(`images-${Math.min(imageCount, 5)}`);
+
+                // 5개 이상인 경우 마지막 이미지에 "+n" 표시
+                if (imageCount > 5) {
+                    const lastVisibleImage = imagesContainer.find('.post-detail-image').eq(4);
+                    const remainingCount = imageCount - 4;
+                    lastVisibleImage.addClass('more-indicator');
+                    lastVisibleImage.attr('data-more-count', `+${remainingCount}`);
+
+                    // 5번째 이후 이미지들 숨기기
+                    imagesContainer.find('.post-detail-image').slice(5).hide();
+                }
+            }
+        }
+
+        /**
+         * 이미지 클릭 시 모달 표시 기능
+         */
+        function setupImageModal() {
+            // 이미지 클릭 이벤트
+            $('.post-detail-image img').on('click', function () {
+                const imageSrc = $(this).attr('src');
+                const imageAlt = $(this).attr('alt') || '게시글 이미지';
+
+                showImageModal(imageSrc, imageAlt);
+            });
+        }
+
+        /**
+         * 이미지 모달 표시
+         */
+        function showImageModal(imageSrc, imageAlt) {
+            // 기존 모달 제거
+            $('.image-modal').remove();
+
+            // 모달 HTML 생성
+            const modalHtml = `
+        <div class="image-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        ">
+            <div class="modal-content" style="
+                position: relative;
+                max-width: 90%;
+                max-height: 90%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <img src="${imageSrc}" alt="${imageAlt}" style="
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                ">
+                <button class="modal-close" style="
+                    position: absolute;
+                    top: -15px;
+                    right: -15px;
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.9);
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: background 0.2s ease;
+                " onmouseover="this.style.background='white'"
+                   onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'">
+                    ✕
+                </button>
+            </div>
+        </div>
+    `;
+
+            // 모달을 body에 추가
+            $('body').append(modalHtml);
+
+            // 페이드인 효과
+            setTimeout(() => {
+                $('.image-modal').css('opacity', '1');
+            }, 10);
+
+            // 스크롤 방지
+            $('body').css('overflow', 'hidden');
+
+            // 모달 닫기 이벤트
+            $('.image-modal').on('click', function (e) {
+                if (e.target === this || $(e.target).hasClass('modal-close')) {
+                    closeImageModal();
+                }
+            });
+
+            // ESC 키로 모달 닫기
+            $(document).on('keydown.imageModal', function (e) {
+                if (e.keyCode === 27) {
+                    closeImageModal();
+                }
+            });
+        }
+
+        /**
+         * 이미지 모달 닫기
+         */
+        function closeImageModal() {
+            $('.image-modal').css('opacity', '0');
+
+            setTimeout(() => {
+                $('.image-modal').remove();
+                $('body').css('overflow', 'auto');
+                $(document).off('keydown.imageModal');
+            }, 300);
+        }
+
+        /**
+         * 이미지 로드 에러 처리
+         */
+        $('.post-detail-image img').on('error', function () {
+            console.warn('이미지 로드 실패:', $(this).data('original-src') || $(this).attr('src'));
+            $(this).hide(); // 이미지를 숨김
+            // 또는 부모 요소도 숨기고 싶다면
+            // $(this).closest('.post-detail-image').hide();
+        });
+
+
+    </script>
+
+    <script th:inline="javascript">
+        // Google Maps 관련 변수
+        let map;
+        let service;
+        let marker;
+
+        // Google Maps 초기화
+        function initMap() {
+            // 기본 위치 (서울)
+            const defaultLocation = {lat: 37.5665, lng: 126.9780};
+
+            // 지도 생성
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: defaultLocation,
+                zoom: 15,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+            });
+
+            // Place Service 초기화
+            service = new google.maps.places.PlacesService(map);
+
+            // placeId가 있으면 해당 장소 정보 로드
+            const placeId = /*[[${placeId}]]*/ null;
+            if (placeId) {
+                loadPlaceDetails(placeId);
+            } else {
+                // placeId가 없으면 기본 메시지 표시
+                document.getElementById('place-name').textContent = '위치 정보가 없습니다.';
+                document.getElementById('place-address').textContent = '';
+            }
+        }
+
+        // Place ID를 사용하여 장소 상세 정보 로드
+        function loadPlaceDetails(placeId) {
+            const request = {
+                placeId: placeId,
+                fields: [
+                    'name',
+                    'formatted_address',
+                    'geometry',
+                    'place_id',
+                    'types',
+                    'vicinity',
+                    'rating',
+                    'price_level',
+                    'opening_hours',
+                    'website',
+                    'formatted_phone_number'
+                ]
+            };
+
+            service.getDetails(request, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    displayPlaceInfo(place);
+                } else {
+                    console.error('Place details request failed:', status);
+                    handlePlaceError(status);
+                }
+            });
+        }
+
+        // 장소 정보 표시
+        function displayPlaceInfo(place) {
+            // 장소명 표시
+            const placeName = place.name || '알 수 없는 장소';
+            document.getElementById('place-name').textContent = placeName;
+
+            // 주소 표시
+            const address = place.formatted_address || place.vicinity || '주소 정보 없음';
+            document.getElementById('place-address').textContent = address;
+
+            // 지도 중심을 해당 위치로 이동
+            if (place.geometry && place.geometry.location) {
+                const location = place.geometry.location;
+                map.setCenter(location);
+
+                // 기존 마커 제거
+                if (marker) {
+                    marker.setMap(null);
+                }
+
+                // 새 마커 생성
+                marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: placeName,
+                    animation: google.maps.Animation.DROP
+                });
+
+                // 마커 클릭 시 정보창 표시
+                const infoWindow = new google.maps.InfoWindow({
+                    content: createInfoWindowContent(place)
+                });
+
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+
+                // 지도 줌 레벨 조정
+                if (place.types && place.types.includes('establishment')) {
+                    map.setZoom(17); // 상세한 장소면 더 확대
+                } else {
+                    map.setZoom(15); // 일반적인 줌 레벨
+                }
+            }
+        }
+
+        // 정보창 내용 생성
+        function createInfoWindowContent(place) {
+            let content = `<div style="max-width: 250px; font-family: 'Noto Sans KR', sans-serif;">`;
+            content += `<h4 style="margin: 0 0 8px 0; color: #333;">${place.name || '장소'}</h4>`;
+
+            if (place.formatted_address) {
+                content += `<p style="margin: 4px 0; font-size: 13px; color: #666;">📍 ${place.formatted_address}</p>`;
+            }
+
+            if (place.rating) {
+                content += `<p style="margin: 4px 0; font-size: 13px; color: #666;">⭐ ${place.rating}점</p>`;
+            }
+
+            if (place.opening_hours && place.opening_hours.isOpen !== undefined) {
+                const status = place.opening_hours.isOpen() ? '영업 중' : '영업 종료';
+                const color = place.opening_hours.isOpen() ? '#28a745' : '#dc3545';
+                content += `<p style="margin: 4px 0; font-size: 13px; color: ${color};">🕒 ${status}</p>`;
+            }
+
+            content += `</div>`;
+            return content;
+        }
+
+        // 오류 처리
+        function handlePlaceError(status) {
+            let errorMessage = '위치 정보를 불러올 수 없습니다.';
+
+            switch (status) {
+                case google.maps.places.PlacesServiceStatus.NOT_FOUND:
+                    errorMessage = '해당 장소를 찾을 수 없습니다.';
+                    break;
+                case google.maps.places.PlacesServiceStatus.OVER_QUERY_LIMIT:
+                    errorMessage = '일일 조회 한도를 초과했습니다.';
+                    break;
+                case google.maps.places.PlacesServiceStatus.REQUEST_DENIED:
+                    errorMessage = '요청이 거부되었습니다.';
+                    break;
+                case google.maps.places.PlacesServiceStatus.INVALID_REQUEST:
+                    errorMessage = '잘못된 요청입니다.';
+                    break;
+                default:
+                    errorMessage = '위치 정보 로드 중 오류가 발생했습니다.';
+            }
+
+            document.getElementById('place-name').textContent = errorMessage;
+            document.getElementById('place-address').textContent = '';
+        }
+
+        // Google Maps API 로드 오류 처리
+        window.gm_authFailure = function () {
+            console.error('Google Maps API 인증 실패');
+            document.getElementById('place-name').textContent = 'Google Maps API 인증 오류';
+            document.getElementById('place-address').textContent = 'API 키를 확인해주세요.';
+        };
+
+        $(document).ready(function () {
+            // 현재 로그인한 사용자 ID 가져오기
+            const currentUserId = /*[[${session.user_id}]]*/ null;
+
+            // 댓글 매니저
+            const commentManager = {
+                postId: [[${dto.id}]] || 1,
+                currentUserId: currentUserId,
+                currentPage: 0,
+                pageSize: 10,
+                isLoading: false,
+                totalComments: 0,
+                loadedComments: 0,
+
+                init() {
+                    console.log('=== 댓글 매니저 초기화 ===');
+                    console.log('PostID:', this.postId);
+                    console.log('CurrentUserId:', this.currentUserId);
+
+                    this.bindEvents();
+                    this.loadTotalCommentCount();
+                    this.loadComments();
+                },
+
+                bindEvents() {
+                    console.log('이벤트 바인딩 시작');
+
+                    // 댓글 작성 버튼
+                    $('.comment-submit').off('click').on('click', () => {
+                        this.createComment();
+                    });
+
+                    // 엔터키로 댓글 작성
+                    $('.comment-input').off('keypress').on('keypress', (e) => {
+                        if (e.which === 13 && !e.shiftKey) {
+                            e.preventDefault();
+                            this.createComment();
+                        }
+                    });
+
+                    // 더보기 버튼
+                    $('#showMoreBtn').off('click').on('click', () => {
+                        console.log('더보기 버튼 클릭됨');
+                        this.loadMoreComments();
+                    });
+                },
+
+                // 전체 댓글 수 로드
+                async loadTotalCommentCount() {
+                    try {
+                        console.log('전체 댓글 수 로딩 시작...');
+                        const response = await fetch(`/api/comments/test/${this.postId}`);
+                        const text = await response.text();
+                        console.log('전체 댓글 수 API 응답:', text);
+
+                        // "PostID 1의 댓글 수: 25" 형식에서 숫자만 추출
+                        const match = text.match(/댓글 수: (\d+)/);
+                        if (match) {
+                            this.totalComments = parseInt(match[1]);
+                            console.log('✅ 전체 댓글 수:', this.totalComments);
+                            $('.comments-count').text(this.totalComments);
+                            this.updateMoreButton();
+                        } else {
+                            console.error('댓글 수 파싱 실패:', text);
+                        }
+                    } catch (error) {
+                        console.error('❌ 전체 댓글 수 로드 실패:', error);
+                    }
+                },
+
+                // 댓글 로드
+                async loadComments() {
+                    if (this.isLoading) {
+                        console.log('⏳ 이미 로딩 중...');
+                        return;
+                    }
+
+                    this.isLoading = true;
+                    this.updateMoreButton(); // 로딩 상태 표시
+
+                    try {
+                        console.log(`📥 댓글 로딩 시작 - 페이지: ${this.currentPage}, 크기: ${this.pageSize}`);
+
+                        const response = await fetch(`/api/comments/post/${this.postId}?page=${this.currentPage}&size=${this.pageSize}`);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        console.log('📦 댓글 API 전체 응답:', result);
+
+                        if (result.success && result.data && result.data.dtoList) {
+                            console.log('✅ 댓글 데이터:', result.data.dtoList);
+                            console.log('📊 페이징 정보:', {
+                                page: result.data.page,
+                                size: result.data.size,
+                                totalPage: result.data.totalPage,
+                                prev: result.data.prev,
+                                next: result.data.next
+                            });
+
+                            if (this.currentPage === 0) {
+                                // 첫 페이지는 새로 렌더링
+                                console.log('🔄 첫 페이지 렌더링');
+                                this.renderComments(result.data.dtoList);
+                                this.loadedComments = result.data.dtoList.length;
+                            } else {
+                                // 추가 페이지는 append
+                                console.log('➕ 댓글 추가');
+                                this.appendComments(result.data.dtoList);
+                                this.loadedComments += result.data.dtoList.length;
+                            }
+
+                            console.log('📈 로드된 댓글 수:', this.loadedComments);
+                        } else {
+                            console.error('❌ 댓글 로드 실패:', result.message || '알 수 없는 오류');
+                            this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('💥 댓글 로드 에러:', error);
+                        this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
+                    } finally {
+                        this.isLoading = false;
+                        this.updateMoreButton();
+                    }
+                },
+
+                // 더 많은 댓글 로드
+                async loadMoreComments() {
+                    console.log('🔄 더보기 요청');
+                    console.log('현재 상태:', {
+                        currentPage: this.currentPage,
+                        loadedComments: this.loadedComments,
+                        totalComments: this.totalComments,
+                        isLoading: this.isLoading
+                    });
+
+                    if (this.isLoading) {
+                        console.log('⚠️ 이미 로딩 중이므로 중단');
+                        return;
+                    }
+
+                    if (this.loadedComments >= this.totalComments) {
+                        console.log('⚠️ 모든 댓글을 이미 로드했으므로 중단');
+                        return;
+                    }
+
+                    this.currentPage++;
+                    console.log('📄 다음 페이지 로드:', this.currentPage);
+                    await this.loadComments();
+                },
+
+
+                // 더보기 버튼 상태 업데이트
+                updateMoreButton() {
+                    const moreButton = $('#showMoreBtn');
+
+                    console.log('🔄 더보기 버튼 상태 업데이트:', {
+                        totalComments: this.totalComments,
+                        loadedComments: this.loadedComments,
+                        isLoading: this.isLoading,
+                        threshold: 11
+                    });
+
+                    // 로딩 중일 때
+                    if (this.isLoading) {
+                        console.log('⏳ 로딩 중 상태');
+                        moreButton.show().text('로딩 중...').prop('disabled', true);
+                        return;
+                    }
+
+                    // 전체 댓글이 11개 미만이면 버튼 숨김
+                    if (this.totalComments < 11) {
+                        console.log('🚫 댓글 11개 미만이므로 버튼 숨김');
+                        moreButton.hide();
+                        return;
+                    }
+
+                    // 아직 로드할 댓글이 있으면 더보기 버튼 표시
+                    if (this.loadedComments < this.totalComments) {
+                        console.log('✅ 더보기 버튼 표시');
+                        moreButton.show()
+                            .text(`댓글 더보기 (${this.loadedComments}/${this.totalComments})`)
+                            .prop('disabled', false);
+                    } else {
+                        // 모든 댓글을 로드했으면 "더 이상 댓글이 없습니다" 표시
+                        console.log('🏁 모든 댓글 로드 완료');
+                        moreButton.show()
+                            .text('더 이상 댓글이 없습니다')
+                            .prop('disabled', true);
+                    }
+                },
+
+                // 댓글 렌더링 함수 수정
+                async renderComments(comments) {
+                    console.log('🎨 댓글 렌더링 시작, 댓글 수:', comments.length);
+                    const container = $('.comments-list');
+                    container.empty();
+
+                    if (comments.length === 0) {
+                        container.append('<p class="no-comments">아직 댓글이 없습니다.</p>');
+                        return;
+                    }
+
+                    // 각 댓글을 렌더링하고 대댓글도 함께 로드
+                    for (const comment of comments) {
+                        const commentHtml = this.createCommentHTML(comment);
+                        container.append(commentHtml);
+
+                        // 각 댓글의 대댓글 로드
+                        await this.loadReplies(comment.id);
+                    }
+
+                    console.log('✅ 댓글 렌더링 완료');
+                },
+
+                // 댓글 추가 함수도 수정 (페이징용)
+                async appendComments(comments) {
+                    console.log('➕ 댓글 추가 시작, 추가할 댓글 수:', comments.length);
+                    const container = $('.comments-list');
+
+                    // 각 댓글을 추가하고 대댓글도 함께 로드
+                    for (const comment of comments) {
+                        const commentHtml = this.createCommentHTML(comment);
+                        container.append(commentHtml);
+
+                        // 각 댓글의 대댓글 로드
+                        await this.loadReplies(comment.id);
+                    }
+
+                    console.log('✅ 댓글 추가 완료');
+                },
+
+                // 댓글 HTML 생성
+                createCommentHTML(comment) {
+                    const isOwner = this.currentUserId && this.currentUserId == comment.userId;
+                    const isDeleted = comment.isDeleted === 'Y';
+                    const isBlinded = (comment.dislikeCount || 0) >= 10;
+
+                    let html = `
+    <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
+    ${comment.userProfileImage ?
+                        `<img src="${getProfileImageUrl(comment.userProfileImage)}" alt="${comment.userNickname}" class="comment-avatar">` :
+                        '<div class="comment-avatar-placeholder"></div>'
+                    }
+    <div class="comment-content">
+        <div class="comment-header">
+            <div class="comment-header-left">
+                <span class="comment-author">${comment.userNickname}</span>
+                <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
+            </div>
+            <div class="comment-header-right">
+    `;
+
+                    // 수정/삭제 버튼 (작성자이고 삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (isOwner && !isDeleted && !isBlinded) {
+                        html += `
+        <div class="comment-edit-delete">
+            <button class="comment-edit-btn" onclick="commentManager.startEditComment(${comment.id})">
+                <i class="fas fa-edit"></i> 수정
+            </button>
+            <button class="comment-delete-btn" onclick="commentManager.deleteComment(${comment.id})">
+                <i class="fas fa-trash"></i> 삭제
+            </button>
+        </div>
+    `;
+                    }
+
+                    html += `
+                </div>
+            </div>
+            <div class="comment-text-container">
+                <p class="comment-text" data-original-content="${comment.content}">
+                    ${isDeleted ? '삭제된 댓글입니다.' :
+                        (isBlinded ? '블라인드 처리된 댓글입니다.' : comment.content)}
+                </p>
+                <!-- 수정 폼 (숨김 상태) -->
+                <div class="comment-edit-form">
+                    <textarea class="comment-edit-textarea">${comment.content}</textarea>
+                    <div class="comment-edit-actions">
+                        <button class="comment-save-btn" onclick="commentManager.saveEditComment(${comment.id})">저장</button>
+                        <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${comment.id})">취소</button>
+                    </div>
+                </div>
+            </div>
+    `;
+
+                    // 좋아요/싫어요/답글 버튼 (삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (!isDeleted && !isBlinded) {
+                        html += `
+            <div class="comment-actions">
+                <div class="comment-action comment-like-btn ${comment.isLikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'LIKE')">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">${comment.likeCount || 0}</span>
+                </div>
+                <div class="comment-action comment-dislike-btn ${comment.isDislikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${comment.id}" onclick="commentManager.toggleReaction(${comment.id}, 'DISLIKE')">
+                    <i class="fas fa-heart-broken"></i>
+                    <span class="dislike-count">${comment.dislikeCount || 0}</span>
+                </div>
+                <div class="comment-action reply-btn" onclick="commentManager.showReplyInput(${comment.id})">
+                    <i class="far fa-comment"></i>
+                    <span>답글</span>
+                </div>
+            </div>
+    `;
+                    }
+
+                    // 블라인드된 댓글에는 신고 버튼만 표시
+                    if (isBlinded && !isDeleted) {
+                        html += `
+            <div class="comment-actions">
+                <div class="comment-action report-btn" onclick="commentManager.reportComment(${comment.id})">
+                    <i class="fas fa-flag"></i>
+                    <span>신고</span>
+                </div>
+            </div>
+    `;
+                    }
+
+                    html += `
+        </div>
+    </div>
+
+    <!-- 대댓글 입력 컨테이너 -->
+    <div class="reply-input-container" id="reply-input-${comment.id}">
+        <div class="reply-input-wrapper">
+            <img src="/api/placeholder/30/30" alt="내 프로필" class="comment-avatar" style="width: 30px; height: 30px;">
+            <textarea class="reply-input" placeholder="답글을 입력하세요..." rows="2"></textarea>
+            <button class="reply-submit" onclick="commentManager.createReply(${comment.id})">등록</button>
+            <button class="reply-cancel" onclick="commentManager.hideReplyInput(${comment.id})">취소</button>
+        </div>
+    </div>
+
+    <!-- 대댓글 목록 컨테이너 -->
+    <div class="replies-container" id="replies-${comment.id}">
+        <!-- 대댓글들이 여기에 로드됩니다 -->
+    </div>
+    `;
+
+                    return html;
+                },
+
+                // 대댓글 입력창 표시
+                showReplyInput(commentId) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    // 다른 모든 대댓글 입력창 숨기기
+                    $('.reply-input-container').hide();
+
+                    // 선택된 댓글의 대댓글 입력창 표시
+                    $(`#reply-input-${commentId}`).show();
+                    $(`#reply-input-${commentId} .reply-input`).focus();
+                },
+
+                // 대댓글 입력창 숨기기
+                hideReplyInput(commentId) {
+                    $(`#reply-input-${commentId}`).hide();
+                    $(`#reply-input-${commentId} .reply-input`).val('');
+                },
+
+                // 대댓글 작성
+                async createReply(parentCommentId) {
+                    const replyContent = $(`#reply-input-${parentCommentId} .reply-input`).val().trim();
+
+                    if (!replyContent) {
+                        this.showToast('답글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('💬 대댓글 작성 시도:', replyContent);
+
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                userId: this.currentUserId,
+                                content: replyContent,
+                                parentId: parentCommentId
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.hideReplyInput(parentCommentId);
+                            this.showToast('답글이 등록되었습니다.', 'success');
+
+                            // 해당 댓글의 대댓글 목록만 새로고침
+                            await this.loadReplies(parentCommentId);
+
+                            // 전체 댓글 수 업데이트
+                            await this.loadTotalCommentCount();
+                        } else {
+                            this.showToast(result.message || '답글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 대댓글 작성 실패:', error);
+                        this.showToast('답글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 대댓글 목록 로드 함수 수정 (에러 처리 강화)
+                async loadReplies(parentCommentId) {
+                    try {
+                        console.log('📥 대댓글 로딩 시작:', parentCommentId);
+
+                        const response = await fetch(`/api/comments/${parentCommentId}/replies`);
+                        const result = await response.json();
+
+                        if (result.success && result.data && result.data.length > 0) {
+                            console.log('✅ 대댓글 데이터:', result.data);
+                            this.renderReplies(parentCommentId, result.data);
+                        } else {
+                            console.log('ℹ️ 대댓글 없음:', parentCommentId);
+                            // 대댓글이 없는 경우는 정상 상황이므로 에러로 처리하지 않음
+                        }
+                    } catch (error) {
+                        console.error('💥 대댓글 로드 에러:', error);
+                        // 대댓글 로드 실패해도 메인 댓글은 정상 표시되도록 함
+                    }
+                },
+
+                // 대댓글 렌더링
+                renderReplies(parentCommentId, replies) {
+                    const repliesContainer = $(`#replies-${parentCommentId}`);
+                    repliesContainer.empty();
+
+                    if (replies.length === 0) {
+                        return;
+                    }
+
+                    replies.forEach(reply => {
+                        const replyHtml = this.createReplyHTML(reply);
+                        repliesContainer.append(replyHtml);
+                    });
+                },
+
+                // 대댓글 HTML 생성
+                createReplyHTML(reply) {
+                    const isOwner = this.currentUserId && this.currentUserId == reply.userId;
+                    const isDeleted = reply.isDeleted === 'Y';
+                    const isBlinded = (reply.dislikeCount || 0) >= 10;
+
+                    let html = `
+                        <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
+                            <img src="${getProfileImageUrl(reply.userProfileImage)}"
+     alt="${reply.userNickname}" class="comment-avatar">
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <div class="comment-header-left">
+                                        <span class="comment-author">${reply.userNickname}</span>
+                                        <span class="comment-date">${this.formatDate(reply.createdAt)}</span>
+                                    </div>
+                                    <div class="comment-header-right">
+                        `;
+
+                    // 수정/삭제 버튼 (작성자이고 삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (isOwner && !isDeleted && !isBlinded) {
+                        html += `
+                            <div class="comment-edit-delete">
+                                <button class="comment-edit-btn" onclick="commentManager.startEditComment(${reply.id})">
+                                    <i class="fas fa-edit"></i> 수정
+                                </button>
+                                <button class="comment-delete-btn" onclick="commentManager.deleteComment(${reply.id})">
+                                    <i class="fas fa-trash"></i> 삭제
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    html += `
+                </div>
+            </div>
+            <div class="comment-text-container">
+                <p class="comment-text" data-original-content="${reply.content}">
+                    ${isDeleted ? '삭제된 댓글입니다.' :
+                        (isBlinded ? '블라인드 처리된 댓글입니다.' : reply.content)}
+                </p>
+                <!-- 수정 폼 (숨김 상태) -->
+                <div class="comment-edit-form">
+                    <textarea class="comment-edit-textarea">${reply.content}</textarea>
+                    <div class="comment-edit-actions">
+                        <button class="comment-save-btn" onclick="commentManager.saveEditComment(${reply.id})">저장</button>
+                        <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${reply.id})">취소</button>
+                    </div>
+                </div>
+            </div>
+    `;
+
+                    // 좋아요/싫어요 버튼 (삭제되지 않고 블라인드되지 않은 경우에만 표시)
+                    if (!isDeleted && !isBlinded) {
+                        html += `
+            <div class="comment-actions">
+                <div class="comment-action comment-like-btn ${reply.isLikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${reply.id}" onclick="commentManager.toggleReaction(${reply.id}, 'LIKE')">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">${reply.likeCount || 0}</span>
+                </div>
+                <div class="comment-action comment-dislike-btn ${reply.isDislikedByCurrentUser ? 'active' : ''}"
+                     data-comment-id="${reply.id}" onclick="commentManager.toggleReaction(${reply.id}, 'DISLIKE')">
+                    <i class="fas fa-heart-broken"></i>
+                    <span class="dislike-count">${reply.dislikeCount || 0}</span>
+                </div>
+            </div>
+    `;
+                    }
+
+                    html += `
+        </div>
+    </div>
+    `;
+
+                    return html;
+                },
+
+                async createComment() {
+                    const content = $('.comment-input').val().trim();
+                    if (!content) {
+                        this.showToast('댓글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('💬 댓글 작성 시도:', content);
+
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                userId: this.currentUserId,
+                                content: content,
+                                parentId: null
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            $('.comment-input').val('');
+                            this.showToast('댓글이 등록되었습니다.', 'success');
+
+                            // 전체 다시 로드
+                            this.currentPage = 0;
+                            this.loadedComments = 0;
+                            await this.loadTotalCommentCount();
+                            await this.loadComments();
+                        } else {
+                            this.showToast(result.message || '댓글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 댓글 작성 실패:', error);
+                        this.showToast('댓글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 댓글 수정 시작
+                startEditComment(commentId) {
+                    console.log('✏️ 댓글 수정 시작:', commentId);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                    const textElement = commentItem.find('.comment-text');
+                    const editForm = commentItem.find('.comment-edit-form');
+                    const editDeleteButtons = commentItem.find('.comment-edit-delete');
+
+                    textElement.hide();
+                    editForm.show();
+                    editDeleteButtons.hide();
+                    editForm.find('.comment-edit-textarea').focus();
+                },
+
+                // 댓글 수정 취소
+                cancelEditComment(commentId) {
+                    console.log('❌ 댓글 수정 취소:', commentId);
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                    const textElement = commentItem.find('.comment-text');
+                    const editForm = commentItem.find('.comment-edit-form');
+                    const editDeleteButtons = commentItem.find('.comment-edit-delete');
+
+                    const originalContent = textElement.data('original-content');
+                    editForm.find('.comment-edit-textarea').val(originalContent);
+
+                    editForm.hide();
+                    textElement.show();
+                    editDeleteButtons.show();
+                },
+
+                // 댓글 수정 저장
+                async saveEditComment(commentId) {
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                    const newContent = commentItem.find('.comment-edit-textarea').val().trim();
+
+                    if (!newContent) {
+                        this.showToast('댓글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('💾 댓글 수정 저장:', commentId, newContent);
+
+                        const response = await fetch(`/api/comments/${commentId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                content: newContent
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showToast('댓글이 수정되었습니다.', 'success');
+
+                            // 전체 다시 로드 (대댓글도 함께)
+                            this.currentPage = 0;
+                            this.loadedComments = 0;
+                            await this.loadComments();
+                        } else {
+                            this.showToast(result.message || '댓글 수정에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 댓글 수정 실패:', error);
+                        this.showToast('댓글 수정에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 댓글 삭제
+                async deleteComment(commentId) {
+                    if (!confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+                        return;
+                    }
+
+                    try {
+                        console.log('🗑️ 댓글 삭제:', commentId);
+
+                        const response = await fetch(`/api/comments/${commentId}`, {
+                            method: 'DELETE'
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showToast('댓글이 삭제되었습니다.', 'success');
+
+                            // 전체 다시 로드 (대댓글도 함께)
+                            this.currentPage = 0;
+                            this.loadedComments = 0;
+                            await this.loadTotalCommentCount();
+                            await this.loadComments();
+                        } else {
+                            this.showToast(result.message || '댓글 삭제에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 댓글 삭제 실패:', error);
+                        this.showToast('댓글 삭제에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 댓글 좋아요/싫어요
+                async toggleReaction(commentId, reactionType) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        console.log('👍 반응 토글:', commentId, reactionType);
+
+                        const response = await fetch(`/api/comments/${commentId}/reaction`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                userId: this.currentUserId,
+                                reactionType: reactionType
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.updateReactionUI(commentId, result.data, reactionType);
+                            this.showToast(
+                                reactionType === 'LIKE' ?
+                                    (result.data.isLikedByCurrentUser ? '좋아요를 눌렀습니다.' : '좋아요를 취소했습니다.') :
+                                    (result.data.isDislikedByCurrentUser ? '싫어요를 눌렀습니다.' : '싫어요를 취소했습니다.'),
+                                'success'
+                            );
+                        } else {
+                            this.showToast(result.message || '반응 처리에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 반응 처리 실패:', error);
+                        this.showToast('반응 처리에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 반응 UI 업데이트
+                updateReactionUI(commentId, reactionData, reactionType) {
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+
+                    // 좋아요 버튼 업데이트
+                    const likeBtn = commentItem.find('.comment-like-btn');
+                    likeBtn.find('.like-count').text(reactionData.likeCount || 0);
+                    if (reactionData.isLikedByCurrentUser !== undefined) {
+                        likeBtn.toggleClass('active', reactionData.isLikedByCurrentUser);
+                    }
+
+                    // 싫어요 버튼 업데이트
+                    const dislikeBtn = commentItem.find('.comment-dislike-btn');
+                    dislikeBtn.find('.dislike-count').text(reactionData.dislikeCount || 0);
+                    if (reactionData.isDislikedByCurrentUser !== undefined) {
+                        dislikeBtn.toggleClass('active', reactionData.isDislikedByCurrentUser);
+                    }
+
+                    // 싫어요 10개 이상이면 댓글 블라인드 처리
+                    if ((reactionData.dislikeCount || 0) >= 10) {
+                        const commentText = commentItem.find('.comment-text');
+                        if (!commentText.text().includes('블라인드 처리된 댓글입니다')) {
+                            this.showToast('댓글이 블라인드 처리되었습니다.', 'info');
+
+                            // 전체 다시 로드
+                            this.currentPage = 0;
+                            this.loadedComments = 0;
+                            this.loadComments();
+                        }
+                    }
+                },
+
+                // 댓글 신고
+                async reportComment(commentId) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    const reason = prompt('신고 사유를 입력해주세요:');
+                    if (!reason || !reason.trim()) {
+                        return;
+                    }
+
+                    try {
+                        console.log('🚨 댓글 신고:', commentId, reason);
+
+                        const response = await fetch('/api/reports', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                reporterId: this.currentUserId,
+                                reportType: 'COMMENT',
+                                targetId: commentId,
+                                reason: 'OTHER',
+                                detail: reason.trim()
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.showToast('신고가 접수되었습니다.', 'success');
+                        } else {
+                            this.showToast(result.message || '신고 접수에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ 신고 실패:', error);
+                        this.showToast('신고 접수에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 날짜 포맷팅
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    const now = new Date();
+                    const diffMs = now - date;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMins / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+
+                    if (diffMins < 1) return '방금 전';
+                    if (diffMins < 60) return `${diffMins}분 전`;
+                    if (diffHours < 24) return `${diffHours}시간 전`;
+                    if (diffDays < 7) return `${diffDays}일 전`;
+
+                    return date.toLocaleDateString('ko-KR');
+                },
+
+                // 토스트 메시지
+                showToast(message, type = 'info') {
+                    const colors = {
+                        success: '#28a745',
+                        error: '#dc3545',
+                        warning: '#ffc107',
+                        info: '#17a2b8'
+                    };
+
+                    const toast = $(`<div style="
+                    position: fixed; top: 20px; right: 20px;
+                    background: ${colors[type] || colors.info};
+                    color: ${type === 'warning' ? '#212529' : 'white'};
+                    padding: 15px 20px;
+                    border-radius: 6px;
+                    z-index: 9999;
+                    font-weight: 500;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                ">${message}</div>`);
+
+                    $('body').append(toast);
+
+                    setTimeout(() => toast.css('opacity', '1'), 10);
+                    setTimeout(() => {
+                        toast.css('opacity', '0');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+            };
+
+            // 댓글 매니저 시작
+            commentManager.init();
+
+            // 전역 변수로 등록 (수정/삭제 버튼에서 사용)
+            window.commentManager = commentManager;
+
+            // ===== 포스트 기능들 =====
+
+            // 수정된 포스트 수정 기능 - modify 페이지로 이동
+            window.editPost = function () {
+                const postId = [[${dto.id}]];
+                // modify 페이지로 이동
+                window.location.href = `/post/modify/${postId}`;
+            };
+
+            // 포스트 삭제 기능 (기존 함수를 window 객체에 등록)
+            window.deletePost = function () {
+                const postId = [[${dto.id}]];
+
+                if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.')) {
+                    fetch(`/api/posts/${postId}`, {
+                        method: 'DELETE'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                commentManager.showToast('게시글이 삭제되었습니다.', 'success');
+
+                                // 목록 페이지로 이동
+                                setTimeout(() => {
+                                    window.location.href = '/post';
+                                }, 1000);
+                            } else {
+                                commentManager.showToast(data.message || '게시글 삭제에 실패했습니다.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ 게시글 삭제 실패:', error);
+                            commentManager.showToast('게시글 삭제 중 오류가 발생했습니다.', 'error');
+                        });
+                }
+            };
+
+            // 기존 게시글 상세 기능들...
+            $('#backButton').click(function () {
+                window.history.back();
+            });
+
+            $('#likeButton').click(function () {
+                $(this).toggleClass('active');
+                if ($(this).hasClass('active')) {
+                    $(this).find('i').removeClass('far').addClass('fas');
+                    $(this).find('span').text('좋아요 취소');
+                    commentManager.showToast('게시글을 좋아요 했습니다.', 'success');
+                } else {
+                    $(this).find('i').removeClass('fas').addClass('far');
+                    $(this).find('span').text('좋아요');
+                    commentManager.showToast('좋아요를 취소했습니다.', 'info');
+                }
+            });
+
+            $('#bookmarkButton').click(function () {
+                $(this).toggleClass('active');
+                if ($(this).hasClass('active')) {
+                    $(this).find('i').removeClass('far').addClass('fas');
+                    $(this).find('span').text('저장됨');
+                    commentManager.showToast('게시글을 저장했습니다.', 'success');
+                } else {
+                    $(this).find('i').removeClass('fas').addClass('far');
+                    $(this).find('span').text('저장');
+                    commentManager.showToast('저장을 취소했습니다.', 'info');
+                }
+            });
+
+            $('#followButton').click(function () {
+                $(this).toggleClass('following');
+                if ($(this).hasClass('following')) {
+                    $(this).text('팔로잉');
+                    commentManager.showToast('작성자를 팔로우 했습니다.', 'success');
+                } else {
+                    $(this).text('팔로우');
+                    commentManager.showToast('팔로우를 취소했습니다.', 'info');
+                }
+            });
+        });
+
+        // ESC 키로 모달 닫기
+        $(document).on('keydown', function (e) {
+            if (e.keyCode === 27) { // ESC 키
+                $('.reply-input-container').hide();
+            }
+        });
+
+        // 엔터키로 답글 작성
+        $(document).on('keypress', '.reply-input', function (e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                const parentId = $(this).closest('.reply-input-container').attr('id').replace('reply-input-', '');
+                commentManager.createReply(parseInt(parentId));
+            }
+        });
+    </script>
+
+    <!-- Google Maps API 스크립트-->
+    <script async defer th:src="'https://maps.googleapis.com/maps/api/js?key=' + ${apiKey} + '&libraries=places&callback=initMap'">
+    </script>
+</th:block>
+</body>
+</html>

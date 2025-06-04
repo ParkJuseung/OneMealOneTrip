@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>채팅방</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+        .chat-box { max-width: 800px; margin: 30px auto; background: white; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; }
+        .messages { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; background: #fff; border-radius: 4px; }
+        .message { margin: 5px 0; }
+        .message.you { text-align: right; color: #0ED8D5; }
+        .message.other { text-align: left; }
+        .input-area { display: flex; gap: 10px; }
+        #message { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        #sendBtn { padding: 10px 20px; background: #0ED8D5; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #sendBtn:hover { background: #04A6A4; }
+        .divider-read-line {
+            text-align: center;
+            color: #888;
+            font-size: 0.85em;
+            font-style: italic;
+            margin: 12px 0;
+            padding: 5px 0;
+            border-top: 1px dashed #ccc;
+            border-bottom: 1px dashed #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-box">
+    <h2 id="chatroom-title">채팅방 제목 로딩중...</h2>
+    <div class="messages" id="chat-messages"></div>
+    <div class="input-area">
+        <input type="text" id="message" placeholder="메시지를 입력하세요...">
+        <button id="sendBtn">전송</button>
+    </div>
+</div>
+<script th:inline="javascript">
+    const chatData = /*[[${chatData}]]*/ {};
+    const chatRoomId = chatData.chatRoomId;
+    const userId = chatData.userId;
+    const nickname = chatData.nickname;
+    const chatRoomTitle = chatData.chatRoomTitle;
+
+    let isUserAtBottom = true; // ✅ 유저가 현재 맨 아래에 있는지 여부
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("chatroom-title").textContent = `${chatRoomTitle}`;
+        loadGroupedMessages();
+    });
+
+    function loadGroupedMessages() {
+        fetch(`/api/chatroom/${chatRoomId}/grouped-messages?userId=${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                const messagesDiv = document.getElementById("chat-messages");
+                messagesDiv.innerHTML = '';
+
+                // 과거 메시지
+                data.afterMessages.forEach(msg => {
+                    const isMine = String(msg.userId) === String(userId);
+                    appendMessage(msg.senderNickname, msg.content, isMine, msg.messageId, false); // ❌ 초기 메시지는 스크롤 안함
+                });
+
+                // 기준선
+                const divider = document.createElement('div');
+                divider.classList.add('divider-read-line');
+                divider.id = 'read-divider';
+                divider.dataset.hidden = 'false';
+                divider.innerText = "---- 여기까지 읽으셨습니다 ----";
+                messagesDiv.appendChild(divider);
+
+                messagesDiv.scrollTop = messagesDiv.scrollHeight; // 초기 로딩 시 스크롤 내려줌
+            });
+    }
+
+    const socket = new SockJS('/ws-stomp');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+        stompClient.subscribe('/topic/chatroom.' + chatRoomId, function (message) {
+            const body = JSON.parse(message.body);
+            const isMine = String(body.userId) === String(userId);
+            appendMessage(body.senderNickname, body.content, isMine, null, true); // ✅ 실시간 메시지는 자동 스크롤 여부 판단
+        });
+    });
+
+    function sendMessage() {
+        const input = document.getElementById('message');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const dto = {
+            chatRoomId: chatRoomId,
+            userId: userId,
+            content: content,
+            messageType: 'TEXT'
+        };
+
+        stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(dto));
+        input.value = '';
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendMessage);
+    document.getElementById('message').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // ✅ 스크롤 상태 감지
+    document.getElementById("chat-messages").addEventListener("scroll", () => {
+        const messagesDiv = document.getElementById("chat-messages");
+        const tolerance = 10; // 오차 허용 범위 (px)
+        const distanceToBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop - messagesDiv.clientHeight;
+        isUserAtBottom = distanceToBottom <= tolerance;
+    });
+
+    // ✅ 자동 스크롤 여부를 매개변수로 제어
+    function appendMessage(sender, content, isMine = false, messageId = null, allowAutoScroll = true) {
+        const div = document.createElement('div');
+        div.classList.add('message');
+        div.classList.add(isMine ? 'you' : 'other');
+        if (messageId !== null) div.dataset.messageId = messageId;
+        div.innerText = isMine ? content : `${sender}: ${content}`;
+        const messagesDiv = document.getElementById('chat-messages');
+        messagesDiv.appendChild(div);
+
+        // ✅ 자동 스크롤 조건: 사용자 하단에 있을 때만
+        if (allowAutoScroll && isUserAtBottom) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    }
+
+    function loadPreviousMessages(beforeMessageId) {
+        const messagesDiv = document.getElementById("chat-messages");
+        messagesDiv.classList.add("loading");
+
+        const loading = document.createElement("div");
+        loading.id = "loading-indicator";
+        loading.innerText = "⏳ 이전 메시지 불러오는 중...";
+        loading.style.textAlign = "center";
+        messagesDiv.prepend(loading);
+
+        fetch(`/api/chatroom/${chatRoomId}/previous-messages?before=${beforeMessageId}`)
+            .then(response => response.json())
+            .then(messages => {
+                loading.remove();
+                messagesDiv.classList.remove("loading");
+
+                messages.reverse().forEach(msg => {
+                    const isMine = String(msg.userId) === String(userId);
+                    const div = document.createElement("div");
+                    div.classList.add("message", isMine ? "you" : "other");
+                    div.dataset.messageId = msg.messageId;
+                    div.innerText = isMine ? msg.content : `${msg.senderNickname}: ${msg.content}`;
+                    messagesDiv.prepend(div);
+                });
+            });
+    }
+
+    document.getElementById("chat-messages").addEventListener("scroll", () => {
+        const messagesDiv = document.getElementById("chat-messages");
+        if (messagesDiv.scrollTop === 0 && !messagesDiv.classList.contains("loading")) {
+            const firstMsg = messagesDiv.querySelector(".message");
+            if (firstMsg) {
+                const beforeMessageId = parseInt(firstMsg.dataset.messageId);
+                loadPreviousMessages(beforeMessageId);
+            }
+        }
+    });
+
+    document.addEventListener("click", function (e) {
+        if (e.target.id === "read-divider") {
+            const el = e.target;
+            if (el.dataset.hidden === "true") {
+                el.style.display = "block";
+                el.dataset.hidden = "false";
+            } else {
+                el.style.display = "none";
+                el.dataset.hidden = "true";
+            }
+        }
+    });
+</script>
+</body>
+</html>

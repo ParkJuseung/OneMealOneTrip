@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layout/main}">
+
+<th:block layout:fragment="style">
+	<link rel="stylesheet" th:href="@{/css/chat.css}">
+</th:block>
+
+<body>
+<th:block layout:fragment="content">
+	<!-- 채팅방 목록 영역 -->
+	<div class="chat-list-container">
+
+
+		<!-- 탭 네비게이션 -->
+		<div class="tab-navigation">
+			<div class="tab active" data-tab="all" onclick="location.href='/post'">포스트</div>
+			<div class="tab" data-tab="companion" onclick="location.href='/travel'">추천 여행경로</div>
+			<div class="tab" data-tab="post" onclick="location.href='/chat'">채팅</div>
+			<div class="tab" data-tab="explorer"></div>
+			<div class="tab-indicator"></div>
+		</div>
+
+
+		<!-- 검색 및 필터 영역 -->
+		<div class="chat-controls">
+			<h3 class="chat-list-title">채팅방 목록</h3>
+			<div class="create-chat" id="create-chat-btn">
+				<i class="fas fa-plus"></i> 새 채팅방 만들기
+			</div>
+		</div>
+
+		<div class="search-box">
+			<i class="fas fa-search search-icon"></i>
+			<input type="text" class="search-input" placeholder="채팅방 검색..." id="chat-search-input">
+
+			<ul id="suggestion-list" class="suggestion-list"></ul>
+		</div>
+
+		<div class="chat-filters">
+			<div class="chat-filter active" data-filter="all">전체</div>
+			<div class="chat-filter" data-filter="popular">인기</div>
+			<div class="chat-filter" data-filter="mine">나의 채팅방</div>
+		</div>
+
+		<!-- 채팅방 목록 영역 -->
+		<div class="chat-list">
+			<div class="chat-room"
+				 th:each="room : ${chatRooms}"
+				 th:classappend="${room.myRole == 'OWNER'} ? ' owner-room' : ''"
+				 th:attr="data-id=${room.id}, data-room-id=${room.id}">
+				<!-- 왼쪽: 썸네일 + 참여자 수 -->
+				<div class="chat-left">
+					<img th:src="${room.thumbnailImageUrl != null ? room.thumbnailImageUrl : '/images/chat/default-thumbnail-100x100.png'}"
+						 alt="채팅방 이미지" class="chat-avatar" />
+					<div class="chat-participant-count">
+						참여자: <span th:text="${room.participantCount}">0</span>명
+					</div>
+				</div>
+
+				<!-- 중앙 내용 -->
+				<div class="chat-center">
+					<div class="chat-title" th:text="${room.title}">채팅방 제목</div>
+
+					<div class="chat-hashtags">
+						<div class="chat-hashtag" th:each="tag : ${room.hashtags}" th:text="'#' + ${tag}">#해시태그
+						</div>
+					</div>
+
+					<div class="chat-owner">
+						방장: <span th:text="${room.ownerNickname}"></span>
+					</div>
+				</div>
+
+				<!-- 오른쪽: 시간 + 좋아요 -->
+				<div class="chat-right">
+					<div class="chat-time" th:text="${#temporals.format(room.createdAt, 'yy-MM-dd HH:mm')}">시간</div>
+					<div class="chat-likes" data-room-id="${room.id}">
+						<i class="${room.liked ? 'fas' : 'far'} fa-heart like-icon"></i>
+						<span class="like-count">${room.likeCount}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 더보기 버튼 -->
+		<div class="load-more-container">
+			<button id="load-more-btn" class="load-more-btn">
+				더보기
+			</button>
+			<div id="loading-spinner" class="loading-spinner" style="display: none;">
+				<img src="/images/loadingspinner/spinner.svg" alt="로딩 중" />
+			</div>
+			<div id="end-message" class="end-message" style="display: none;">
+				마지막 채팅방입니다.
+			</div>
+		</div>
+
+
+		<!-- 채팅방 상세 모달 -->
+		<div class="modal-overlay" id="chat-detail-modal">
+			<div class="modal">
+				<div class="modal-inner">
+					<div class="modal-header">
+						<h3 class="modal-title">채팅방 상세 정보</h3>
+						<div class="modal-close" id="close-detail-modal">
+							<i class="fas fa-times"></i>
+						</div>
+					</div>
+					<div class="modal-scroll-container">
+						<div class="modal-body chatroom-detail-modal">
+
+							<!-- 상단 배경 썸네일 이미지 영역 -->
+							<div class="chatroom-header" id="detail-thumbnail-area">
+								<!-- 상세 모달의 좋아요 표시 영역 -->
+								<div class="like-toggle" id="like-toggle">
+									<i class="far fa-heart"></i> <!-- filled: fas, empty: far -->
+								</div>
+								<div class="chatroom-header-content">
+									<div class="chatroom-title" id="detail-title">채팅방 제목</div>
+									<div class="chatroom-meta">
+										참여자 <span id="detail-participants">0</span>명 · 개설일 <span id="detail-created-at">YYYY.MM.DD</span>
+									</div>
+								</div>
+							</div>
+
+							<!-- 방장 -->
+							<div class="chatroom-owner" id="detail-owner">방장: -</div>
+
+							<!-- 해시태그 -->
+							<div class="chatroom-tags" id="detail-hashtags">
+								<!-- 동적으로 태그가 들어감 -->
+							</div>
+
+							<!-- 공지사항 (스크롤 가능) -->
+							<div class="chatroom-notice">
+								<div class="section-title">공지사항</div>
+								<div id="detail-notice" style="max-height: 120px; overflow-y: auto; white-space: pre-wrap; padding: 8px; border: 1px solid #ccc; border-radius: 8px; background: #fdfdfd;"></div>
+							</div>
+
+							<!-- 설명글 (스크롤 가능) -->
+							<div class="chatroom-description">
+								<div class="section-title">설명글</div>
+								<div id="detail-description" style="max-height: 150px; overflow-y: auto; white-space: pre-wrap; padding: 8px; border: 1px solid #ccc; border-radius: 8px; background: #fdfdfd;"></div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="create-button" id="enter-chatroom">채팅방 입장하기</button>
+						<button class="cancel-button" id="leave-chatroom" style="display:none;">채팅방 나가기</button>
+						<button class="create-button" id="edit-chatroom" style="display:none;">채팅방 수정</button>
+						<button class="cancel-button" id="delete-chatroom"
+								style="display:none; background-color: #f44336; color: white;">채팅방 삭제
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!-- 채팅방 생성 모달 -->
+		<div class="modal-overlay" id="create-chat-modal">
+			<div class="modal">
+				<div class="modal-inner">
+					<div class="modal-header">
+						<h3 class="modal-title">새 채팅방 만들기</h3>
+						<div class="modal-close" id="close-create-modal">
+							<i class="fas fa-times"></i>
+						</div>
+					</div>
+					<div class="modal-scroll-container">
+						<div class="form-group">
+							<label class="form-label">채팅방 제목</label>
+							<input type="text" class="form-input" id="chat-title" placeholder="제목을 입력하세요 (최대 30자)"
+								   maxlength="30">
+						</div>
+
+						<div class="form-group">
+							<label class="form-label">썸네일 이미지 (선택)</label>
+							<input type="file" class="form-input" id="chat-thumbnail" accept="image/png, image/jpeg">
+
+							<!-- 썸네일 미리보기 박스 -->
+							<div class="thumbnail-preview-box-create">
+								<img id="chatCreatePreview" src="/images/chat/default-thumbnail-100x100.png"
+									 style="width: 100%; height: 100%; object-fit: contain; object-position: center;" />
+							</div>
+						</div>
+
+
+						<div class="form-group">
+							<label class="form-label">해시태그 (최대 5개)</label>
+							<div class="hashtag-input">
+								<input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter...">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="form-label">공지사항 (선택)</label>
+							<textarea class="form-textarea" id="chat-notice" placeholder="채팅방 공지사항을 입력하세요 (최대 100자)"
+									  maxlength="100"></textarea>
+						</div>
+						<div class="form-group">
+							<label class="form-label">설명글 (선택)</label>
+							<textarea class="form-textarea" id="chat-description" placeholder="채팅방에 대한 설명을 입력하세요 (최대 200자)"
+									  maxlength="200"></textarea>
+						</div>
+						<div class="modal-footer">
+							<button class="cancel-button" id="cancel-create">취소</button>
+							<button class="create-button" id="confirm-create">채팅방 만들기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 채팅방 수정 모달 -->
+	<div class="modal-overlay" id="edit-chat-modal">
+		<div class="modal">
+			<div class="modal-inner">
+				<div class="modal-header">
+					<h3 class="modal-title">채팅방 수정</h3>
+					<div class="modal-close" id="close-edit-modal">
+						<i class="fas fa-times"></i>
+					</div>
+				</div>
+				<div class="modal-scroll-container">
+					<div class="form-group">
+						<label class="form-label">채팅방 제목</label>
+						<input type="text" class="form-input" id="edit-chat-title" maxlength="30" />
+					</div>
+
+					<div class="form-group">
+						<label class="form-label">썸네일 이미지 (선택)</label>
+						<input type="file" class="form-input" id="edit-chat-thumbnail" accept="image/png, image/jpeg">
+						<!-- 썸네일 미리보기 -->
+						<div class="thumbnail-preview-box">
+							<img id="thumbnailPreview" src="/images/chat/default-thumbnail-100x100.png" alt="썸네일 미리보기"
+								 style="width: 100%; object-fit: cover; border-radius: 6px; margin-top: 10px;" />
+						</div>
+						<!-- 기본 이미지로 초기화 버튼 -->
+						<button type="button" id="resetThumbnailBtn" class="form-button" style="margin-top: 8px;">
+							기본 이미지로 초기화
+						</button>
+						<!-- 초기화 여부 플래그 -->
+						<input type="hidden" id="resetThumbnailFlag" name="resetThumbnail" value="false" />
+					</div>
+
+					<div class="form-group">
+						<label class="form-label">해시태그 (최대 5개)</label>
+						<div class="hashtag-input" id="edit-hashtag-container">
+							<!-- 기존 태그 채워짐 -->
+							<input type="text" class="hashtag-input-field" placeholder="태그 입력 후 Enter..." />
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="form-label">공지사항</label>
+						<textarea class="form-textarea" id="edit-chat-notice" maxlength="100"></textarea>
+					</div>
+
+					<div class="form-group">
+						<label class="form-label">설명글</label>
+						<textarea class="form-textarea" id="edit-chat-description" maxlength="200"></textarea>
+					</div>
+
+					<div class="modal-footer">
+						<button class="cancel-button" id="cancel-edit">취소</button>
+						<button class="create-button" id="confirm-edit">저장</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// 탭 네비게이션
+		document.addEventListener('DOMContentLoaded', function () {
+			const tabs = document.querySelectorAll('.tab');
+			const indicator = document.querySelector('.tab-indicator');
+
+			function setIndicatorPosition(activeTab) {
+				const tabRect = activeTab.getBoundingClientRect();
+				const navRect = document.querySelector('.tab-navigation').getBoundingClientRect();
+
+				indicator.style.width = `${tabRect.width}px`;
+				indicator.style.left = `${tabRect.left - navRect.left}px`;
+			}
+
+			tabs.forEach(tab => {
+				tab.addEventListener('click', function () {
+					tabs.forEach(t => t.classList.remove('active'));
+					this.classList.add('active');
+					setIndicatorPosition(this);
+				});
+			});
+
+			// 초기 인디케이터 위치 설정
+			const activeTab = document.querySelector('.tab.active');
+			if (activeTab) {
+				setIndicatorPosition(activeTab);
+			}
+
+			// 창 크기 변경시 인디케이터 위치 조정
+			window.addEventListener('resize', function () {
+				const activeTab = document.querySelector('.tab.active');
+				if (activeTab) {
+					setIndicatorPosition(activeTab);
+				}
+			});
+
+			// 🔧 이미지 클릭 시 상세보기로 이동
+			document.querySelectorAll('.post-image').forEach(image => {
+				image.addEventListener('click', function() {
+					const postCard = this.closest('.post-card');
+					const viewBtn = postCard.querySelector('.view-btn');
+					if (viewBtn) {
+						viewBtn.click();
+					}
+				});
+			});
+		});
+
+		// 사용자 선택 탭
+		const userTabs = document.querySelectorAll('.user-tab');
+		userTabs.forEach(tab => {
+			tab.addEventListener('click', function () {
+				userTabs.forEach(t => t.classList.remove('active'));
+				this.classList.add('active');
+			});
+		});
+
+		// 토픽 배지
+		const topicBadges = document.querySelectorAll('.topic-badge');
+		topicBadges.forEach(badge => {
+			badge.addEventListener('click', function () {
+				this.classList.toggle('active');
+			});
+		});
+
+		// 뷰 옵션
+		const viewOptions = document.querySelectorAll('.view-option');
+		viewOptions.forEach(option => {
+			option.addEventListener('click', function () {
+				viewOptions.forEach(o => o.classList.remove('active'));
+				this.classList.add('active');
+			});
+		});
+	</script>
+
+
+	<!-- 모달 모듈 -->
+	<script type="module">
+		import {
+			bindModalCloseButtons,
+			bindCreateModalOpen,
+			bindHashtagInputs,
+			initCreateModal,
+			initEditModal,
+			initDetailModal
+		} from '/js/chat-modal-utils.js';
+
+		document.addEventListener('DOMContentLoaded', () => {
+			bindModalCloseButtons();
+			bindCreateModalOpen();
+			bindHashtagInputs();
+			initCreateModal();
+			initEditModal();
+
+			// 썸네일 업로드 미리보기 및 초기화 로직
+			const thumbnailInput = document.getElementById('edit-chat-thumbnail');
+			const thumbnailPreview = document.getElementById('thumbnailPreview');
+			const resetBtn = document.getElementById('resetThumbnailBtn');
+			const resetFlag = document.getElementById('resetThumbnailFlag');
+
+			const DEFAULT_IMAGE_URL = "/images/chat/default-thumbnail-100x100.png";
+
+			if (thumbnailInput && thumbnailPreview && resetBtn && resetFlag) {
+				thumbnailInput.addEventListener('change', function () {
+					const file = this.files[0];
+					if (file) {
+						const reader = new FileReader();
+						reader.onload = function (e) {
+							thumbnailPreview.src = e.target.result;
+						};
+						reader.readAsDataURL(file);
+						resetFlag.value = "false"; // 사용자가 파일 업로드했으므로 reset 취소
+					}
+				});
+
+				resetBtn.addEventListener('click', function () {
+					thumbnailPreview.src = DEFAULT_IMAGE_URL;
+					thumbnailInput.value = ""; // 업로드 파일 초기화
+					resetFlag.value = "true";  // 기본 이미지로 초기화 요청
+				});
+			}
+
+
+
+
+			initDetailModal();
+		});
+	</script>
+
+	<script type="module">
+		import {
+			setDetailModal,
+			controlDetailButtons,
+			bindLikeToggle,
+			openModal
+		} from '/js/chat-modal-utils.js';
+
+		let currentTab = '전체';
+		let offset = 0;
+		const limit = 10;
+
+		const loadMoreBtn = document.getElementById('load-more-btn');
+		const spinner = document.getElementById('loading-spinner');
+		const endMessage = document.getElementById('end-message');
+
+		document.addEventListener('DOMContentLoaded', () => {
+			bindFilterTabEvents();
+			bindSearchInput();
+			bindLoadMore();
+			loadChatRooms();
+		});
+
+		function bindFilterTabEvents() {
+			document.querySelectorAll('.chat-filter').forEach(tab => {
+				tab.addEventListener('click', () => {
+					document.querySelectorAll('.chat-filter').forEach(el => el.classList.remove('active'));
+					tab.classList.add('active');
+					currentTab = tab.dataset.filter;
+					offset = 0;
+					loadChatRooms();
+				});
+			});
+		}
+
+		function bindSearchInput() {
+			const input = document.getElementById('chat-search-input');
+			const suggestionList = document.getElementById('suggestion-list');
+			let debounceTimer;
+			let selectedIndex = -1;
+
+			input.addEventListener('keydown', e => {
+				const items = suggestionList.querySelectorAll('li');
+				if (e.key === 'ArrowDown') {
+					e.preventDefault(); selectedIndex = (selectedIndex + 1) % items.length;
+					updateActiveItem(items);
+				} else if (e.key === 'ArrowUp') {
+					e.preventDefault(); selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+					updateActiveItem(items);
+				} else if (e.key === 'Enter') {
+					if (selectedIndex >= 0 && selectedIndex < items.length) {
+						e.preventDefault(); items[selectedIndex].click();
+					}
+				}
+			});
+
+			input.addEventListener('input', () => {
+				const keyword = input.value.trim();
+				offset = 0;
+
+				clearTimeout(debounceTimer);
+				debounceTimer = setTimeout(() => {
+					loadChatRooms(keyword);
+
+					if (keyword.length > 0) {
+						fetch(`/api/suggestions?keyword=${encodeURIComponent(keyword)}`)
+								.then(res => res.json())
+								.then(suggestions => showSuggestions(suggestions));
+					} else {
+						suggestionList.innerHTML = '';
+					}
+				}, 300);
+			});
+
+			document.addEventListener('click', e => {
+				if (!input.contains(e.target) && !suggestionList.contains(e.target)) {
+					suggestionList.innerHTML = '';
+				}
+			});
+
+			function updateActiveItem(items) {
+				items.forEach((item, index) => {
+					item.classList.toggle('active', index === selectedIndex);
+					if (index === selectedIndex) item.scrollIntoView({ block: 'nearest' });
+				});
+			}
+
+			function showSuggestions(suggestions) {
+				suggestionList.innerHTML = '';
+				selectedIndex = -1;
+				suggestions.forEach(item => {
+					const li = document.createElement('li');
+					li.textContent = item;
+					if (item.startsWith('#')) li.classList.add('hashtag-suggestion');
+					if (item.startsWith('@')) li.classList.add('owner-suggestion');
+					li.addEventListener('click', () => {
+						input.value = item.replace(/^[@#]/, '');
+						suggestionList.innerHTML = '';
+						input.dispatchEvent(new Event('input'));
+					});
+					suggestionList.appendChild(li);
+				});
+			}
+		}
+
+		function bindLoadMore() {
+			if (loadMoreBtn) {
+				loadMoreBtn.addEventListener('click', async () => {
+					offset += limit;
+					loadMoreBtn.style.display = 'none';
+					spinner.style.display = 'block';
+					endMessage.style.display = 'none';
+
+					const minDuration = new Promise(resolve => setTimeout(resolve, 800)); // 최소 800ms
+					const dataPromise = loadChatRoomsData(offset, limit);
+
+					const [data] = await Promise.all([
+						dataPromise.then(data => [data]),
+						minDuration
+					]);
+
+					renderChatRooms(data[0].rooms);
+
+					if (data[0].rooms.length < limit) {
+						endMessage.style.display = 'block';
+						loadMoreBtn.style.display = 'none';
+					} else {
+						endMessage.style.display = 'none';
+						loadMoreBtn.style.display = 'inline-block';
+					}
+
+					spinner.style.display = 'none';
+				});
+			}
+		}
+
+		async function loadChatRooms(keyword = '') {
+			const { rooms } = await loadChatRoomsData(offset, limit, keyword);
+			if (offset === 0) document.querySelector('.chat-list').innerHTML = '';
+			renderChatRooms(rooms);
+			if (rooms.length < limit) {
+				endMessage.style.display = 'block';
+				loadMoreBtn.style.display = 'none';
+			} else {
+				endMessage.style.display = 'none';
+				loadMoreBtn.style.display = 'inline-block';
+			}
+		}
+
+		async function loadChatRoomsData(offset, limit, keyword = '') {
+			const path = currentTab === 'popular' ? '/popular' :
+					currentTab === 'mine' ? '/mine' : '';
+			const query = new URLSearchParams({ offset, limit });
+			if (keyword) query.append('keyword', keyword);
+
+			const res = await fetch(`/api/chatrooms${path}?${query.toString()}`);
+			return await res.json();
+		}
+
+		function renderChatRooms(rooms) {
+			const container = document.querySelector('.chat-list');
+			rooms.forEach(room => {
+				const div = document.createElement('div');
+				div.className = `chat-room${room.myRole === 'OWNER' ? ' owner-room' : ''}`;
+				div.setAttribute('data-id', room.id);
+				div.setAttribute('data-room-id', room.id);
+				div.innerHTML = `
+		<div class="chat-left">
+			<img src="${room.thumbnailImageUrl || '/images/chat/default-thumbnail-100x100.png'}" class="chat-avatar" />
+			<div class="chat-participant-count">참여자: ${room.participantCount}명</div>
+		</div>
+		<div class="chat-center">
+			<div class="chat-title">${room.title}</div>
+			<div class="chat-hashtags">${room.hashtags.map(tag => `<div class="chat-hashtag">#${tag}</div>`).join('')}</div>
+			<div class="chat-owner">방장: ${room.ownerNickname}</div>
+		</div>
+		<div class="chat-right">
+			<div class="chat-time">${new Date(room.createdAt).toLocaleString('ko-KR')}</div>
+			<div class="chat-likes" data-room-id="${room.id}">
+			  <i class="${room.liked ? 'fas' : 'far'} fa-heart like-icon"></i>
+			  <span class="like-count">${room.likeCount}</span>
+			</div>
+		</div>`;
+				container.appendChild(div);
+
+				// 상세 모달 바인딩
+				div.addEventListener('click', async () => {
+					try {
+						const res = await fetch(`/api/chatrooms/${room.id}`);
+						const roomDetail = await res.json();
+						setDetailModal(roomDetail);
+						controlDetailButtons(roomDetail.myRole);
+						bindLikeToggle(room.id);
+						openModal(document.getElementById('chat-detail-modal'));
+					} catch (err) {
+						alert('채팅방 정보를 불러오는 데 실패했습니다.');
+						console.error(err);
+					}
+				});
+			});
+		}
+	</script>
+
+</th:block>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- CSS 스타일 추가 -->
+<link rel="stylesheet" th:href="@{/css/header-dropdown.css}">
+<body>
+<!-- 헤더 -->
+<div class="header" th:fragment="header">
+    <h2>모험가님!</h2>
+    <div class="header-actions">
+        <div class="top-icons">
+            <div class="notification-icon">
+                <i class="far fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+        </div>
+
+        <!-- 인증된 사용자일 때 프로필 영역 표시 -->
+        <div sec:authorize="isAuthenticated()" class="profile-dropdown">
+            <button class="profile-area" onclick="toggleDropdown()">
+                <img th:if="${currentUser.profileImage != null}"
+                     th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                     class="profile-pic"/>
+                <img th:if="${currentUser.profileImage == null}"
+                     src="/images/default-profile.png"
+                     class="profile-pic"/>
+                <span class="profile-name" th:text="${#authentication.principal.nickname}">김여행</span>
+                <i class="fas fa-chevron-down dropdown-arrow"></i>
+            </button>
+
+            <div class="dropdown-menu" id="profileDropdown">
+                <a href="/mypage" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    <span>마이페이지</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="dropdown-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>로그아웃</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 비인증 사용자일 때 로그인 버튼 표시 -->
+        <div sec:authorize="!isAuthenticated()">
+            <a href="/login" class="login-button">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>로그인</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 드롭다운 오버레이 -->
+    <div class="dropdown-overlay" id="dropdownOverlay" onclick="closeDropdown()"></div>
+</div>
+
+
+
+<!-- JavaScript 스크립트 추가 -->
+
+</body>
+</html>

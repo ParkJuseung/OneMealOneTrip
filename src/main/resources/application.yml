@@ -1,0 +1,72 @@
+spring:
+  config:
+    import: optional:application-secret.yml
+
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${SPRING_DATASOURCE_URL:jdbc:oracle:thin:@localhost:1521/xe}
+    username: ${SPRING_DATASOURCE_USERNAME:springboot}
+    password: ${SPRING_DATASOURCE_PASSWORD:java1234}
+
+  # JPA 설정
+  jpa:
+    database: oracle
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Thymeleaf ??
+  thymeleaf:
+    cache: false  # ?? ????? false, ?? ????? true ??
+    mode: HTML
+    encoding: UTF-8
+
+  # ?? ?? ??
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+
+# MyBatis ??
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  type-aliases-package: com.test.domain
+  configuration:
+    map-underscore-to-camel-case: true
+
+# ?? ??
+server:
+  port: 8090
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# ?? ??
+logging:
+  level:
+    root: INFO
+    com.test: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+
+# 프로필 이미지 업로드 기본 폴더
+file:
+  upload-dir: uploads/profile-images
