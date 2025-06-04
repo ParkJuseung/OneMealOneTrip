@@ -923,7 +923,6 @@
          * 이미지 로드 에러 처리
          */
         $('.post-detail-image img').on('error', function () {
-            console.warn('이미지 로드 실패:', $(this).data('original-src') || $(this).attr('src'));
             $(this).hide(); // 이미지를 숨김
             // 또는 부모 요소도 숨기고 싶다면
             // $(this).closest('.post-detail-image').hide();
@@ -989,7 +988,6 @@
                 if (status === google.maps.places.PlacesServiceStatus.OK) {
                     displayPlaceInfo(place);
                 } else {
-                    console.error('Place details request failed:', status);
                     handlePlaceError(status);
                 }
             });
@@ -1091,7 +1089,6 @@
 
         // Google Maps API 로드 오류 처리
         window.gm_authFailure = function () {
-            console.error('Google Maps API 인증 실패');
             document.getElementById('place-name').textContent = 'Google Maps API 인증 오류';
             document.getElementById('place-address').textContent = 'API 키를 확인해주세요.';
         };
@@ -1111,9 +1108,6 @@
                 loadedComments: 0,
 
                 init() {
-                    console.log('=== 댓글 매니저 초기화 ===');
-                    console.log('PostID:', this.postId);
-                    console.log('CurrentUserId:', this.currentUserId);
 
                     this.bindEvents();
                     this.loadTotalCommentCount();
@@ -1121,7 +1115,7 @@
                 },
 
                 bindEvents() {
-                    console.log('이벤트 바인딩 시작');
+
 
                     // 댓글 작성 버튼
                     $('.comment-submit').off('click').on('click', () => {
@@ -1138,7 +1132,6 @@
 
                     // 더보기 버튼
                     $('#showMoreBtn').off('click').on('click', () => {
-                        console.log('더보기 버튼 클릭됨');
                         this.loadMoreComments();
                     });
                 },
@@ -1146,30 +1139,24 @@
                 // 전체 댓글 수 로드
                 async loadTotalCommentCount() {
                     try {
-                        console.log('전체 댓글 수 로딩 시작...');
                         const response = await fetch(`/api/comments/test/${this.postId}`);
                         const text = await response.text();
-                        console.log('전체 댓글 수 API 응답:', text);
 
                         // "PostID 1의 댓글 수: 25" 형식에서 숫자만 추출
                         const match = text.match(/댓글 수: (\d+)/);
                         if (match) {
                             this.totalComments = parseInt(match[1]);
-                            console.log('✅ 전체 댓글 수:', this.totalComments);
                             $('.comments-count').text(this.totalComments);
                             this.updateMoreButton();
                         } else {
-                            console.error('댓글 수 파싱 실패:', text);
                         }
                     } catch (error) {
-                        console.error('❌ 전체 댓글 수 로드 실패:', error);
                     }
                 },
 
                 // 댓글 로드
                 async loadComments() {
                     if (this.isLoading) {
-                        console.log('⏳ 이미 로딩 중...');
                         return;
                     }
 
@@ -1177,7 +1164,6 @@
                     this.updateMoreButton(); // 로딩 상태 표시
 
                     try {
-                        console.log(`📥 댓글 로딩 시작 - 페이지: ${this.currentPage}, 크기: ${this.pageSize}`);
 
                         const response = await fetch(`/api/comments/post/${this.postId}?page=${this.currentPage}&size=${this.pageSize}`);
 
@@ -1186,37 +1172,23 @@
                         }
 
                         const result = await response.json();
-                        console.log('📦 댓글 API 전체 응답:', result);
 
                         if (result.success && result.data && result.data.dtoList) {
-                            console.log('✅ 댓글 데이터:', result.data.dtoList);
-                            console.log('📊 페이징 정보:', {
-                                page: result.data.page,
-                                size: result.data.size,
-                                totalPage: result.data.totalPage,
-                                prev: result.data.prev,
-                                next: result.data.next
-                            });
 
                             if (this.currentPage === 0) {
                                 // 첫 페이지는 새로 렌더링
-                                console.log('🔄 첫 페이지 렌더링');
                                 this.renderComments(result.data.dtoList);
                                 this.loadedComments = result.data.dtoList.length;
                             } else {
                                 // 추가 페이지는 append
-                                console.log('➕ 댓글 추가');
                                 this.appendComments(result.data.dtoList);
                                 this.loadedComments += result.data.dtoList.length;
                             }
 
-                            console.log('📈 로드된 댓글 수:', this.loadedComments);
                         } else {
-                            console.error('❌ 댓글 로드 실패:', result.message || '알 수 없는 오류');
                             this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
                         }
                     } catch (error) {
-                        console.error('💥 댓글 로드 에러:', error);
                         this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
                     } finally {
                         this.isLoading = false;
@@ -1226,13 +1198,7 @@
 
                 // 더 많은 댓글 로드
                 async loadMoreComments() {
-                    console.log('🔄 더보기 요청');
-                    console.log('현재 상태:', {
-                        currentPage: this.currentPage,
-                        loadedComments: this.loadedComments,
-                        totalComments: this.totalComments,
-                        isLoading: this.isLoading
-                    });
+
 
                     if (this.isLoading) {
                         console.log('⚠️ 이미 로딩 중이므로 중단');

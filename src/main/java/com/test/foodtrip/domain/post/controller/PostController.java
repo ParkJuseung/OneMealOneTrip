@@ -7,7 +7,7 @@ import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.service.PostService;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
-import com.test.foodtrip.domain.user.service.UserService;
+import com.test.foodtrip.common.aws.S3Service;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,13 +28,14 @@ public class PostController {
     @Value("${google.maps.key}")
     private String apiKey;
 
-
     private final PostService postService;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
-    public PostController(PostService postService, UserRepository userRepository) {
+    public PostController(PostService postService, UserRepository userRepository, S3Service s3Service) {
         this.postService = postService;
         this.userRepository = userRepository;
+        this.s3Service = s3Service;
     }
 
     @GetMapping("/")
@@ -60,7 +62,6 @@ public class PostController {
         String placeId = dto.getPlaceId();
         model.addAttribute("dto", dto);
 
-
         // 게시글 작성자 정보 조회하여 모델에 추가
         if (dto.getUserId() != null) {
             Optional<User> authorOpt = userRepository.findById(dto.getUserId());
@@ -69,7 +70,6 @@ public class PostController {
                 model.addAttribute("author", author);
             }
         }
-
 
         model.addAttribute("placeId", placeId);
         model.addAttribute("apiKey", apiKey);
@@ -100,21 +100,6 @@ public class PostController {
         log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
         log.info("PostController create() - placeId: {}", placeId);
 
-        // 🔍 추가 디버깅: 각 이미지 파일 정보 출력
-        System.out.println("=== Controller 이미지 파일 디버깅 ===");
-        System.out.println("받은 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : "null"));
-
-        if (imageFiles != null) {
-            for (int i = 0; i < imageFiles.size(); i++) {
-                MultipartFile file = imageFiles.get(i);
-                System.out.println("파일 " + i + ":");
-                System.out.println("  - 파일명: " + file.getOriginalFilename());
-                System.out.println("  - 크기: " + file.getSize() + " bytes");
-                System.out.println("  - Content-Type: " + file.getContentType());
-                System.out.println("  - 비어있음: " + file.isEmpty());
-            }
-        }
-
         // 로그인 체크
         if (!isLoggedIn(session)) {
             return "redirect:/login?error=login_required";
@@ -133,19 +118,35 @@ public class PostController {
             dto.setPlaceName(placeName);
             dto.setPlaceAddress(placeAddress);
 
-            // 🔍 배열 변환 전 추가 로그
-            System.out.println("배열 변환 전 리스트 크기: " + (imageFiles != null ? imageFiles.size() : 0));
+            // S3에 이미지 업로드 처리
+            List<String> imageUrls = new ArrayList<>();
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                log.info("=== S3 이미지 업로드 시작 ===");
 
-            // 이미지 배열로 변환
-            MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+                for (MultipartFile file : imageFiles) {
+                    if (!file.isEmpty() && isValidImageFile(file)) {
+                        try {
+                            String imageUrl = s3Service.upload(file, "posts");
+                            imageUrls.add(imageUrl);
+                            log.info("S3 업로드 성공: {}", imageUrl);
+                        } catch (Exception e) {
+                            log.error("S3 업로드 실패: {}", e.getMessage());
+                        }
+                    }
+                }
 
-            System.out.println("배열 변환 후 크기: " + imagesArray.length);
+                log.info("총 업로드된 이미지 수: {}", imageUrls.size());
+            }
+
+            // DTO에 S3 URL들 설정
+            dto.setImageUrls(imageUrls);
 
             // 서비스 호출
-            Long pno = postService.create(dto, imagesArray);
+            Long pno = postService.create(dto, new MultipartFile[0]);
 
             redirectAttributes.addFlashAttribute("msg", pno);
             return "redirect:/post";
+
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/login";
@@ -155,7 +156,6 @@ public class PostController {
             return "redirect:/post/create";
         }
     }
-
 
     // 이미지 파일 유효성 검사 메서드
     private boolean isValidImageFile(MultipartFile file) {
@@ -181,7 +181,6 @@ public class PostController {
                          @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
                          HttpSession session,
                          Model model) {
-
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -209,7 +208,7 @@ public class PostController {
                     System.out.println("이미지 URL 목록: " + dto.getImageUrls());
                 }
             } else {
-                System.out.println("❌ DTO가 null입니다!");
+                System.out.println("DTO가 null입니다!");
                 return "redirect:/post";
             }
 
@@ -222,7 +221,7 @@ public class PostController {
 
             return "post/modify-post";
         } catch (Exception e) {
-            System.err.println("❌ 게시글 수정 페이지 로드 중 오류: " + e.getMessage());
+            System.err.println("게시글 수정 페이지 로드 중 오류: " + e.getMessage());
             e.printStackTrace();
             return "redirect:/post";
         }
@@ -251,18 +250,65 @@ public class PostController {
             // 태그 정보를 DTO에 설정
             dto.setTags(tags);
 
-            // 이미지 배열로 변환
-            MultipartFile[] imagesArray = imageFiles != null ?
-                    imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+            // 기존 이미지 URL들 가져오기
+            PostDTO existingPost = postService.read(dto.getId());
+            List<String> currentImageUrls = new ArrayList<>(existingPost.getImageUrls() != null ?
+                    existingPost.getImageUrls() : new ArrayList<>());
 
-            // 수정 서비스 호출 (이미지도 함께 처리)
-            postService.modify(dto, imagesArray, deleteImageIndexes);
+            // 삭제할 이미지들 S3에서 삭제 및 URL 리스트에서 제거
+            if (deleteImageIndexes != null && !deleteImageIndexes.isEmpty()) {
+                log.info("=== S3 이미지 삭제 시작 ===");
+
+                // 인덱스를 역순으로 정렬해서 삭제 (리스트 인덱스 오류 방지)
+                deleteImageIndexes.sort((a, b) -> b.compareTo(a));
+
+                for (Integer index : deleteImageIndexes) {
+                    if (index >= 0 && index < currentImageUrls.size()) {
+                        String imageUrl = currentImageUrls.get(index);
+                        try {
+                            // S3에서 파일 삭제
+                            String fileName = s3Service.extractFileNameFromUrl(imageUrl);
+                            s3Service.deleteFile(fileName);
+                            log.info("S3 이미지 삭제 성공: {}", imageUrl);
+
+                            // URL 리스트에서도 제거
+                            currentImageUrls.remove((int)index);
+                        } catch (Exception e) {
+                            log.error("S3 이미지 삭제 실패: {}", e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            // 새로운 이미지들 S3에 업로드
+            if (imageFiles != null && !imageFiles.isEmpty()) {
+                log.info("=== 새 이미지 S3 업로드 시작 ===");
+
+                for (MultipartFile file : imageFiles) {
+                    if (!file.isEmpty() && isValidImageFile(file)) {
+                        try {
+                            String imageUrl = s3Service.upload(file, "posts");
+                            currentImageUrls.add(imageUrl);
+                            log.info("새 이미지 S3 업로드 성공: {}", imageUrl);
+                        } catch (Exception e) {
+                            log.error("새 이미지 S3 업로드 실패: {}", e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            // DTO에 업데이트된 이미지 URL들 설정
+            dto.setImageUrls(currentImageUrls);
+
+            // 수정 서비스 호출
+            postService.modify(dto, new MultipartFile[0], null);
 
             redirectAttributes.addAttribute("page", requestDTO.getPage());
             redirectAttributes.addAttribute("type", requestDTO.getType());
             redirectAttributes.addAttribute("keyword", requestDTO.getKeyword());
 
             return "redirect:/post/" + dto.getId();
+
         } catch (IllegalStateException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/post/" + dto.getId();
@@ -286,6 +332,22 @@ public class PostController {
         }
 
         try {
+            // 게시글 삭제 전에 S3 이미지들도 삭제
+            PostDTO postToDelete = postService.read(id);
+            if (postToDelete.getImageUrls() != null && !postToDelete.getImageUrls().isEmpty()) {
+                log.info("=== 게시글 삭제 시 S3 이미지들 삭제 시작 ===");
+
+                for (String imageUrl : postToDelete.getImageUrls()) {
+                    try {
+                        String fileName = s3Service.extractFileNameFromUrl(imageUrl);
+                        s3Service.deleteFile(fileName);
+                        log.info("게시글 삭제 시 S3 이미지 삭제 성공: {}", imageUrl);
+                    } catch (Exception e) {
+                        log.error("게시글 삭제 시 S3 이미지 삭제 실패: {}", e.getMessage());
+                    }
+                }
+            }
+
             postService.remove(id);
 
             redirectAttributes.addAttribute("page", 1);
@@ -303,6 +365,4 @@ public class PostController {
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
-
-
 }
