@@ -162,18 +162,20 @@ GooGle API를 통해 정확한 위치를 제공하며 Pin과 경로 표시를 �
 ## 팀원 소개 👪
 <table>
     <tr>
-        <td height="140px" align="center"> <a href="https://github.com/Qulip">
-            <img src="https://avatars.githubusercontent.com/Qulip" width="140px" /> <br><br> 👑 유일권 <br>(Back-End) </a> <br></td>
-        <td height="140px" align="center"> <a href="https://github.com/BoyeonK">
-            <img src="https://avatars.githubusercontent.com/BoyeonK" width="140px" /> <br><br> 🐱 김보연 <br>(Front-End) </a> <br></td>
-        <td height="140px" align="center"> <a href="https://github.com/js0828">
-            <img src="https://avatars.githubusercontent.com/js0828" width="140px" /> <br><br> 🐻 최종수 <br>(Back-End) </a> <br></td>
-        <td height="140px" align="center"> <a href="https://github.com/choijoohee213">
-            <img src="https://avatars.githubusercontent.com/choijoohee213" width="140px" /> <br><br> 🐰 최주희 <br>(Back-End) </a> <br></td>
-        <td height="140px" align="center"> <a href="https://github.com/niinp28">
-            <img src="https://avatars.githubusercontent.com/niinp28" width="140px" /> <br><br> 🐯 최준혁 <br>(Front-End) </a> <br></td>
-        <td height="140px" align="center"> <a href="https://github.com/HSungDuk">
-            <img src="https://avatars.githubusercontent.com/HSungDuk" width="140px" /> <br><br> 🐹 홍성덕 <br>(Front-End) </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/ParkJuseung">
+            <img src="https://avatars.githubusercontent.com/ParkJuseung" width="140px" /> <br><br> 박주승 </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/josephkimmm">
+            <img src="https://avatars.githubusercontent.com/josephkimmm" width="140px" /> <br><br> 김두현 </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/Jinry5154">
+            <img src="https://avatars.githubusercontent.com/Jinry5154" width="140px" /> <br><br> 김진혁 </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/zionpaul1047">
+            <img src="https://avatars.githubusercontent.com/zionpaul1047" width="140px" /> <br><br> 이지온 </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/Lee1p">
+            <img src="https://avatars.githubusercontent.com/Lee1p" width="140px" /> <br><br> 이재현 </a> <br></td>
+        <td height="140px" align="center"> <a href="https://github.com/daumi125">
+            <img src="https://avatars.githubusercontent.com/daumi125" width="140px" /> <br><br> 정다음 </a> <br></td>
+              <td height="140px" align="center"> <a href="https://github.com/jnow424">
+            <img src="https://avatars.githubusercontent.com/jnow424" width="140px" /> <br><br> 조인제 </a> <br></td>
     </tr>
 </table>
 
