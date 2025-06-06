@@ -6,17 +6,21 @@ import com.test.foodtrip.domain.post.service.PostService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/posts")
-@RequiredArgsConstructor
 @Log4j2
 public class PostRestController {
 
     private final PostService postService;
+
+    public PostRestController(@Qualifier("postServiceImpl_local") PostService postService) {
+        this.postService = postService;
+    }
 
     // 로그인 상태를 확인하는 헬퍼 메서드
     private boolean isLoggedIn(HttpSession session) {
