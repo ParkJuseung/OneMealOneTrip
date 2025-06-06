@@ -2,10 +2,8 @@
 package com.test.foodtrip.domain.travel.service;
 
 import com.test.foodtrip.domain.travel.dto.*;
-import com.test.foodtrip.domain.travel.entity.RoutePlace;
-import com.test.foodtrip.domain.travel.entity.TravelRoute;
-import com.test.foodtrip.domain.travel.entity.TravelRouteTag;
-import com.test.foodtrip.domain.travel.entity.TravelRouteTagging;
+import com.test.foodtrip.domain.travel.entity.*;
+import com.test.foodtrip.domain.travel.repository.RouteBookmarkRepository;
 import com.test.foodtrip.domain.travel.repository.RoutePlaceRepository;
 import com.test.foodtrip.domain.travel.repository.TravelRouteRepository;
 import com.test.foodtrip.domain.travel.repository.TravelRouteTagRepository;
@@ -20,8 +18,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +34,7 @@ public class TravelRouteService {
     private final TravelRouteTagRepository tagRepository;
     private final UserRepository userRepository;
     private final RoutePlaceRepository routePlaceRepository;
+    private final RouteBookmarkRepository routeBookmarkRepository;
 
     public List<TravelRoute> getAllRoutes() {
         return travelRouteRepository.findAll(); // 추후 정렬/필터 추가 가능
@@ -157,11 +158,15 @@ public class TravelRouteService {
                     if (apiPlaceId == null || apiPlaceId.isBlank()) {
                         return "/images/default-thumbnail.jpg";
                     }
-                    return "/api/place/photos/first?placeId=" + apiPlaceId;
+
+                    List<String> references = googlePlaceService.getPhotoReferences(apiPlaceId);
+                    if (references.isEmpty()) {
+                        return "/images/default-thumbnail.jpg";
+                    }
+
+                    return "/api/place/photo-proxy?photoReference=" + references.get(0);
                 })
-                .orElseGet(() -> {
-                    return "/images/default-thumbnail.jpg";
-                });
+                .orElse("/images/default-thumbnail.jpg");
     }
 
     @Transactional
@@ -213,6 +218,24 @@ public class TravelRouteService {
     @Transactional
     public void deleteRoute(Long routeId) {
         travelRouteRepository.deleteById(routeId);
+    }
+
+    public boolean toggleBookmark(Long routeId, Long userId) {
+        Optional<RouteBookmark> existing = routeBookmarkRepository.findByTravelRoute_RouteIdAndUser_Id(routeId, userId);
+
+        if (existing.isPresent()) {
+            routeBookmarkRepository.delete(existing.get());
+            return false;
+        } else {
+            RouteBookmark bookmark = RouteBookmark.builder()
+                    .travelRoute(TravelRoute.builder().routeId(routeId).build())
+                    .user(User.builder().id(userId).build())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            routeBookmarkRepository.save(bookmark);
+            return true;
+        }
     }
 
 

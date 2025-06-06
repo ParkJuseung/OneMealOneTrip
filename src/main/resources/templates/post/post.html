@@ -8,17 +8,45 @@
 
 <th:block layout:fragment="style">
     <link rel="stylesheet" th:href="@{/css/post.css}">
+
+    <!-- 추가 스타일: 리스트 이미지 표시용 -->
+    <style>
+        /* 게시글 카드 이미지 */
+        .post-image {
+            width: 130px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            margin: 10px 0;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .post-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .post-image {
+                width: 100px;
+                height: 70px;
+            }
+        }
+
+    </style>
 </th:block>
 
 <body>
 <th:block layout:fragment="content">
-<!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
-<!--    <div class="search-container">-->
-<!--        <div class="search-input-wrap">-->
-<!--            <i class="fas fa-search search-icon-input"></i>-->
-<!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
-<!--        </div>-->
-<!--    </div>-->
+    <!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
+    <!--    <div class="search-container">-->
+    <!--        <div class="search-input-wrap">-->
+    <!--            <i class="fas fa-search search-icon-input"></i>-->
+    <!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
+    <!--        </div>-->
+    <!--    </div>-->
 
     <!-- 사용자 선택 탭 -->
     <div class="user-selection">
@@ -45,9 +73,9 @@
 
     <!-- 탭 네비게이션 -->
     <div class="tab-navigation">
-        <div class="tab active" data-tab="all">포스트</div>
-        <div class="tab" data-tab="companion">추천 여행경로</div>
-        <div class="tab" data-tab="post">채팅</div>
+        <div class="tab active" data-tab="all" onclick="location.href='/post'">포스트</div>
+        <div class="tab" data-tab="companion" onclick="location.href='/travel'">추천 여행경로</div>
+        <div class="tab" data-tab="post" onclick="location.href='/chat'">채팅</div>
         <div class="tab" data-tab="explorer"></div>
         <div class="tab-indicator"></div>
     </div>
@@ -101,21 +129,31 @@
                 <div class="post-tags">
                     <span class="post-tag" th:each="tag : ${dto.tags}" th:text="'#' + ${tag}"></span>
                 </div>
-                <img src="/api/placeholder/130/90" alt="여행 사진" class="post-image"
-                     th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}">
-                <p class="post-text">[[${dto.content}]]</p>
+
+                <!-- 가장 깔끔한 버전: 이미지가 있을 때만 표시 -->
+                <div th:if="${dto.imageUrls != null and !dto.imageUrls.isEmpty()}" class="post-image-container">
+                    <img th:src="${dto.imageUrls[0]}"
+                         alt="게시글 이미지"
+                         class="post-image"
+                         onerror="this.parentElement.style.display='none';">
+                </div>
+
+                <!-- 또는 더 읽기 쉽게 -->
+                <p class="post-text">
+                    <span th:text="${#strings.abbreviate(dto.content, 150)}"></span>
+                </p>
                 <div class="post-meta">
                     <div class="post-author">
-                        <img th:if="${currentUser.profileImage != null}"
-                             th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
+                        <img th:if="${dto.authorProfileImage != null}"
+                             th:src="@{/images/profiles/{fn}(fn=${dto.authorProfileImage})}"
                              alt="프로필" class="profile-pic"
                              style="width:28px; height:28px; object-fit:cover;"/>
 
-                        <img th:if="${currentUser.profileImage == null}"
+                        <img th:if="${dto.authorProfileImage == null}"
                              src="/images/default-profile.png"
                              alt="프로필" class="profile-pic"
                              style="width:28px; height:28px; object-fit:cover;"/>
-                        <span>20대 여행자</span>
+                        <span th:text="${dto.authorNickname}">작성자</span>
                     </div>
                     <span class="post-date">[[${dto.elapsedTime}]]</span>
                 </div>
@@ -201,6 +239,17 @@
                 if (activeTab) {
                     setIndicatorPosition(activeTab);
                 }
+            });
+
+            // 🔧 이미지 클릭 시 상세보기로 이동
+            document.querySelectorAll('.post-image').forEach(image => {
+                image.addEventListener('click', function() {
+                    const postCard = this.closest('.post-card');
+                    const viewBtn = postCard.querySelector('.view-btn');
+                    if (viewBtn) {
+                        viewBtn.click();
+                    }
+                });
             });
         });
 

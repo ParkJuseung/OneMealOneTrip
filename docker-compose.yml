@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  oracle:
+    image: gvenzl/oracle-xe:18
+    container_name: oracle
+    ports:
+      - "1525:1521"
+    networks:
+      - foodtrip
+    environment:
+      - ORACLE_PASSWORD=java1234
+      - APP_USER=foodtrip
+      - APP_USER_PASSWORD=java1234
+    volumes:
+      - ./script:/container-entrypoint-initdb.d
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: foodtrip
+    ports:
+      - "8091:8090"
+    networks:
+      - foodtrip
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle:1521/XEPDB1
+      - SPRING_DATASOURCE_USERNAME=foodtrip
+      - SPRING_DATASOURCE_PASSWORD=java1234
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=oracle.jdbc.OracleDriver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.OracleDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+    depends_on:
+      oracle:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  foodtrip:
+    driver: bridge
+
+volumes:
+  oracle_data:

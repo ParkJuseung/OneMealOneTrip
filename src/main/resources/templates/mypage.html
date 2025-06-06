@@ -43,8 +43,8 @@
                      alt="프로필 이미지"
                      class="profile-image"/>
                 <div class="profile-info">
-                    <h2 class="profile-name" th:text="${user.nickname} + ' ' + (user.role == 'USER' ? '' : user.role)">
-                        닉네임 <span class="badge-label">등급</span></h2> <!-- 등급 바인딩은 필요에 맞춰 조정 -->
+                    <h2 class="profile-name" th:text="${user.nickname} ">
+                        닉네임 ></h2> <!-- 등급 바인딩은 필요에 맞춰 조정 -->
                     <div class="profile-email" th:text="${user.socialEmail}">user@example.com</div>
                     <div class="profile-greeting" th:text="${user.greeting}">안녕하세요! 여행을 사랑하는 김여행입니다. 함께 멋진 여행을 만들어가요!
                         ✈️

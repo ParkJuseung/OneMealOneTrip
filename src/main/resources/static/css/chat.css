@@ -33,6 +33,41 @@ body {
     line-height: 1.6;
 }
 
+/* 탭 네비게이션 */
+.tab-navigation {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.tab {
+    padding: 14px 24px;
+    cursor: pointer;
+    color: var(--text-light);
+    font-weight: 500;
+    position: relative;
+    transition: var(--transition);
+}
+
+.tab:hover:not(.active) {
+    color: var(--primary-dark);
+}
+
+.tab.active {
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.tab-indicator {
+    position: absolute;
+    bottom: -1px;
+    height: 3px;
+    background-color: var(--primary-color);
+    transition: var(--transition);
+    border-radius: 3px 3px 0 0;
+}
+
 /* 컨테이너 레이아웃 */
 .container {
     display: flex;

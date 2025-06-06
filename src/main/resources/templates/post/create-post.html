@@ -8,11 +8,193 @@
     <link rel="stylesheet" th:href="@{/css/post-create.css}">
 
     <!-- Google Maps JavaScript API 추가 (Geocoding API도 포함) -->
-    <script async defer
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE&libraries=places&callback=initLocationSearch">
+    <script th:src="@{'https://maps.googleapis.com/maps/api/js'(key=${apiKey}, libraries='places', callback='initLocationSearch')}"
+            async defer>
     </script>
 
+
     <style>
+        /* 기본 레이아웃 */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-hint {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 개선된 이미지 업로드 컨테이너 */
+        .image-upload-container {
+            width: 100% !important;
+        }
+
+        /* 이미지 미리보기 영역 스타일 */
+        .image-preview-area {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 15px !important;
+            min-height: 120px !important;
+            padding: 16px !important;
+            border: 2px dashed #ddd !important;
+            border-radius: 12px !important;
+            background-color: #fafafa !important;
+        }
+
+        .image-preview-area:hover {
+            border-color: #0ED8D5 !important;
+        }
+
+        /* 이미지 미리보기 아이템 스타일 */
+        .image-preview-item {
+            position: relative !important;
+            width: 150px !important;
+            height: 150px !important;
+            margin: 0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            flex: 0 0 auto !important;
+        }
+
+        .image-preview-item:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* 이미지 자체 스타일 */
+        .image-preview-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* 파일 정보 스타일 */
+        .image-file-info {
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent) !important;
+            color: white !important;
+            padding: 15px 10px 8px !important;
+        }
+
+        .file-name {
+            font-weight: 500 !important;
+            margin-bottom: 2px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            color: white !important;
+        }
+
+        .file-size {
+            opacity: 0.8 !important;
+            font-size: 10px !important;
+            color: white !important;
+        }
+
+        /* 삭제 버튼 스타일 */
+        .image-preview-remove {
+            position: absolute !important;
+            top: 8px !important;
+            right: 8px !important;
+            width: 24px !important;
+            height: 24px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #e74c3c !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            z-index: 10 !important;
+        }
+
+        .image-preview-remove:hover {
+            background: #e74c3c !important;
+            color: white !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* 이미지 추가 버튼 스타일 */
+        .image-upload-btn {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            border: 2px dashed #0ED8D5 !important;
+            border-radius: 8px !important;
+            background: white !important;
+            color: #0ED8D5 !important;
+            cursor: pointer !important;
+        }
+
+        .image-upload-btn:hover {
+            background: #f0fffe !important;
+            border-color: #0BC5C2 !important;
+            transform: translateY(-3px) !important;
+            box-shadow: 0 4px 12px rgba(14, 216, 213, 0.2) !important;
+        }
+
+        .image-upload-btn i {
+            font-size: 24px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .image-upload-btn span {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .image-preview-area {
+                gap: 10px !important;
+            }
+
+            .image-preview-item,
+            .image-upload-btn {
+                width: 130px !important;
+                height: 130px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .image-preview-item,
+            .image-upload-btn {
+                width: calc(50% - 5px) !important;
+                height: 120px !important;
+            }
+        }
+
+        /* 에러 메시지 */
+        .form-error {
+            display: none;
+            margin-top: 8px;
+            color: #e74c3c;
+            font-size: 12px;
+        }
+
+        /* 데모용 스타일 */
+        .demo-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
         /* 위치 검색 드롭다운 스타일 */
         .location-search-container {
             position: relative;
@@ -344,19 +526,23 @@
                 <div class="form-error" id="contentError">내용을 입력해주세요</div>
             </div>
 
-            <!-- 이미지 업로드 -->
+            <!-- 이미지 업로드 영역 HTML 수정 -->
             <div class="form-group">
                 <label class="form-label">이미지</label>
                 <span class="form-hint">최대 5장까지 업로드 가능합니다. (jpg, png, gif 형식, 각 5MB 이하)</span>
                 <div class="image-upload-container">
                     <div class="image-preview-area" id="imagePreviewArea">
-                        <label for="imageUpload" class="image-upload-btn">
-                            <i class="fas fa-plus"></i>
-                            <span>이미지 추가</span>
-                        </label>
+                        <!-- 여기에 이미지 미리보기가 동적으로 추가됩니다 -->
+
+                        <!-- 이미지 추가 버튼을 별도의 div로 감싸서 미리보기 아이템처럼 만듭니다 -->
+                        <div class="image-preview-item upload-btn-container">
+                            <label for="imageUpload" class="image-upload-btn">
+                                <i class="fas fa-plus"></i>
+                                <span>이미지 추가</span>
+                            </label>
+                        </div>
                     </div>
-                    <input type="file" id="imageUpload" name="imageFiles" accept="image/jpeg, image/png, image/gif" style="display: none;"
-                           multiple>
+                    <input type="file" id="imageUpload" name="imageFiles" accept="image/jpeg, image/png, image/gif" style="display: none;" multiple>
                 </div>
                 <div class="form-error" id="imageError">이미지는 최대 5장까지 업로드 가능합니다</div>
             </div>
@@ -397,16 +583,22 @@
         </form>
     </div>
 
+
+
     <script>
-        // Google Maps API 관련 변수들 - 단순화
+        // Google Maps API 관련 변수들
         let map;
         let service;
         let geocoder;
         let currentSelectedIndex = -1;
+        let isGoogleMapsInitialized = false;
+        const apiKey = '[[${apiKey}]]';
 
-        // Google Maps API 초기화 함수 - 강화
-        function initGoogleMaps() {
-            console.log('🚀 Google Maps API 초기화 시작');
+        // 🔧 새로운 방식: 실제 파일들을 저장할 전역 변수
+        let allSelectedFiles = [];
+
+        // Google Maps API 초기화 함수를 전역으로 먼저 정의
+        window.initLocationSearch = function() {
             try {
                 // DOM에 실제 맵 요소 생성 (더 안정적)
                 const mapDiv = document.createElement('div');
@@ -420,17 +612,58 @@
 
                 service = new google.maps.places.PlacesService(map);
                 geocoder = new google.maps.Geocoder();
+                isGoogleMapsInitialized = true;
 
-                console.log('✅ Google Maps API 초기화 완료');
             } catch (error) {
-                console.error('❌ Google Maps API 초기화 실패:', error);
+                isGoogleMapsInitialized = false;
             }
+        };
+
+        // 지연 초기화 함수 (검색 시에만 호출)
+        function initializeGoogleMapsOnDemand() {
+            return new Promise((resolve, reject) => {
+                // 이미 초기화되었다면 바로 resolve
+                if (isGoogleMapsInitialized && service && geocoder) {
+                    resolve();
+                    return;
+                }
+
+                // Google Maps API가 로드되었는지 확인
+                if (!window.google || !window.google.maps) {
+                    reject(new Error('Google Maps API가 로드되지 않았습니다'));
+                    return;
+                }
+
+                // 초기화 실행
+                try {
+                    const mapDiv = document.createElement('div');
+                    mapDiv.style.display = 'none';
+                    document.body.appendChild(mapDiv);
+
+                    map = new google.maps.Map(mapDiv, {
+                        center: { lat: 0, lng: 0 },
+                        zoom: 1
+                    });
+
+                    service = new google.maps.places.PlacesService(map);
+                    geocoder = new google.maps.Geocoder();
+                    isGoogleMapsInitialized = true;
+
+                    resolve();
+                } catch (error) {
+                    isGoogleMapsInitialized = false;
+                    reject(error);
+                }
+            });
         }
 
-        // 페이지 로드 시 Google Maps 초기화
-        window.initLocationSearch = initGoogleMaps;
-
         $(document).ready(function () {
+            // DOM이 완전히 로드된 후에만 실행
+            // 모든 필요한 요소가 존재하는지 확인
+            if (!$('#postTitle').length) {
+                console.error('필수 DOM 요소를 찾을 수 없습니다');
+                return;
+            }
             // 카테고리 선택
             $('.category-option').click(function () {
                 $('.category-option').removeClass('active');
@@ -509,98 +742,108 @@
                 }
             });
 
-            // 이미지 업로드 처리 - multipart/form-data 방식
+            // 🔧 완전히 새로운 간단한 방식의 이미지 업로드
             $('#imageUpload').change(function (e) {
-                const files = e.target.files;
-                const currentImages = $('.image-preview-item').length - 1; // 업로드 버튼 제외
+                const newFiles = Array.from(e.target.files);
 
-                // 최대 이미지 수 제한 확인
-                if (currentImages + files.length > 5) {
+                // 기존 파일과 새 파일 합치기
+                allSelectedFiles = [...allSelectedFiles, ...newFiles];
+
+                // 최대 5개 제한 확인
+                if (allSelectedFiles.length > 5) {
                     $('#imageError').text('이미지는 최대 5장까지 업로드 가능합니다').show();
-                    // 초과된 파일들은 제거
-                    $(this).val('');
-                    return;
+                    // 초과된 파일들 제거
+                    allSelectedFiles = allSelectedFiles.slice(0, 5);
                 } else {
                     $('#imageError').hide();
                 }
 
-                // 각 파일 처리 및 미리보기 생성
-                for (let i = 0; i < files.length; i++) {
-                    if (currentImages + i >= 5) break;
-
-                    const file = files[i];
-
+                // 유효한 파일들만 필터링
+                const validFiles = [];
+                allSelectedFiles.forEach((file, index) => {
                     // 파일 유형 및 크기 확인
                     if (!file.type.match('image/jpeg') && !file.type.match('image/png') && !file.type.match('image/gif')) {
                         showToast('JPG, PNG, GIF 형식의 이미지만 업로드 가능합니다');
-                        continue;
+                        return;
                     }
 
                     if (file.size > 5 * 1024 * 1024) { // 5MB
                         showToast('이미지 크기는 5MB 이하만 가능합니다');
-                        continue;
+                        return;
                     }
 
-                    // 미리보기 생성
-                    createImagePreview(file, i);
-                }
+                    validFiles.push(file);
+                });
+
+                allSelectedFiles = validFiles;
+
+                // 모든 미리보기 다시 그리기
+                redrawAllPreviews();
+
+                // 🔧 핵심: 숨겨진 input들을 사용해서 파일 전송
+                updateHiddenFileInputs();
+
+                // 원래 input 초기화
+                $(this).val('');
             });
 
-            // 이미지 미리보기 생성 함수
-            function createImagePreview(file, index) {
+            // 모든 미리보기를 다시 그리는 함수
+            function redrawAllPreviews() {
+                // 기존 미리보기들 제거 (업로드 버튼 제외)
+                $('.image-preview-item').not(':has(.image-upload-btn)').remove();
+
+                // 모든 파일에 대해 미리보기 생성
+                allSelectedFiles.forEach((file, index) => {
+                    createSimpleImagePreview(file, index);
+                });
+            }
+
+            // 이미지 미리보기 생성 함수 수정
+            function createSimpleImagePreview(file, index) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    const uniqueId = 'img_' + Date.now() + '_' + index;
-
+                reader.onload = function(e) {
                     const imagePreview = $(`
-                        <div class="image-preview-item" data-file-index="${index}" data-unique-id="${uniqueId}">
-                            <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
-                            <div class="image-preview-remove">
-                                <i class="fas fa-times"></i>
-                            </div>
-                            <div class="image-file-info">
-                                <div class="file-name">${file.name}</div>
-                                <div class="file-size">${formatFileSize(file.size)}</div>
-                            </div>
-                        </div>
-                    `);
+            <div class="image-preview-item" data-file-index="${index}">
+                <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
+                <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="image-file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+        `);
 
-                    // 이미지 미리보기를 이미지 추가 버튼 앞에 추가
-                    imagePreview.insertBefore('.image-upload-btn');
-
-                    // 이미지 삭제 이벤트 바인딩
-                    imagePreview.find('.image-preview-remove').click(function () {
-                        removeImagePreview(uniqueId, index);
-                    });
+                    // 중요: 이미지 추가 버튼 앞에 삽입
+                    $('.upload-btn-container').before(imagePreview);
                 };
                 reader.readAsDataURL(file);
             }
 
-            // 이미지 미리보기 제거 함수
-            function removeImagePreview(uniqueId, fileIndex) {
-                // 미리보기 제거
-                $(`.image-preview-item[data-unique-id="${uniqueId}"]`).remove();
+            // 🔧 핵심: 실제 파일들을 숨겨진 input들로 전송
+            function updateHiddenFileInputs() {
+                // 기존 숨겨진 파일 input들 제거
+                $('.hidden-file-input').remove();
 
-                // 파일 입력에서 해당 파일 제거 (복잡하므로 전체 재구성)
-                const fileInput = $('#imageUpload')[0];
-                const files = Array.from(fileInput.files);
+                // 각 파일에 대해 별도의 input 생성
+                allSelectedFiles.forEach((file, index) => {
+                    const fileInput = $('<input>', {
+                        type: 'file',
+                        name: 'imageFiles',
+                        class: 'hidden-file-input',
+                        style: 'display: none;'
+                    });
 
-                // DataTransfer 객체를 사용해서 파일 목록 재구성
-                const newFileList = new DataTransfer();
+                    // DataTransfer를 사용해서 파일 설정
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput[0].files = dataTransfer.files;
 
-                $('.image-preview-item').each(function() {
-                    const itemIndex = $(this).data('file-index');
-                    if (itemIndex !== fileIndex && files[itemIndex]) {
-                        newFileList.items.add(files[itemIndex]);
-                    }
+                    // 폼에 추가
+                    $('#postForm').append(fileInput);
                 });
-
-                // 파일 입력 업데이트
-                fileInput.files = newFileList.files;
-
-                // 에러 메시지 숨기기
-                $('#imageError').hide();
-            }
+}
 
             // 파일 크기 포맷팅 함수
             function formatFileSize(bytes) {
@@ -611,39 +854,53 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
             }
 
-            // 위치 검색 입력 처리 - 단순화
-            let searchTimeout;
-            $('#locationSearch').on('input', function () {
-                const query = $(this).val().trim();
-
-                // 검색어가 비어있으면 드롭다운 숨기기
-                if (!query) {
-                    hideLocationDropdown();
-                    return;
+            // 위치 검색 입력 처리 - 자동 검색 제거, Enter 키로만 검색
+            $('#locationSearch').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const query = $(this).val().trim();
+                    if (query) {
+                        performLocationSearch(query);
+                    }
                 }
 
-                // 최소 2글자 이상부터 검색
-                if (query.length < 2) {
-                    hideLocationDropdown();
-                    return;
-                }
+                // 키보드 네비게이션 처리
+                const dropdown = $('#locationDropdown');
+                const items = dropdown.find('.location-dropdown-item');
 
-                // 입력 후 600ms 대기 후 검색
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    console.log('⌨️ 입력 검색 시작:', query);
-                    performLocationSearch(query);
-                }, 600);
+                if (!dropdown.hasClass('show') || items.length === 0) return;
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
+                        updateSelectedItem(items);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+                        updateSelectedItem(items);
+                        break;
+                    case 'Escape':
+                        hideLocationDropdown();
+                        break;
+                }
             });
 
             // 위치 검색 함수 (Places API + Geocoding API 조합)
-            function performLocationSearch(query) {
-                if (!service || !geocoder) {
-                    showLocationDropdown(['<div class="location-search-loading">지도 서비스를 초기화하는 중...</div>']);
+            async function performLocationSearch(query) {
+                // 로딩 상태 표시
+                showLocationDropdown(['<div class="location-search-loading"><i class="fas fa-spinner fa-spin"></i> 지도 서비스 초기화 중...</div>']);
+
+                try {
+                    // 필요시 Google Maps 초기화
+                    await initializeGoogleMapsOnDemand();
+                } catch (error) {
+                    showLocationDropdown(['<div class="location-search-no-results">지도 서비스 초기화에 실패했습니다.<br>페이지를 새로고침하고 다시 시도해주세요.</div>']);
                     return;
                 }
 
-                // 로딩 상태 표시
+                // 검색 중 상태로 변경
                 showLocationDropdown(['<div class="location-search-loading"><i class="fas fa-spinner fa-spin"></i> 전세계 검색 중...</div>']);
 
                 // 1차: Google Places Text Search 실행
@@ -653,8 +910,6 @@
                 };
 
                 service.textSearch(placesRequest, (placesResults, placesStatus) => {
-                    console.log('Places API 결과:', placesResults);
-                    console.log('Places API 상태:', placesStatus);
 
                     // 2차: Geocoding API로 추가 검색 (더 광범위한 검색)
                     const geocodingRequest = {
@@ -662,8 +917,7 @@
                     };
 
                     geocoder.geocode(geocodingRequest, (geocodeResults, geocodeStatus) => {
-                        console.log('Geocoding API 결과:', geocodeResults);
-                        console.log('Geocoding API 상태:', geocodeStatus);
+
 
                         // 두 API 결과 합치기
                         let combinedResults = [];
@@ -801,36 +1055,6 @@
                 currentSelectedIndex = -1;
             }
 
-            // 키보드 네비게이션 처리
-            $('#locationSearch').on('keydown', function (e) {
-                const dropdown = $('#locationDropdown');
-                const items = dropdown.find('.location-dropdown-item');
-
-                if (!dropdown.hasClass('show') || items.length === 0) return;
-
-                switch (e.key) {
-                    case 'ArrowDown':
-                        e.preventDefault();
-                        currentSelectedIndex = Math.min(currentSelectedIndex + 1, items.length - 1);
-                        updateSelectedItem(items);
-                        break;
-                    case 'ArrowUp':
-                        e.preventDefault();
-                        currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
-                        updateSelectedItem(items);
-                        break;
-                    case 'Enter':
-                        e.preventDefault();
-                        if (currentSelectedIndex >= 0) {
-                            $(items[currentSelectedIndex]).click();
-                        }
-                        break;
-                    case 'Escape':
-                        hideLocationDropdown();
-                        break;
-                }
-            });
-
             // 선택된 아이템 표시 업데이트
             function updateSelectedItem(items) {
                 items.removeClass('active');
@@ -839,12 +1063,13 @@
                 }
             }
 
-            // 검색 버튼 클릭 처리 - 단순화
+            // 검색 버튼 클릭 처리
             $('#searchLocationBtn').click(function () {
                 const query = $('#locationSearch').val().trim();
                 if (query) {
-                    console.log('🔘 버튼 검색 시작:', query);
                     performLocationSearch(query);
+                } else {
+                    showToast('검색어를 입력해주세요');
                 }
             });
 
@@ -880,11 +1105,7 @@
                     <input type="hidden" id="hiddenPlaceAddress" name="placeAddress" value="${placeAddress}">
                 `);
 
-                console.log('선택된 위치:', {
-                    placeId: placeId,
-                    placeName: placeName,
-                    placeAddress: placeAddress
-                });
+
             });
 
             // Place Details API로 정확한 좌표 가져와서 지도 업데이트
@@ -899,10 +1120,8 @@
                         const lat = place.geometry.location.lat();
                         const lng = place.geometry.location.lng();
 
-                        console.log('정확한 좌표:', {lat, lng, placeName});
                         updateLocationMapByCoordinates(lat, lng, placeName);
                     } else {
-                        console.log('Place Details 가져오기 실패:', status);
                         updateLocationMapByPlaceId(placeId, placeName);
                     }
                 });
@@ -915,7 +1134,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7C${lat},${lng}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -927,7 +1146,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7Cplace_id:${placeId}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -940,7 +1159,7 @@
                     `zoom=15&` +
                     `size=500x200&` +
                     `markers=color:red%7C${encodedAddress}&` +
-                    `key=AIzaSyBxNabOta7u8Pj4FJuD0rdAKeGfOOEPrcE`;
+                    `key=${apiKey}`;
 
                 $('#locationPreview').find('.location-preview-map').attr('src', mapUrl);
             }
@@ -994,7 +1213,7 @@
                 }
             });
 
-            // 폼 제출 처리
+            // 🔧 수정된 폼 제출 처리
             $('#postForm').submit(function (e) {
                 e.preventDefault();
 
@@ -1013,17 +1232,25 @@
                 }
 
                 if (isValid) {
-                    $('input[name="tags"]').remove();
+                    // 🔍 제출 전 최종 확인
 
+                    $('.hidden-file-input').each(function(index) {
+                        console.log(`숨겨진 input ${index}:`, this.files.length > 0 ? this.files[0].name : '파일 없음');
+                    });
+
+                    // 태그 처리
+                    $('input[name="tags"]').remove();
                     $('.tag').each(function () {
                         const tagValue = $(this).data('tag');
                         $('#postForm').append('<input type="hidden" name="tags" value="' + tagValue + '">');
                     });
 
+                    // 카테고리 처리
                     const category = $('.category-option.active').data('category');
                     $('#hiddenCategory').remove();
                     $('#postForm').append('<input type="hidden" id="hiddenCategory" name="category" value="' + category + '">');
 
+                    // 실제 폼 제출
                     this.submit();
                 } else {
                     const firstError = $('.form-error:visible').first();
@@ -1037,10 +1264,108 @@
 
             // 토스트 메시지 표시
             function showToast(message) {
-                const toast = $('#toast');
-                // 토스트 구현이 필요한 경우 여기에 추가
+                // 간단한 alert로 대체 (실제 프로젝트에서는 토스트 라이브러리 사용)
+                alert(message);
             }
         });
+
+        // 🔧 전역 함수: 특정 인덱스의 파일 제거 (HTML onclick에서 호출)
+        function removeFileAtIndex(index) {
+
+
+            // 배열에서 해당 파일 제거
+            allSelectedFiles.splice(index, 1);
+
+
+
+            // 모든 미리보기 다시 그리기
+            redrawAllPreviews();
+
+            // 숨겨진 input들 업데이트
+            updateHiddenFileInputs();
+
+            $('#imageError').hide();
+        }
+
+        // 전체 미리보기 재구성 함수 수정
+        function redrawAllPreviews() {
+            // 기존 미리보기 항목 제거 (추가 버튼 제외)
+            $('.image-preview-item').not('.upload-btn-container').remove();
+
+            // 모든 파일에 대해 미리보기 생성
+            allSelectedFiles.forEach((file, index) => {
+                createSimpleImagePreview(file, index);
+            });
+        }
+
+        // 이미지 미리보기 생성 함수 개선
+        function createSimpleImagePreview(file, index) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imagePreview = $(`
+            <div class="image-preview-item" data-file-index="${index}">
+                <img src="${e.target.result}" class="image-preview-img" alt="미리보기">
+                <div class="image-preview-remove" onclick="removeFileAtIndex(${index})">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="image-file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${formatFileSize(file.size)}</div>
+                </div>
+            </div>
+        `);
+
+                // 이미지 추가 버튼 앞에 삽입
+                imagePreview.insertBefore($('.image-upload-btn').parent());
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.redrawAllPreviews = function() {
+            // 기존 미리보기들 제거 (업로드 버튼 제외)
+            $('.image-preview-item').not(':has(.image-upload-btn)').remove();
+
+            // 모든 파일에 대해 미리보기 생성
+            allSelectedFiles.forEach((file, index) => {
+                createSimpleImagePreview(file, index);
+            });
+        }
+
+        function updateHiddenFileInputs() {
+            // 기존 숨겨진 파일 input들 제거
+            $('.hidden-file-input').remove();
+
+
+            // 각 파일에 대해 별도의 input 생성
+            allSelectedFiles.forEach((file, index) => {
+                const fileInput = $('<input>', {
+                    type: 'file',
+                    name: 'imageFiles',
+                    class: 'hidden-file-input',
+                    style: 'display: none;'
+                });
+
+                // DataTransfer를 사용해서 파일 설정
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput[0].files = dataTransfer.files;
+
+                // 폼에 추가
+                $('#postForm').append(fileInput);
+
+            });
+
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        window.createSimpleImagePreview = createSimpleImagePreview;
     </script>
 </th:block>
 </body>

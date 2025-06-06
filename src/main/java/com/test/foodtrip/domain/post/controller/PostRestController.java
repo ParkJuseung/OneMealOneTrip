@@ -78,7 +78,7 @@ public class PostRestController {
     // 게시글 삭제
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<String>> deletePost(
-            @PathVariable Long postId,
+    		@PathVariable("postId") Long postId,
             HttpSession session) {
         try {
             // 로그인 체크

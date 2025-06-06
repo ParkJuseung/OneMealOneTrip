@@ -10,6 +10,10 @@
 
 <th:block layout:fragment="content">
 
+
+
+
+
         <!-- 여행 코스 콘텐츠 -->
         <div class="course-list-container tab-content active" id="courses-tab">
             <div class="section-header">
@@ -18,6 +22,16 @@
                     여행 코스
                     <i class="fa-solid fa-square-plus" style="margin-top: 2px;"></i>
                 </button>
+            </div>
+
+
+            <!-- 탭 네비게이션 -->
+            <div class="tab-navigation">
+                <div class="tab active" data-tab="all" onclick="location.href='/post'">포스트</div>
+                <div class="tab" data-tab="companion" onclick="location.href='/travel'">추천 여행경로</div>
+                <div class="tab" data-tab="post" onclick="location.href='/chat'">채팅</div>
+                <div class="tab" data-tab="explorer"></div>
+                <div class="tab-indicator"></div>
             </div>
 
             <!-- 검색 및 필터 -->
@@ -35,8 +49,10 @@
             <div class="course-grid" th:if="${routes != null and !routes.isEmpty()}">
                 <div class="course-card" th:each="route : ${routes}" th:data-id="${route.routeId}">
                     <div class="course-image-container js-thumbnail-container" th:data-id="${route.routeId}">
-                        <div class="course-like">
-                            <i class="far fa-heart"></i> <!-- 좋아요 여부 처리 필요 시 class 제어 -->
+                        <div class="course-like"
+                             th:data-id="${route.routeId}"
+                             th:classappend="${route.bookmarked} ? ' active' : ''">
+                            <i th:class="${route.bookmarked} ? 'fas fa-heart' : 'far fa-heart'"></i>
                         </div>
                     </div>
                     <div class="course-content">
@@ -304,24 +320,20 @@
                     const routeId = container.dataset.id;
 
                     // 썸네일 요청 → 실제 이미지 URL 받아오기
-                    fetch(`/api/travel/thumbnail?routeId=${routeId}`) //백틱 주의 없으면 이미지 로드 안됨!
+                    fetch(`/api/travel/thumbnail?routeId=${routeId}`)
                         .then(res => res.json())
                         .then(data => {
-                            // data.url은 다시 JSON을 주는 API임 → 다시 fetch
-                            return fetch(data.url);
-                        })
-                        .then(res => res.json())
-                        .then(photoData => {
                             const img = document.createElement('img');
-                            img.src = photoData.url; // 실제 Google CDN 이미지 URL
+                            img.src = data.url; // 이미 프록시 경로로 리턴됨
                             img.alt = '썸네일';
                             img.className = 'course-image';
 
-                            // ✅ 이미지 로드 실패 시 fallback
+                            // 실패 시 fallback
                             img.onerror = function () {
                                 this.onerror = null;
                                 this.src = '/images/default-thumbnail.jpg';
                             };
+
                             container.insertBefore(img, container.firstChild);
                         })
                         .catch(err => {
@@ -407,6 +419,31 @@
                     });
                 }
 
+            });
+
+            document.querySelectorAll('.course-like').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('i');
+                    const routeId = this.dataset.id;
+
+                    fetch(`/api/travel/${routeId}/bookmark`, {
+                        method: 'POST',
+                        credentials: 'include' //세션 쿠키 전송
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.bookmarked) {
+                                icon.classList.remove('far');
+                                icon.classList.add('fas');
+                                this.classList.add('active');
+                            } else {
+                                icon.classList.remove('fas');
+                                icon.classList.add('far');
+                                this.classList.remove('active');
+                            }
+                        });
+                });
             });
 
     </script>

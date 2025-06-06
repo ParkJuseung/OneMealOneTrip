@@ -86,7 +86,10 @@ public class Post {
 
     // 편의 메서드
     public void addImage(PostImage image) {
-        images.add(image);
+        if (this.images == null) {
+            this.images = new ArrayList<>();
+        }
+        this.images.add(image);
         image.setPost(this);
     }
 

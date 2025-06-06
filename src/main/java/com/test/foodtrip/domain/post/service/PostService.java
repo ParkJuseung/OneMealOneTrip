@@ -62,6 +62,13 @@ public interface PostService {
                 .updatedAt(post.getUpdatedAt())
                 .userId(post.getUser() != null ? post.getUser().getId() : null);
 
+        // 작성자 정보 추가
+        if (post.getUser() != null) {
+            User author = post.getUser();
+            builder.authorNickname(author.getNickname())
+                    .authorProfileImage(author.getProfileImage());
+        }
+
         try {
             // ✅ 이미지 정보 (초기화된 경우만 접근)
             if (post.getImages() != null && org.hibernate.Hibernate.isInitialized(post.getImages())) {
@@ -109,5 +116,6 @@ public interface PostService {
     void modify(PostDTO dto);
     void remove(Long id);
     void increaseViewCount(Long id);
+    void modify(PostDTO dto, MultipartFile[] images, List<Integer> deleteImageIndexes);
 
 }
