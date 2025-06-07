@@ -92,7 +92,9 @@
 ## 주요 기능 📚
 
 ### 1. 소셜로그인
-<img width="700" src="https://user-images.githubusercontent.com/60915285/189544140-0e26ce69-2191-4abf-a5df-54f915a86d72.gif">
+<img width="700" src="https://github.com/user-attachments/assets/0a480e03-eeac-42f4-8070-54dd287b67c8">
+
+
 네이버, 구글, 카카오 소셜 로그인을 제공합니다.
 
 <br><br>
