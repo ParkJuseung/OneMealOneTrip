@@ -76,7 +76,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/css/**", "/js/**", "/images/**",
                                 "/", "/index", "/login", "/signup", "/api/**",
-                                "/oauth2/authorization/**", "/login/oauth2/**"
+                                "/oauth2/authorization/**", "/login/oauth2/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

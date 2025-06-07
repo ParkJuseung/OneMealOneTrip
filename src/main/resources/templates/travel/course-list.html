@@ -108,7 +108,7 @@
 
                 <!-- 페이지 번호 버튼 -->
                 <div th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
-                     th:class="'page-item' + (pageNum == currentPage ? ' active' : '')"
+                     th:class="${pageNum == currentPage} ? 'page-item active' : 'page-item'"
                      th:attr="data-page=${pageNum}"
                      th:text="${pageNum + 1}">
                 </div>

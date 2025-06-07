@@ -4,6 +4,8 @@ import com.test.foodtrip.domain.travel.entity.RoutePlace;
 import com.test.foodtrip.domain.travel.entity.TravelRoute;
 import com.test.foodtrip.domain.travel.service.GooglePlaceService;
 import com.test.foodtrip.domain.user.entity.User;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,27 +19,50 @@ import java.util.stream.Collectors;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "여행 코스 상세 응답 DTO")
 public class TravelRouteDTO {
 
+    @Schema(description = "여행 코스 ID", example = "1")
     private Long routeId;
+
+    @Schema(description = "여행 코스 제목", example = "제주도 자연 여행")
     private String title;
+
+    @Schema(description = "코스 설명", example = "3박 4일 일정으로 제주도 유명 명소 탐방")
     private String description;
+
+    @Schema(description = "총 거리 (단위: 미터)", example = "12500.0")
     private Double totalDistance;
+
+    @Schema(description = "총 예상 시간 (단위: 초)", example = "7200")
     private Integer totalTime;
+
+    @Schema(description = "조회수", example = "10")
     private Integer views;
+
+    @Schema(description = "생성 일시", example = "2025-06-07T13:00:00")
     private LocalDateTime createdAt;
+
+    @Schema(description = "마지막 수정 일시", example = "2025-06-07T14:00:00")
     private LocalDateTime updatedAt;
-    
+
+    @ArraySchema(schema = @Schema(implementation = RoutePlaceDTO.class))
+    @Schema(description = "여행 코스에 포함된 장소 목록")
     @Builder.Default
     private List<RoutePlaceDTO> places = new ArrayList<>();
-    
+
+    @ArraySchema(schema = @Schema(implementation = TravelRouteTagDTO.class))
+    @Schema(description = "여행 코스에 포함된 태그 목록")
     @Builder.Default
     private List<TravelRouteTagDTO> tags = new ArrayList<>();
-    
+
+    @Schema(description = "작성자 ID", example = "5")
     private Long userId;
+
+    @Schema(description = "작성자 이름 (닉네임)", example = "김여행")
     private String userName;
-    
-    // 목록 화면에서 사용할 장소 개수 반환
+
+    @Schema(description = "여행 코스 내 장소 수", example = "3", accessMode = Schema.AccessMode.READ_ONLY)
     public int getPlaceCount() {
         return places.size();
     }
