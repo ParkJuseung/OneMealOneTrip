@@ -98,9 +98,11 @@
 <br><br>
         
 ### 2. 포스팅
-<img width="700" src="https://user-images.githubusercontent.com/60915285/223932054-64bbdda6-03de-4ba4-a044-32875e6ba8fa.gif">
+<img width="350" src="https://github.com/user-attachments/assets/c848995b-f1bb-47f0-9af9-69601a566026">
+<img width="365" src="https://github.com/user-attachments/assets/60779d50-4c6d-45e0-b8bf-d870807e235c"><br>
 추천하고 싶은 여행 장소나 맛집을 공유할 수 있습니다. <br>
 사용자들에게 Google API를 통해 더 정확한 위치 정보를 제공하며, 해시태그나 사진을 통해 정보를 더 효과적으로 전달할 수 있습니다.
+
 
 <br><br>
 
