@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface RouteBookmarkRepository extends JpaRepository<RouteBookmark, Integer> {
     Optional<RouteBookmark> findByTravelRoute_RouteIdAndUser_Id(Long routeId, Long userId);
+
+    boolean existsByUser_IdAndTravelRoute_RouteId(Long loginUserId, Long routeId);
 }
