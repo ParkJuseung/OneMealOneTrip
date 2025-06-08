@@ -286,32 +286,34 @@
                 const container = card.querySelector('.js-photo-container');
                 const reviewsContainer = card.querySelector('.place-reviews');
 
-                fetch(`/api/place/photos?placeId=${placeId}`)
-                    .then(res => res.json())
-                    .then(photoUrls => {
-                        if (!photoUrls.length) {
-                            container.innerHTML =
-                                `<div style="text-align: center; margin-top: 20px; padding: 15px;">
+
+                    fetch(`/api/place/photos?placeId=${placeId}`)
+                        .then(res => res.json())
+                        .then(photoReferences => {
+                            if (!photoReferences.length) {
+                                container.innerHTML =
+                                    `<div style="text-align: center; margin-top: 20px; padding: 15px;">
                                     이미지 없음
                                  </div>`;
-                            return;
-                        }
+                                return;
+                            }
 
-                        // 캐러셀 요소 생성
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'carousel-container';
+                            // 캐러셀 요소 생성
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'carousel-container';
 
-                        const track = document.createElement('div');
-                        track.className = 'carousel-track';
+                            const track = document.createElement('div');
+                            track.className = 'carousel-track';
 
-                        photoUrls.forEach(url => {
-                            const img = document.createElement('img');
-                            img.src = url;
-                            img.alt = '장소 이미지';
-                            img.className = 'carousel-image';
 
-                            track.appendChild(img);
-                        });
+                            photoReferences.forEach(photoReference => {
+                                const img = document.createElement('img');
+                                img.src = `/api/place/photo-proxy?photoReference=${photoReference}`;
+                                img.alt = '장소 이미지';
+                                img.className = 'carousel-image';
+
+                                track.appendChild(img);
+                            });
 
                         const prevBtn = document.createElement('div');
                         prevBtn.className = 'carousel-nav carousel-prev';
@@ -324,6 +326,7 @@
                         // 슬라이드 이동 처리
                         let currentIndex = 0;
                         const slideWidth = 265;
+                        const totalSlides = photoReferences.length;
 
                         prevBtn.addEventListener('click', () => {
                             if (currentIndex > 0) {
@@ -336,7 +339,7 @@
                         });
 
                         nextBtn.addEventListener('click', () => {
-                            if (currentIndex < photoUrls.length - 1) {
+                            if (currentIndex < totalSlides - 1) {
                                 currentIndex++;
                                 track.scrollTo({
                                     left: currentIndex * slideWidth,

@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.travel.repository;
 
+import com.test.foodtrip.domain.travel.dto.TravelRouteListItemDTO;
 import com.test.foodtrip.domain.travel.entity.TravelRoute;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +19,21 @@ public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long> 
     """)
     Optional<TravelRoute> findByIdWithPlaces(@Param("routeId") Long routeId);
 
-    @Query("SELECT DISTINCT r FROM TravelRoute r " +
-            "LEFT JOIN r.tags t " +
-            "LEFT JOIN r.user u " +
-            "WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "   OR LOWER(t.tag.tagName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "   OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    Page<TravelRoute> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    @Query("SELECT new com.test.foodtrip.domain.travel.dto.TravelRouteListItemDTO(" +
+            "t.routeId, t.title, u.name, u.profileImage, t.views, SIZE(t.places)) " +
+            "FROM TravelRoute t " +
+            "JOIN t.user u " +
+            "WHERE (:keyword IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            " ORDER BY t.routeId DESC")
+    Page<TravelRouteListItemDTO> findPagedList(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("""
+    SELECT DISTINCT r FROM TravelRoute r
+    LEFT JOIN r.tags t
+    LEFT JOIN r.user u
+    WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+       OR LOWER(t.tag.tagName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+       OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+""")
+    Page<TravelRoute> searchByTitleTagOrUser(@Param("keyword") String keyword, Pageable pageable);
 }

@@ -3,10 +3,7 @@ package com.test.foodtrip.domain.travel.service;
 
 import com.test.foodtrip.domain.travel.dto.*;
 import com.test.foodtrip.domain.travel.entity.*;
-import com.test.foodtrip.domain.travel.repository.RouteBookmarkRepository;
-import com.test.foodtrip.domain.travel.repository.RoutePlaceRepository;
-import com.test.foodtrip.domain.travel.repository.TravelRouteRepository;
-import com.test.foodtrip.domain.travel.repository.TravelRouteTagRepository;
+import com.test.foodtrip.domain.travel.repository.*;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,34 +32,7 @@ public class TravelRouteService {
     private final UserRepository userRepository;
     private final RoutePlaceRepository routePlaceRepository;
     private final RouteBookmarkRepository routeBookmarkRepository;
-
-    public List<TravelRoute> getAllRoutes() {
-        return travelRouteRepository.findAll(); // 추후 정렬/필터 추가 가능
-    }
-
-    public Page<TravelRouteListItemDTO> getPagedRouteList(int page, int size, String keyword) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<TravelRoute> routePage;
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            routePage = travelRouteRepository.searchByKeyword(keyword, pageable); // ✅ 검색 쿼리
-        } else {
-            routePage = travelRouteRepository.findAll(pageable);
-        }
-
-        return routePage.map(route -> TravelRouteListItemDTO.builder()
-                        .routeId(route.getRouteId())
-                        .title(route.getTitle())
-                        .placeCount(route.getPlaces().size())
-                        .views(route.getViews())
-                        .userId(route.getUser().getId())
-                        .userName(route.getUser().getNickname())
-                        .profileImage(route.getUser().getProfileImage())
-                        .tagNames(route.getTags().stream()
-                                        .map(tagging -> tagging.getTag().getTagName())
-                                        .collect(Collectors.toList()))
-                        .build());
-    }
+    private final TravelRouteTaggingRepository travelRouteTaggingRepository;
 
     public void createTravelRoute(CreateTravelRouteDTO dto) {
 
@@ -158,11 +128,15 @@ public class TravelRouteService {
                     if (apiPlaceId == null || apiPlaceId.isBlank()) {
                         return "/images/default-thumbnail.jpg";
                     }
-                    return "/api/place/photos/first?placeId=" + apiPlaceId;
+
+                    List<String> references = googlePlaceService.getPhotoReferences(apiPlaceId);
+                    if (references.isEmpty()) {
+                        return "/images/default-thumbnail.jpg";
+                    }
+
+                    return "/api/place/photo-proxy?photoReference=" + references.get(0);
                 })
-                .orElseGet(() -> {
-                    return "/images/default-thumbnail.jpg";
-                });
+                .orElse("/images/default-thumbnail.jpg");
     }
 
     @Transactional
@@ -232,6 +206,22 @@ public class TravelRouteService {
             routeBookmarkRepository.save(bookmark);
             return true;
         }
+    }
+
+    public Page<TravelRouteListItemDTO> getPagedRouteListWithBookmarks(Long loginUserId, int page, int size, String keyword) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<TravelRoute> routePage;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            routePage = travelRouteRepository.searchByTitleTagOrUser(keyword, pageable);
+        } else {
+            routePage = travelRouteRepository.findAll(pageable);
+        }
+
+        return routePage.map(route -> {
+            boolean isBookmarked = routeBookmarkRepository.existsByUser_IdAndTravelRoute_RouteId(loginUserId, route.getRouteId());
+            return TravelRouteListItemDTO.fromEntity(route, isBookmarked);
+        });
     }
 
 

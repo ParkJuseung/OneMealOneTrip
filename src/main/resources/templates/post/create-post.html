@@ -599,7 +599,6 @@
 
         // Google Maps API 초기화 함수를 전역으로 먼저 정의
         window.initLocationSearch = function() {
-            console.log('🚀 Google Maps API 초기화 시작');
             try {
                 // DOM에 실제 맵 요소 생성 (더 안정적)
                 const mapDiv = document.createElement('div');
@@ -615,9 +614,7 @@
                 geocoder = new google.maps.Geocoder();
                 isGoogleMapsInitialized = true;
 
-                console.log('✅ Google Maps API 초기화 완료');
             } catch (error) {
-                console.error('❌ Google Maps API 초기화 실패:', error);
                 isGoogleMapsInitialized = false;
             }
         };
@@ -652,10 +649,8 @@
                     geocoder = new google.maps.Geocoder();
                     isGoogleMapsInitialized = true;
 
-                    console.log('✅ 지연 초기화 완료');
                     resolve();
                 } catch (error) {
-                    console.error('❌ 지연 초기화 실패:', error);
                     isGoogleMapsInitialized = false;
                     reject(error);
                 }
@@ -664,8 +659,6 @@
 
         $(document).ready(function () {
             // DOM이 완전히 로드된 후에만 실행
-            console.log('📄 DOM 로드 완료, 이벤트 바인딩 시작');
-
             // 모든 필요한 요소가 존재하는지 확인
             if (!$('#postTitle').length) {
                 console.error('필수 DOM 요소를 찾을 수 없습니다');
@@ -753,21 +746,14 @@
             $('#imageUpload').change(function (e) {
                 const newFiles = Array.from(e.target.files);
 
-                console.log("=== 새로운 간단한 방식 디버깅 ===");
-                console.log("새로 선택된 파일 수:", newFiles.length);
-                console.log("기존 파일 수:", allSelectedFiles.length);
-
                 // 기존 파일과 새 파일 합치기
                 allSelectedFiles = [...allSelectedFiles, ...newFiles];
-
-                console.log("합쳐진 총 파일 수:", allSelectedFiles.length);
 
                 // 최대 5개 제한 확인
                 if (allSelectedFiles.length > 5) {
                     $('#imageError').text('이미지는 최대 5장까지 업로드 가능합니다').show();
                     // 초과된 파일들 제거
                     allSelectedFiles = allSelectedFiles.slice(0, 5);
-                    console.log("5개로 제한 후 파일 수:", allSelectedFiles.length);
                 } else {
                     $('#imageError').hide();
                 }
@@ -790,7 +776,6 @@
                 });
 
                 allSelectedFiles = validFiles;
-                console.log("유효한 파일 수:", allSelectedFiles.length);
 
                 // 모든 미리보기 다시 그리기
                 redrawAllPreviews();
@@ -841,9 +826,6 @@
                 // 기존 숨겨진 파일 input들 제거
                 $('.hidden-file-input').remove();
 
-                console.log("=== 숨겨진 input 업데이트 ===");
-                console.log("생성할 input 수:", allSelectedFiles.length);
-
                 // 각 파일에 대해 별도의 input 생성
                 allSelectedFiles.forEach((file, index) => {
                     const fileInput = $('<input>', {
@@ -860,12 +842,8 @@
 
                     // 폼에 추가
                     $('#postForm').append(fileInput);
-
-                    console.log(`숨겨진 input ${index} 생성: ${file.name}`);
                 });
-
-                console.log("최종 생성된 hidden input 수:", $('.hidden-file-input').length);
-            }
+}
 
             // 파일 크기 포맷팅 함수
             function formatFileSize(bytes) {
@@ -882,7 +860,6 @@
                     e.preventDefault();
                     const query = $(this).val().trim();
                     if (query) {
-                        console.log('⌨️ Enter 키 검색 시작:', query);
                         performLocationSearch(query);
                     }
                 }
@@ -933,8 +910,6 @@
                 };
 
                 service.textSearch(placesRequest, (placesResults, placesStatus) => {
-                    console.log('Places API 결과:', placesResults);
-                    console.log('Places API 상태:', placesStatus);
 
                     // 2차: Geocoding API로 추가 검색 (더 광범위한 검색)
                     const geocodingRequest = {
@@ -942,8 +917,7 @@
                     };
 
                     geocoder.geocode(geocodingRequest, (geocodeResults, geocodeStatus) => {
-                        console.log('Geocoding API 결과:', geocodeResults);
-                        console.log('Geocoding API 상태:', geocodeStatus);
+
 
                         // 두 API 결과 합치기
                         let combinedResults = [];
@@ -1093,7 +1067,6 @@
             $('#searchLocationBtn').click(function () {
                 const query = $('#locationSearch').val().trim();
                 if (query) {
-                    console.log('🔘 버튼 검색 시작:', query);
                     performLocationSearch(query);
                 } else {
                     showToast('검색어를 입력해주세요');
@@ -1132,11 +1105,7 @@
                     <input type="hidden" id="hiddenPlaceAddress" name="placeAddress" value="${placeAddress}">
                 `);
 
-                console.log('선택된 위치:', {
-                    placeId: placeId,
-                    placeName: placeName,
-                    placeAddress: placeAddress
-                });
+
             });
 
             // Place Details API로 정확한 좌표 가져와서 지도 업데이트
@@ -1151,10 +1120,8 @@
                         const lat = place.geometry.location.lat();
                         const lng = place.geometry.location.lng();
 
-                        console.log('정확한 좌표:', {lat, lng, placeName});
                         updateLocationMapByCoordinates(lat, lng, placeName);
                     } else {
-                        console.log('Place Details 가져오기 실패:', status);
                         updateLocationMapByPlaceId(placeId, placeName);
                     }
                 });
@@ -1266,9 +1233,6 @@
 
                 if (isValid) {
                     // 🔍 제출 전 최종 확인
-                    console.log("=== 폼 제출 전 최종 확인 ===");
-                    console.log("전역 배열 파일 수:", allSelectedFiles.length);
-                    console.log("숨겨진 input 수:", $('.hidden-file-input').length);
 
                     $('.hidden-file-input').each(function(index) {
                         console.log(`숨겨진 input ${index}:`, this.files.length > 0 ? this.files[0].name : '파일 없음');
@@ -1307,12 +1271,12 @@
 
         // 🔧 전역 함수: 특정 인덱스의 파일 제거 (HTML onclick에서 호출)
         function removeFileAtIndex(index) {
-            console.log("파일 제거:", index);
+
 
             // 배열에서 해당 파일 제거
             allSelectedFiles.splice(index, 1);
 
-            console.log("제거 후 파일 수:", allSelectedFiles.length);
+
 
             // 모든 미리보기 다시 그리기
             redrawAllPreviews();
@@ -1371,8 +1335,6 @@
             // 기존 숨겨진 파일 input들 제거
             $('.hidden-file-input').remove();
 
-            console.log("=== 숨겨진 input 업데이트 ===");
-            console.log("생성할 input 수:", allSelectedFiles.length);
 
             // 각 파일에 대해 별도의 input 생성
             allSelectedFiles.forEach((file, index) => {
@@ -1391,10 +1353,8 @@
                 // 폼에 추가
                 $('#postForm').append(fileInput);
 
-                console.log(`숨겨진 input ${index} 생성: ${file.name}`);
             });
 
-            console.log("최종 생성된 hidden input 수:", $('.hidden-file-input').length);
         }
 
         function formatFileSize(bytes) {

@@ -108,7 +108,7 @@
 
                 <!-- 페이지 번호 버튼 -->
                 <div th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
-                     th:class="'page-item' + (pageNum == currentPage ? ' active' : '')"
+                     th:class="${pageNum == currentPage} ? 'page-item active' : 'page-item'"
                      th:attr="data-page=${pageNum}"
                      th:text="${pageNum + 1}">
                 </div>
@@ -320,24 +320,20 @@
                     const routeId = container.dataset.id;
 
                     // 썸네일 요청 → 실제 이미지 URL 받아오기
-                    fetch(`/api/travel/thumbnail?routeId=${routeId}`) //백틱 주의 없으면 이미지 로드 안됨!
+                    fetch(`/api/travel/thumbnail?routeId=${routeId}`)
                         .then(res => res.json())
                         .then(data => {
-                            // data.url은 다시 JSON을 주는 API임 → 다시 fetch
-                            return fetch(data.url);
-                        })
-                        .then(res => res.json())
-                        .then(photoData => {
                             const img = document.createElement('img');
-                            img.src = photoData.url; // 실제 Google CDN 이미지 URL
+                            img.src = data.url; // 이미 프록시 경로로 리턴됨
                             img.alt = '썸네일';
                             img.className = 'course-image';
 
-                            // ✅ 이미지 로드 실패 시 fallback
+                            // 실패 시 fallback
                             img.onerror = function () {
                                 this.onerror = null;
                                 this.src = '/images/default-thumbnail.jpg';
                             };
+
                             container.insertBefore(img, container.firstChild);
                         })
                         .catch(err => {
