@@ -209,19 +209,19 @@ public class TravelRouteService {
     }
 
     public Page<TravelRouteListItemDTO> getPagedRouteListWithBookmarks(Long loginUserId, int page, int size, String keyword) {
-        Page<TravelRouteListItemDTO> pageList = travelRouteRepository.findPagedList(keyword, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "routeId")));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<TravelRoute> routePage;
 
-        for (TravelRouteListItemDTO dto : pageList.getContent()) {
-            // 북마크 여부
-            boolean bookmarked = routeBookmarkRepository.existsByUser_IdAndTravelRoute_RouteId(loginUserId, dto.getRouteId());
-            dto.setBookmarked(bookmarked);
-
-            // 태그 이름 리스트
-            List<String> tagNames = travelRouteTaggingRepository.findTagNamesByRouteId(dto.getRouteId());
-            dto.setTagNames(tagNames);
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            routePage = travelRouteRepository.searchByTitleTagOrUser(keyword, pageable);
+        } else {
+            routePage = travelRouteRepository.findAll(pageable);
         }
 
-        return pageList;
+        return routePage.map(route -> {
+            boolean isBookmarked = routeBookmarkRepository.existsByUser_IdAndTravelRoute_RouteId(loginUserId, route.getRouteId());
+            return TravelRouteListItemDTO.fromEntity(route, isBookmarked);
+        });
     }
 
 

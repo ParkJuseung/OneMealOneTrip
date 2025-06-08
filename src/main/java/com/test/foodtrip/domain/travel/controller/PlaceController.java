@@ -100,4 +100,15 @@ public class PlaceController {
                 .body(image);
     }
 
+    @GetMapping("/api/place/photo-references")
+    public ResponseEntity<List<String>> getPhotoReferences(@RequestParam String placeId) {
+        List<String> references = googlePlaceService.getPhotoReferences(placeId);
+
+        if (references.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(references);
+    }
+
 }
