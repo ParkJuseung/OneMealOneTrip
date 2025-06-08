@@ -96,7 +96,7 @@ public class ChatRoomService {
     	 //  userId를 바탕으로 User 객체 조회
     	User user = userRepository.findById(currentUserId)
     		    .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
-        
+
         // 1. 썸네일 처리
         String thumbnailUrl = null;
         MultipartFile thumbnailFile = dto.getThumbnailImage();
