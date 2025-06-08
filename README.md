@@ -109,6 +109,7 @@
 <br><br>
 
 ### 3. 여행경로
+![여행경로 상세 페이지](https://github.com/user-attachments/assets/f518b9cd-643c-4abf-a894-b9714e5e95e1)
 <img width="700" src="https://user-images.githubusercontent.com/60915285/189544287-de42403c-4c30-48b5-93bf-dbb20486d092.gif">
 추천하고싶은 여행 경로를 사용자들에게 추천할 수 있습니다. <br>
 GooGle API를 통해 정확한 위치를 제공하며 Pin과 경로 표시를 통해 효율적인 여행 경로를 확인할 수 있습니다.
