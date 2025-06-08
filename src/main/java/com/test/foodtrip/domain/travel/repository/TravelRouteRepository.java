@@ -26,4 +26,14 @@ public interface TravelRouteRepository extends JpaRepository<TravelRoute, Long> 
             "WHERE (:keyword IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
             " ORDER BY t.routeId DESC")
     Page<TravelRouteListItemDTO> findPagedList(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("""
+    SELECT DISTINCT r FROM TravelRoute r
+    LEFT JOIN r.tags t
+    LEFT JOIN r.user u
+    WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+       OR LOWER(t.tag.tagName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+       OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+""")
+    Page<TravelRoute> searchByTitleTagOrUser(@Param("keyword") String keyword, Pageable pageable);
 }
