@@ -1,5 +1,5 @@
 /**
- * 댓글 관련 JavaScript 기능
+ * 댓글 관련 JavaScript 기능 - 신고 기능 추가
  */
 
 class CommentManager {
@@ -54,6 +54,11 @@ class CommentManager {
             this.deleteComment(e);
         });
 
+        // 댓글 신고 (새로 추가)
+        $(document).on('click', '.report-btn', (e) => {
+            this.showReportModal(e);
+        });
+
         // 대댓글 토글
         $(document).on('click', '.toggle-replies-btn', (e) => {
             this.toggleReplies(e);
@@ -69,35 +74,26 @@ class CommentManager {
             const response = await fetch(`/api/comments/post/${this.postId}?page=${this.currentPage}&size=${this.pageSize}`);
             const result = await response.json();
 
-            console.log('API 전체 응답:', result); // 디버깅용
-
             if (result.success) {
-                // PageResultDTO 구조에 맞게 수정
                 let comments = [];
                 if (result.data && result.data.dtoList) {
                     comments = result.data.dtoList;
                     this.hasMoreComments = result.data.next;
                     this.updateCommentCount(result.data.totalCount);
                 } else if (Array.isArray(result.data)) {
-                    // 직접 배열인 경우
                     comments = result.data;
                 } else {
-                    console.warn('예상과 다른 응답 구조:', result);
                     comments = [];
                 }
 
-                console.log('추출된 댓글 리스트:', comments); // 디버깅용
-
                 if (comments.length > 0) {
-                    this.renderComments(comments);
+                    await this.renderComments(comments);
                 } else {
-                    console.log('댓글이 없습니다');
                     if (this.currentPage === 0) {
                         $('.comments-list').append('<p class="no-comments">아직 댓글이 없습니다.</p>');
                     }
                 }
             } else {
-                console.error('API 응답 실패:', result.message);
                 this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
             }
         } catch (error) {
@@ -159,12 +155,10 @@ class CommentManager {
 
             if (result.success) {
                 if (parentId) {
-                    // 대댓글인 경우 해당 댓글의 대댓글 목록에 추가
                     this.addReplyToComment(parentId, result.data);
                     $(`.reply-form[data-parent-id="${parentId}"]`).hide();
                     $(`.reply-form[data-parent-id="${parentId}"] .reply-input`).val('');
                 } else {
-                    // 일반 댓글인 경우 댓글 목록 상단에 추가
                     this.prependComment(result.data);
                     $('.comment-input').val('');
                 }
@@ -256,6 +250,15 @@ class CommentManager {
 
             if (result.success) {
                 this.updateReactionUI(commentId, result.data);
+
+                // 싫어요가 10개 이상이 되면 블라인드 처리 알림
+                if (reactionType === 'DISLIKE' && result.data.dislikeCount >= 10) {
+                    this.showToast('댓글이 블라인드 처리되었습니다.', 'info');
+                    // 페이지 새로고침
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                }
             } else {
                 this.showToast(result.message || '반응 처리에 실패했습니다.', 'error');
             }
@@ -265,32 +268,334 @@ class CommentManager {
         }
     }
 
-    // 댓글 렌더링 - 개선된 버전
-    renderComments(comments) {
-        console.log('렌더링 시작, 댓글 개수:', comments.length); // 디버깅용
-        console.log('렌더링할 댓글들:', comments); // 디버깅용
+    // 신고 모달 표시 (새로 추가)
+    async showReportModal(event) {
+        const commentId = $(event.target).closest('.comment-item, .reply-item').data('comment-id');
 
+        // 먼저 신고 가능 여부 확인
+        try {
+            const statusResponse = await fetch(`/api/reports/comment/${commentId}/status`);
+            const statusResult = await statusResponse.json();
+
+            if (!statusResult.success) {
+                this.showToast('신고 상태를 확인할 수 없습니다.', 'error');
+                return;
+            }
+
+            const status = statusResult.data;
+
+            if (!status.canReport) {
+                this.showToast(status.cannotReportReason, 'warning');
+                return;
+            }
+
+            // 신고 모달 HTML 생성
+            const modalHtml = `
+                <div class="report-modal-overlay" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">
+                    <div class="report-modal" style="
+                        background: white;
+                        border-radius: 12px;
+                        padding: 24px;
+                        max-width: 500px;
+                        width: 90%;
+                        max-height: 90%;
+                        overflow-y: auto;
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                        position: relative;
+                    ">
+                        <div class="report-modal-header" style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 20px;
+                            padding-bottom: 12px;
+                            border-bottom: 1px solid #e9ecef;
+                        ">
+                            <h3 style="margin: 0; color: #333; font-size: 18px;">댓글 신고</h3>
+                            <button class="report-modal-close" style="
+                                background: none;
+                                border: none;
+                                font-size: 24px;
+                                cursor: pointer;
+                                color: #666;
+                                padding: 0;
+                                width: 30px;
+                                height: 30px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">&times;</button>
+                        </div>
+                        
+                        <div class="report-modal-body">
+                            <div class="report-info" style="
+                                background: #f8f9fa;
+                                padding: 12px;
+                                border-radius: 8px;
+                                margin-bottom: 20px;
+                                border-left: 4px solid #dc3545;
+                            ">
+                                <p style="margin: 0; font-size: 14px; color: #666;">
+                                    <i class="fas fa-info-circle" style="margin-right: 8px; color: #dc3545;"></i>
+                                    부적절한 댓글을 신고해주세요. 허위 신고는 제재를 받을 수 있습니다.
+                                </p>
+                            </div>
+                            
+                            <div class="report-reason-section" style="margin-bottom: 20px;">
+                                <label style="
+                                    display: block;
+                                    margin-bottom: 8px;
+                                    font-weight: 600;
+                                    color: #333;
+                                ">신고 사유 <span style="color: #dc3545;">*</span></label>
+                                <div class="report-reason-options">
+                                    <label style="
+                                        display: block;
+                                        margin-bottom: 8px;
+                                        cursor: pointer;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        transition: background-color 0.2s;
+                                    " onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                       onmouseout="this.style.backgroundColor='transparent'">
+                                        <input type="radio" name="reportReason" value="SPAM" style="margin-right: 8px;">
+                                        스팸 및 광고
+                                    </label>
+                                    <label style="
+                                        display: block;
+                                        margin-bottom: 8px;
+                                        cursor: pointer;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        transition: background-color 0.2s;
+                                    " onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                       onmouseout="this.style.backgroundColor='transparent'">
+                                        <input type="radio" name="reportReason" value="INAPPROPRIATE" style="margin-right: 8px;">
+                                        부적절한 내용
+                                    </label>
+                                    <label style="
+                                        display: block;
+                                        margin-bottom: 8px;
+                                        cursor: pointer;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        transition: background-color 0.2s;
+                                    " onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                       onmouseout="this.style.backgroundColor='transparent'">
+                                        <input type="radio" name="reportReason" value="HARASSMENT" style="margin-right: 8px;">
+                                        괴롭힘 및 욕설
+                                    </label>
+                                    <label style="
+                                        display: block;
+                                        margin-bottom: 8px;
+                                        cursor: pointer;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        transition: background-color 0.2s;
+                                    " onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                       onmouseout="this.style.backgroundColor='transparent'">
+                                        <input type="radio" name="reportReason" value="HATE_SPEECH" style="margin-right: 8px;">
+                                        혐오 발언
+                                    </label>
+                                    <label style="
+                                        display: block;
+                                        margin-bottom: 8px;
+                                        cursor: pointer;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        transition: background-color 0.2s;
+                                    " onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                                       onmouseout="this.style.backgroundColor='transparent'">
+                                        <input type="radio" name="reportReason" value="OTHER" style="margin-right: 8px;">
+                                        기타
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="report-detail-section" style="margin-bottom: 20px;">
+                                <label style="
+                                    display: block;
+                                    margin-bottom: 8px;
+                                    font-weight: 600;
+                                    color: #333;
+                                ">상세 내용</label>
+                                <textarea class="report-detail-input" placeholder="신고 사유를 자세히 설명해주세요 (선택사항)" style="
+                                    width: 100%;
+                                    min-height: 80px;
+                                    padding: 12px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 8px;
+                                    resize: vertical;
+                                    font-family: inherit;
+                                    font-size: 14px;
+                                    box-sizing: border-box;
+                                " maxlength="1000"></textarea>
+                                <div style="
+                                    text-align: right;
+                                    margin-top: 4px;
+                                    font-size: 12px;
+                                    color: #666;
+                                ">
+                                    <span class="char-count">0</span>/1000
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="report-modal-footer" style="
+                            display: flex;
+                            gap: 12px;
+                            justify-content: flex-end;
+                            padding-top: 20px;
+                            border-top: 1px solid #e9ecef;
+                        ">
+                            <button class="report-cancel-btn" style="
+                                padding: 10px 20px;
+                                border: 1px solid #ddd;
+                                background: white;
+                                color: #666;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.backgroundColor='#f8f9fa'"
+                               onmouseout="this.style.backgroundColor='white'">취소</button>
+                            <button class="report-submit-btn" style="
+                                padding: 10px 20px;
+                                border: none;
+                                background: #dc3545;
+                                color: white;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 14px;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.backgroundColor='#c82333'"
+                               onmouseout="this.style.backgroundColor='#dc3545'"
+                               data-comment-id="${commentId}">신고하기</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 모달을 body에 추가
+            $('body').append(modalHtml);
+
+            // 문자 수 카운터 업데이트
+            $('.report-detail-input').on('input', function() {
+                const count = $(this).val().length;
+                $('.char-count').text(count);
+            });
+
+            // 모달 닫기 이벤트
+            $('.report-modal-close, .report-cancel-btn').on('click', () => {
+                $('.report-modal-overlay').remove();
+            });
+
+            // 배경 클릭으로 모달 닫기
+            $('.report-modal-overlay').on('click', function(e) {
+                if (e.target === this) {
+                    $(this).remove();
+                }
+            });
+
+            // 신고 제출 이벤트
+            $('.report-submit-btn').on('click', () => {
+                this.submitReport(commentId);
+            });
+
+            // ESC 키로 모달 닫기
+            $(document).on('keydown.reportModal', function(e) {
+                if (e.keyCode === 27) {
+                    $('.report-modal-overlay').remove();
+                    $(document).off('keydown.reportModal');
+                }
+            });
+
+        } catch (error) {
+            console.error('신고 상태 확인 실패:', error);
+            this.showToast('신고 처리 중 오류가 발생했습니다.', 'error');
+        }
+    }
+
+    // 신고 제출 (새로 추가)
+    async submitReport(commentId) {
+        const selectedReason = $('input[name="reportReason"]:checked').val();
+        const detail = $('.report-detail-input').val().trim();
+
+        if (!selectedReason) {
+            this.showToast('신고 사유를 선택해주세요.', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/reports', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    reportType: 'COMMENT',
+                    targetId: commentId,
+                    reason: selectedReason,
+                    detail: detail
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                $('.report-modal-overlay').remove();
+                this.showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
+
+                // 신고 버튼을 비활성화하고 텍스트 변경
+                const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                const reportBtn = commentItem.find('.report-btn');
+                reportBtn.removeClass('report-btn').addClass('reported-btn');
+                reportBtn.find('span').text('신고됨');
+                reportBtn.css({
+                    'color': '#6c757d',
+                    'cursor': 'not-allowed',
+                    'opacity': '0.6'
+                });
+                reportBtn.off('click');
+
+            } else {
+                this.showToast(result.message || '신고 접수에 실패했습니다.', 'error');
+            }
+
+        } catch (error) {
+            console.error('신고 제출 실패:', error);
+            this.showToast('신고 접수 중 오류가 발생했습니다.', 'error');
+        }
+    }
+
+    // 댓글 렌더링 - 개선된 버전
+    async renderComments(comments) {
         const commentsContainer = $('.comments-list');
-        console.log('댓글 컨테이너 찾음:', commentsContainer.length > 0); // 디버깅용
 
         if (commentsContainer.length === 0) {
             console.error('댓글 컨테이너(.comments-list)를 찾을 수 없습니다!');
             return;
         }
 
-        comments.forEach((comment, index) => {
-            console.log(`댓글 ${index + 1} 렌더링 중:`, comment); // 디버깅용
+        for (const comment of comments) {
             try {
-                const commentHtml = this.createCommentHTML(comment);
-                console.log(`댓글 ${index + 1} HTML 생성 완료`); // 디버깅용
+                const commentHtml = await this.createCommentHTML(comment);
                 commentsContainer.append(commentHtml);
-                console.log(`댓글 ${index + 1} DOM에 추가 완료`); // 디버깅용
             } catch (error) {
-                console.error(`댓글 ${index + 1} 렌더링 실패:`, error);
+                console.error(`댓글 렌더링 실패:`, error);
             }
-        });
-
-        console.log('렌더링 완료, 현재 댓글 요소 수:', $('.comment-item').length); // 디버깅용
+        }
 
         // 더보기 버튼 업데이트
         if (!this.hasMoreComments) {
@@ -317,14 +622,30 @@ class CommentManager {
         $('.comments-list').prepend(popularSection);
     }
 
-    // 댓글 HTML 생성
-    createCommentHTML(comment, isPopular = false) {
+    // 댓글 HTML 생성 - 신고 기능 추가
+    async createCommentHTML(comment, isPopular = false) {
         const isBlinded = comment.isBlinded;
-        const displayContent = isBlinded ? '블라인드 처리된 댓글입니다' : comment.getDisplayContent();
+        const isDeleted = comment.isDeleted === 'Y';
+        const displayContent = isDeleted ? '삭제된 댓글입니다' :
+            (isBlinded ? '블라인드 처리된 댓글입니다' : comment.content);
         const popularBadge = isPopular ? '<span class="popular-badge">인기</span>' : '';
 
+        // 신고 상태 조회
+        let canReport = false;
+        let isReported = false;
+        try {
+            const statusResponse = await fetch(`/api/reports/comment/${comment.id}/status`);
+            const statusResult = await statusResponse.json();
+            if (statusResult.success) {
+                canReport = statusResult.data.canReport;
+                isReported = statusResult.data.isReportedByCurrentUser;
+            }
+        } catch (error) {
+            console.warn('신고 상태 조회 실패:', error);
+        }
+
         return `
-            <div class="comment-item ${isPopular ? 'popular-comment' : ''}" data-comment-id="${comment.id}">
+            <div class="comment-item ${isPopular ? 'popular-comment' : ''} ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
                 <img src="${comment.userProfileImage || '/api/placeholder/40/40'}" 
                      alt="${comment.userNickname}" class="comment-avatar">
                 <div class="comment-content">
@@ -334,7 +655,7 @@ class CommentManager {
                         <span class="comment-date">${this.formatDate(comment.createdAt)}</span>
                     </div>
                     <p class="comment-text">${displayContent}</p>
-                    ${!isBlinded ? this.createCommentActionsHTML(comment) : ''}
+                    ${this.createCommentActionsHTML(comment, isBlinded, isDeleted, canReport, isReported)}
                     ${comment.hasReplies ? this.createRepliesToggleHTML(comment) : ''}
                     <div class="replies-container" style="display: none;"></div>
                     <div class="reply-form" data-parent-id="${comment.id}" style="display: none;">
@@ -349,10 +670,17 @@ class CommentManager {
         `;
     }
 
-    // 댓글 액션 버튼 HTML 생성
-    createCommentActionsHTML(comment) {
-        return `
-            <div class="comment-actions">
+    // 댓글 액션 버튼 HTML 생성 - 신고 기능 추가
+    createCommentActionsHTML(comment, isBlinded, isDeleted, canReport, isReported) {
+        if (isDeleted) {
+            return ''; // 삭제된 댓글은 액션 버튼 없음
+        }
+
+        let actionsHtml = '<div class="comment-actions">';
+
+        if (!isBlinded) {
+            // 일반 댓글: 좋아요, 싫어요, 답글, 신고 버튼
+            actionsHtml += `
                 <div class="comment-action comment-like-btn ${comment.isLikedByCurrentUser ? 'active' : ''}">
                     <i class="fas fa-heart"></i>
                     <span class="like-count">${comment.likeCount || 0}</span>
@@ -365,12 +693,55 @@ class CommentManager {
                     <i class="far fa-comment"></i>
                     <span>답글</span>
                 </div>
-                <div class="comment-options">
-                    <button class="comment-edit-btn">수정</button>
-                    <button class="comment-delete-btn">삭제</button>
-                </div>
-            </div>
-        `;
+            `;
+
+            // 신고 버튼 추가
+            if (canReport && !isReported) {
+                actionsHtml += `
+                    <div class="comment-action report-btn">
+                        <i class="fas fa-flag"></i>
+                        <span>신고</span>
+                    </div>
+                `;
+            } else if (isReported) {
+                actionsHtml += `
+                    <div class="comment-action reported-btn" style="color: #6c757d; cursor: not-allowed; opacity: 0.6;">
+                        <i class="fas fa-flag"></i>
+                        <span>신고됨</span>
+                    </div>
+                `;
+            }
+
+            // 수정/삭제 버튼 (본인 댓글인 경우)
+            if (comment.userId === 1) { // 임시로 사용자 ID 1로 비교
+                actionsHtml += `
+                    <div class="comment-options">
+                        <button class="comment-edit-btn">수정</button>
+                        <button class="comment-delete-btn">삭제</button>
+                    </div>
+                `;
+            }
+        } else {
+            // 블라인드된 댓글: 신고 버튼만 표시
+            if (canReport && !isReported) {
+                actionsHtml += `
+                    <div class="comment-action report-btn">
+                        <i class="fas fa-flag"></i>
+                        <span>신고</span>
+                    </div>
+                `;
+            } else if (isReported) {
+                actionsHtml += `
+                    <div class="comment-action reported-btn" style="color: #6c757d; cursor: not-allowed; opacity: 0.6;">
+                        <i class="fas fa-flag"></i>
+                        <span>신고됨</span>
+                    </div>
+                `;
+            }
+        }
+
+        actionsHtml += '</div>';
+        return actionsHtml;
     }
 
     // 대댓글 토글 HTML 생성
@@ -428,20 +799,39 @@ class CommentManager {
 
             if (result.success) {
                 const repliesContainer = $(`.comment-item[data-comment-id="${parentCommentId}"] .replies-container`);
-                const repliesHtml = result.data.map(reply => this.createReplyHTML(reply)).join('');
-                repliesContainer.html(repliesHtml);
+                const repliesHtml = await Promise.all(
+                    result.data.map(reply => this.createReplyHTML(reply))
+                );
+                repliesContainer.html(repliesHtml.join(''));
             }
         } catch (error) {
             console.error('대댓글 로드 실패:', error);
         }
     }
 
-    // 대댓글 HTML 생성
-    createReplyHTML(reply) {
-        const displayContent = reply.isBlinded ? '블라인드 처리된 댓글입니다' : reply.getDisplayContent();
+    // 대댓글 HTML 생성 - 신고 기능 추가
+    async createReplyHTML(reply) {
+        const isBlinded = reply.isBlinded;
+        const isDeleted = reply.isDeleted === 'Y';
+        const displayContent = isDeleted ? '삭제된 댓글입니다' :
+            (isBlinded ? '블라인드 처리된 댓글입니다' : reply.content);
+
+        // 신고 상태 조회
+        let canReport = false;
+        let isReported = false;
+        try {
+            const statusResponse = await fetch(`/api/reports/comment/${reply.id}/status`);
+            const statusResult = await statusResponse.json();
+            if (statusResult.success) {
+                canReport = statusResult.data.canReport;
+                isReported = statusResult.data.isReportedByCurrentUser;
+            }
+        } catch (error) {
+            console.warn('신고 상태 조회 실패:', error);
+        }
 
         return `
-            <div class="comment-item reply-item" data-comment-id="${reply.id}">
+            <div class="comment-item reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
                 <img src="${reply.userProfileImage || '/api/placeholder/40/40'}" 
                      alt="${reply.userNickname}" class="comment-avatar">
                 <div class="comment-content">
@@ -450,10 +840,80 @@ class CommentManager {
                         <span class="comment-date">${this.formatDate(reply.createdAt)}</span>
                     </div>
                     <p class="comment-text">${displayContent}</p>
-                    ${!reply.isBlinded ? this.createCommentActionsHTML(reply) : ''}
+                    ${this.createReplyActionsHTML(reply, isBlinded, isDeleted, canReport, isReported)}
                 </div>
             </div>
         `;
+    }
+
+    // 대댓글 액션 버튼 HTML 생성
+    createReplyActionsHTML(reply, isBlinded, isDeleted, canReport, isReported) {
+        if (isDeleted) {
+            return ''; // 삭제된 댓글은 액션 버튼 없음
+        }
+
+        let actionsHtml = '<div class="comment-actions">';
+
+        if (!isBlinded) {
+            // 일반 대댓글: 좋아요, 싫어요, 신고 버튼
+            actionsHtml += `
+                <div class="comment-action comment-like-btn ${reply.isLikedByCurrentUser ? 'active' : ''}">
+                    <i class="fas fa-heart"></i>
+                    <span class="like-count">${reply.likeCount || 0}</span>
+                </div>
+                <div class="comment-action comment-dislike-btn ${reply.isDislikedByCurrentUser ? 'active' : ''}">
+                    <i class="fas fa-heart-broken"></i>
+                    <span class="dislike-count">${reply.dislikeCount || 0}</span>
+                </div>
+            `;
+
+            // 신고 버튼 추가
+            if (canReport && !isReported) {
+                actionsHtml += `
+                    <div class="comment-action report-btn">
+                        <i class="fas fa-flag"></i>
+                        <span>신고</span>
+                    </div>
+                `;
+            } else if (isReported) {
+                actionsHtml += `
+                    <div class="comment-action reported-btn" style="color: #6c757d; cursor: not-allowed; opacity: 0.6;">
+                        <i class="fas fa-flag"></i>
+                        <span>신고됨</span>
+                    </div>
+                `;
+            }
+
+            // 수정/삭제 버튼 (본인 대댓글인 경우)
+            if (reply.userId === 1) { // 임시로 사용자 ID 1로 비교
+                actionsHtml += `
+                    <div class="comment-options">
+                        <button class="comment-edit-btn">수정</button>
+                        <button class="comment-delete-btn">삭제</button>
+                    </div>
+                `;
+            }
+        } else {
+            // 블라인드된 대댓글: 신고 버튼만 표시
+            if (canReport && !isReported) {
+                actionsHtml += `
+                    <div class="comment-action report-btn">
+                        <i class="fas fa-flag"></i>
+                        <span>신고</span>
+                    </div>
+                `;
+            } else if (isReported) {
+                actionsHtml += `
+                    <div class="comment-action reported-btn" style="color: #6c757d; cursor: not-allowed; opacity: 0.6;">
+                        <i class="fas fa-flag"></i>
+                        <span>신고됨</span>
+                    </div>
+                `;
+            }
+        }
+
+        actionsHtml += '</div>';
+        return actionsHtml;
     }
 
     // 답글 폼 표시
@@ -590,7 +1050,7 @@ class CommentManager {
         return date.toLocaleDateString('ko-KR');
     }
 
-    // 토스트 메시지 표시 - 간단한 버전으로 수정
+    // 토스트 메시지 표시
     showToast(message, type = 'success') {
         // 기존 토스트 제거
         $('.custom-toast').remove();
@@ -637,8 +1097,6 @@ class CommentManager {
             });
             setTimeout(() => $toast.remove(), 300);
         }, 3000);
-
-        console.log('토스트 메시지 표시:', message); // 디버깅용
     }
 
     // 토스트 배경색 반환
@@ -660,7 +1118,7 @@ $(document).ready(function() {
     window.commentManager = new CommentManager(postId);
 });
 
-// CSS 스타일 (별도 파일로 분리 권장)
+// CSS 스타일 추가 (신고 관련 스타일 포함)
 const commentStyles = `
 <style>
 .popular-comments-section {
@@ -745,27 +1203,41 @@ const commentStyles = `
     opacity: 0.6;
 }
 
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 6px;
-    color: white;
-    font-weight: 500;
-    z-index: 9999;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
+.comment-blinded {
+    background-color: #f5f5f5;
+    opacity: 0.8;
 }
 
-.toast.show {
-    transform: translateX(0);
+.comment-blinded .comment-text {
+    color: #999;
+    font-style: italic;
 }
 
-.toast-success { background-color: #28a745; }
-.toast-error { background-color: #dc3545; }
-.toast-warning { background-color: #ffc107; color: #212529; }
-.toast-info { background-color: #17a2b8; }
+/* 신고 버튼 스타일 */
+.report-btn {
+    color: #dc3545 !important;
+    transition: all 0.2s ease;
+}
+
+.report-btn:hover {
+    background-color: #ffebee !important;
+    color: #c62828 !important;
+}
+
+.reported-btn {
+    color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* 신고 모달 반응형 */
+@media (max-width: 768px) {
+    .report-modal {
+        margin: 20px !important;
+        max-width: none !important;
+        width: calc(100% - 40px) !important;
+    }
+}
 
 .toggle-replies-btn {
     color: #007bff;
