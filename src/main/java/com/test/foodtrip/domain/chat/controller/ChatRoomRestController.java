@@ -1,5 +1,6 @@
 package com.test.foodtrip.domain.chat.controller;
 
+import com.test.foodtrip.common.aws.S3Service;
 import com.test.foodtrip.domain.chat.dto.*;
 import com.test.foodtrip.domain.chat.service.ChatRoomService;
 import com.test.foodtrip.domain.user.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,8 @@ public class ChatRoomRestController {
 
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
+
 
     // 현재 로그인한 유저의 userId 가져오기
     private Long getCurrentUserId() {
@@ -75,8 +79,20 @@ public class ChatRoomRestController {
     // 채팅방 생성
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Long createRoom(@ModelAttribute ChatRoomCreateRequestDTO dto) {
+        MultipartFile thumbnailImage = dto.getThumbnailImage();
+
+        if (thumbnailImage != null && !thumbnailImage.isEmpty()) {
+            try {
+                String imageUrl = s3Service.upload(thumbnailImage, "chatroom");
+                dto.setThumbnailImageUrl(imageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("S3 업로드 중 오류 발생", e);
+            }
+        }
+
         return chatRoomService.createChatRoom(dto, getCurrentUserId());
     }
+
 
 
     @PostMapping("/{chatRoomId}/like")

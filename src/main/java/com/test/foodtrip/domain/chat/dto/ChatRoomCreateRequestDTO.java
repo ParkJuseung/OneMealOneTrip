@@ -15,5 +15,8 @@ public class ChatRoomCreateRequestDTO {
     private List<String> hashtags = new ArrayList<>();
     private String notice;
     private String description;
+
+
     private MultipartFile thumbnailImage;
+    private String thumbnailImageUrl;
 }
