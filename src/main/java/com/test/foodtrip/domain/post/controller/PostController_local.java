@@ -111,10 +111,6 @@ public class PostController_local {
         log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
         log.info("PostController create() - placeId: {}", placeId);
 
-        // 🔍 추가 디버깅: 각 이미지 파일 정보 출력
-        System.out.println("=== Controller 이미지 파일 디버깅 ===");
-        System.out.println("받은 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : "null"));
-
         if (imageFiles != null) {
             for (int i = 0; i < imageFiles.size(); i++) {
                 MultipartFile file = imageFiles.get(i);
@@ -144,13 +140,8 @@ public class PostController_local {
             dto.setPlaceName(placeName);
             dto.setPlaceAddress(placeAddress);
 
-            // 🔍 배열 변환 전 추가 로그
-            System.out.println("배열 변환 전 리스트 크기: " + (imageFiles != null ? imageFiles.size() : 0));
-
             // 이미지 배열로 변환
             MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
-
-            System.out.println("배열 변환 후 크기: " + imagesArray.length);
 
             // 서비스 호출
             Long pno = postService.create(dto, imagesArray);
@@ -200,12 +191,7 @@ public class PostController_local {
         }
 
         try {
-            System.out.println("=== 게시글 수정 페이지 로드 시작 ===");
-            System.out.println("게시글 ID: " + id);
-
             PostDTO dto = postService.read(id);
-
-            System.out.println("=== PostDTO 확인 ===");
             if (dto != null) {
                 System.out.println("제목: " + dto.getTitle());
                 System.out.println("내용: " + dto.getContent());
@@ -227,9 +213,6 @@ public class PostController_local {
             model.addAttribute("dto", dto);
             model.addAttribute("requestDTO", requestDTO);
             model.addAttribute("apiKey", apiKey);
-
-            System.out.println("=== Model에 데이터 추가 완료 ===");
-            System.out.println("템플릿 반환: post/modify-post");
 
             return "post/modify-post";
         } catch (Exception e) {
