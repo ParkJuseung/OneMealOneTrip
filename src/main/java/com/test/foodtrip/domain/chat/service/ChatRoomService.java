@@ -476,4 +476,15 @@ public class ChatRoomService {
     }
 
 
+    // 채팅방 나가기
+    @Transactional
+    public void exitChatRoom(Long chatRoomId, Long userId) {
+        ChatroomUser user = chatroomUserRepository
+            .findByChatRoomIdAndUserId(chatRoomId, userId)
+            .orElseThrow(() -> new IllegalArgumentException("참여 기록이 없습니다."));
+
+        user.leave(); // status → 'LEFT', left_at, status_updated_at 기록
+    }
+
+
 }

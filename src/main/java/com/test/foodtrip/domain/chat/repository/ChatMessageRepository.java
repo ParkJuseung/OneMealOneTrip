@@ -1,55 +1,50 @@
 package com.test.foodtrip.domain.chat.repository;
 
 import com.test.foodtrip.domain.chat.entity.ChatMessage;
-
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-// 채팅 메시지를 저장하고, 채팅방별 메시지를 조회하는 Repository
-// 무한 스크롤, 최근 메시지 불러오기 등에서 사용
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
-	// 특정 채팅방에 속한 메시지 조회 (최신순)
-	List<ChatMessage> findByChatRoomIdOrderByCreatedAtAsc(Long chatRoomId);
+    // ✅ 입장 시 보여줄 메시지: statusUpdatedAt 이후 전체 메시지
+    List<ChatMessage> findByChatRoom_IdAndCreatedAtAfterOrderByCreatedAtAsc(
+        Long chatRoomId, LocalDateTime afterTime
+    );
 
-	// 사용자가 마지막으로 읽은 메시지 처리
-	@Query("SELECT MAX(m.id) FROM ChatMessage m WHERE m.chatRoom.id = :chatRoomId")
-	Long findLastMessageIdByChatRoomId(@Param("chatRoomId") Long chatRoomId);
+    // ✅ 무한 스크롤: 이전 메시지 중 statusUpdatedAt 이후만
+    @Query("""
+        SELECT m FROM ChatMessage m
+        WHERE m.chatRoom.id = :chatRoomId
+          AND m.id < :beforeId
+          AND m.createdAt > :afterTime
+        ORDER BY m.id DESC
+    """)
+    List<ChatMessage> findPreviousMessagesAfterTime(
+        @Param("chatRoomId") Long chatRoomId,
+        @Param("beforeId") Long beforeId,
+        @Param("afterTime") LocalDateTime afterTime,
+        Pageable pageable
+    );
 
-	@Query("""
-			    SELECT m FROM ChatMessage m
-			    WHERE m.chatRoom.id = :chatRoomId
-			      AND m.id > :lastReadMessageId
-			    ORDER BY m.id ASC
-			""")
-	List<ChatMessage> findMessagesAfterLastRead(@Param("chatRoomId") Long chatRoomId,
-			@Param("lastReadMessageId") Long lastReadMessageId, Pageable pageable // 예: PageRequest.of(0, 30)
-	);
+    // ✅ UX용: 가장 마지막 메시지 ID (읽음 처리 등에서 사용 가능)
+    @Query("SELECT MAX(m.id) FROM ChatMessage m WHERE m.chatRoom.id = :chatRoomId")
+    Long findLastMessageIdByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 
-	@Query("""
-			    SELECT m FROM ChatMessage m
-			    WHERE m.chatRoom.id = :chatRoomId
-			      AND m.id < :beforeMessageId
-			    ORDER BY m.id DESC
-			""")
-	List<ChatMessage> findPreviousMessages(@Param("chatRoomId") Long chatRoomId,
-			@Param("beforeMessageId") Long beforeMessageId, Pageable pageable);
-
-	// ✅ 처음 입장한 사용자용 메시지 조회 (joinedAt 이후)
-	@Query("""
-		    SELECT m FROM ChatMessage m
-		    WHERE m.chatRoom.id = :chatRoomId
-		      AND m.createdAt >= :joinedAt
-		    ORDER BY m.id ASC
-		""")
-		List<ChatMessage> findMessagesCreatedAfter(@Param("chatRoomId") Long chatRoomId,
-		                                           @Param("joinedAt") LocalDateTime joinedAt,
-		                                           Pageable pageable);
-
+    // ✅ UX용: 사용자가 읽지 않은 메시지들 (읽음선 기준)
+    @Query("""
+        SELECT m FROM ChatMessage m
+        WHERE m.chatRoom.id = :chatRoomId
+          AND m.id > :lastReadMessageId
+        ORDER BY m.id ASC
+    """)
+    List<ChatMessage> findMessagesAfterLastRead(
+        @Param("chatRoomId") Long chatRoomId,
+        @Param("lastReadMessageId") Long lastReadMessageId,
+        Pageable pageable
+    );
 }

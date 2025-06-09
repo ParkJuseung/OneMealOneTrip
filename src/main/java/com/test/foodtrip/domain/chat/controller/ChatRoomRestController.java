@@ -217,6 +217,15 @@ public class ChatRoomRestController {
 
         return ResponseEntity.ok().build();
     }
+    
+    @PostMapping("/{chatRoomId}/exit")
+    public ResponseEntity<?> exitChatRoom(@PathVariable("chatRoomId") Long chatRoomId) {
+        Long userId = getCurrentUserId(); // 로그인한 사용자 ID 가져오기
+
+        chatRoomService.exitChatRoom(chatRoomId, userId); // 서비스 로직 호출
+
+        return ResponseEntity.ok().body("채팅방을 성공적으로 나갔습니다.");
+    }
 
 
 }
