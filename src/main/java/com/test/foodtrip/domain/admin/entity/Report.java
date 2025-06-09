@@ -1,6 +1,5 @@
 package com.test.foodtrip.domain.admin.entity;
 
-
 import com.test.foodtrip.domain.user.entity.User;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "REPORT")
 @Getter @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Report {
 
     @Id
@@ -53,6 +51,22 @@ public class Report {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processor_id")
     private User processor;
+
+    // 🆕 public 생성자 추가 (서비스에서 사용하기 위해)
+    public Report() {
+        // 기본 생성자
+    }
+
+    // 🆕 편의 생성자 추가
+    public Report(User reporter, User reported, String reportType, Long targetId, String reason, String detail) {
+        this.reporter = reporter;
+        this.reported = reported;
+        this.reportType = reportType;
+        this.targetId = targetId;
+        this.reason = reason;
+        this.detail = detail;
+        this.status = "PENDING";
+    }
 
     @PrePersist
     public void prePersist() {
