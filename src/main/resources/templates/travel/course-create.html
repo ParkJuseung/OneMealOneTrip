@@ -110,7 +110,6 @@
   </div>
 </div>
 <div id="login-info" th:attr="data-user-id=${loginUserId}"></div>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNg0wn8JiwA7BeSeZ4AUxfKWPqLsDcPHc&libraries=places&callback=initMap" async defer></script>
 <script>
   // 전역 변수 선언
   let map;
@@ -128,7 +127,7 @@
   const loginUserId = document.getElementById('login-info').dataset.userId;
 
   // 지도 초기화 함수
-  function initMap() {
+  window.initMap = function() {
     // 지도 생성
     map = new google.maps.Map(document.getElementById("googleMap"), {
       center: { lat: 36.5, lng: 127.8 }, // 한국 중심
@@ -395,15 +394,8 @@
   }
 
   // 장소 목록에 추가
-  function addPlaceToList(place, index) {
-    // 사진 URL 배열 생성 (최대 5개)
-    const photoUrls = [];
-    if (place.photos && place.photos.length > 0) {
-      const maxPhotos = Math.min(place.photos.length, 5);
-      for (let i = 0; i < maxPhotos; i++) {
-        photoUrls.push(place.photos[i].getUrl({ maxWidth: 500, maxHeight: 300 }));
-      }
-    }
+  async function addPlaceToList(place, index) {
+
     
     // 이전 장소와의 연결선 추가 (두 번째 장소부터)
     let connectorHtml = '';
@@ -431,11 +423,8 @@
           <button class="remove-place-btn"><i class="fas fa-times"></i></button>
         </div>
         <div class="place-content">
-          <div class="place-photos">
-            ${photoUrls.length > 0 ? 
-              photoUrls.map(url => `<img src="${url}" alt="${place.name}" class="place-photo">`).join('') : 
-              '<div class="no-photos">사진이 없습니다</div>'
-            }
+          <div class="place-photos" id="photo-container-${index - 1}">
+            <div class="loading-photo">사진 불러오는 중...</div>
           </div>
           <div class="place-details">
             <div class="detail-item">
@@ -490,6 +479,9 @@
     });
     
     $('#place-list').append(placeItem);
+
+    // ⭐ 사진 렌더링 (캐시+딜레이 방식)
+    await loadPhotoToElement(place, `#photo-container-${index - 1}`);
     
     // 장소가 2개 이상이면 이전 장소와의 경로 계산
     if (index > 1) {
@@ -921,6 +913,90 @@
       }
     });
   }
+
+  const photoCache = {}; // placeId → photoUrl 캐시
+  const photoDelay = 800; // 200ms 간격
+
+  // 특정 장소의 첫 번째 사진 URL 얻기 (없으면 null)
+  function getPhotoUrls(place, maxPhotos = 5) {
+    const cached = photoCache[place.place_id];
+    if (cached) return cached;
+
+    const urls = [];
+    if (place.photos && place.photos.length > 0) {
+      const count = Math.min(place.photos.length, maxPhotos);
+      for (let i = 0; i < count; i++) {
+        urls.push(place.photos[i].getUrl({ maxWidth: 500, maxHeight: 300 }));
+      }
+    }
+
+    photoCache[place.place_id] = urls;
+    return urls;
+  }
+
+  // 사진을 지정된 DOM에 비동기적으로 추가
+  async function loadPhotoToElement(place, containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+
+    // 사진 불러오는 중... 요소 제거
+    const loadingText = container.querySelector('.loading-photo');
+    if (loadingText) loadingText.remove();
+
+    // 딜레이 적용
+    await new Promise(resolve => setTimeout(resolve, photoDelay));
+
+    const photoUrls = getPhotoUrls(place);
+    if (photoUrls.length === 0) {
+      const fallback = document.createElement('img');
+      fallback.src = 'https://via.placeholder.com/150?text=No+Image';
+      fallback.alt = place.name;
+      fallback.className = 'place-photo';
+      container.appendChild(fallback);
+      return;
+    }
+
+    for (let url of photoUrls) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = place.name;
+      img.className = 'place-photo';
+      img.onerror = function handler() {
+        if (img.src.includes('no-image.png') || img.src.includes('placeholder.com')) return;
+        img.src = 'https://via.placeholder.com/150?text=No+Image';
+      };
+
+      img.onclick = () => {
+        $('#modal-image').attr('src', img.src);
+        $('#photo-modal').css('display', 'flex');
+      };
+
+      container.appendChild(img);
+    }
+  }
+
+  async function renderPlaces(places) {
+    const list = document.getElementById("place-list");
+    list.innerHTML = "";
+
+    for (let i = 0; i < places.length; i++) {
+      const place = places[i];
+
+      const li = document.createElement("li");
+      li.className = "place-item";
+      li.innerHTML = `
+      <div class="place-info">
+        <div class="photo-container" id="photo-container-${i}"></div>
+        <div class="place-title">${place.name}</div>
+      </div>
+    `;
+      list.appendChild(li);
+
+      // 사진 로드: 지연을 걸어서 하나씩
+      await loadPhotoToElement(place, `#photo-container-${i}`);
+    }
+  }
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNg0wn8JiwA7BeSeZ4AUxfKWPqLsDcPHc&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>

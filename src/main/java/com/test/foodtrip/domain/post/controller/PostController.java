@@ -1,4 +1,4 @@
-//package com.test.foodtrip.domain.post.controller;
+package com.test.foodtrip.domain.post.controller;//package com.test.foodtrip.domain.post.controller;
 //
 //import com.test.foodtrip.domain.post.dto.PageRequestDTO;
 //import com.test.foodtrip.domain.post.dto.PageResultDTO;
