@@ -83,7 +83,16 @@
                                 </div>
                             </div>
                             <div class="creator-info">
-                                <img th:src="${route.profileImage != null ? route.profileImage : '/images/default-profile.png'}" alt="작성자" class="creator-avatar" />
+                                <img th:if="${route.profileImage != null}"
+                                     th:src="@{/uploads/profile-images/{fn}(fn=${route.profileImage})}"
+                                     alt="프로필" class="creator-avatar"
+                                     style="width:28px; height:28px; object-fit:cover;"
+                                     onerror="this.style.display='none';" />
+
+                                <img th:if="${route.profileImage == null}"
+                                     src="/images/default-profile.png"
+                                     alt="기본 프로필" class="creator-avatar"
+                                     style="width:28px; height:28px; object-fit:cover;" />
                                 <span th:text="${route.userName}">작성자</span>
                             </div>
                         </div>
