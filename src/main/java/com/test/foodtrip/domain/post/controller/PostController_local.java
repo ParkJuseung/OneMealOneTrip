@@ -7,6 +7,9 @@ import com.test.foodtrip.domain.post.entity.Post;
 import com.test.foodtrip.domain.post.service.PostService;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
 
+@Tag(name = "게시글 HTML View (개발용)", description = "Thymeleaf 기반 게시글 관련 HTML 페이지 반환 컨트롤러 (로컬 개발용)")
 @Controller
 @Log4j2
 public class PostController_local {
@@ -36,13 +40,17 @@ public class PostController_local {
         this.userRepository = userRepository;
     }
 
+    @Operation(summary = "메인 페이지", description = "메인 페이지 접속 시 게시글 목록으로 리다이렉트합니다.")
     @GetMapping("/")
     public String index() {
         return "redirect:/post";
     }
 
+    @Operation(summary = "게시글 목록 페이지", description = "페이징 처리된 게시글 목록을 보여주는 HTML 페이지를 반환합니다.")
     @GetMapping("/post")
-    public String list(PageRequestDTO pageRequestDTO, Model model) {
+    public String list(
+            @Parameter(description = "페이지 요청 정보 (페이지 번호, 검색 조건 등)") PageRequestDTO pageRequestDTO,
+            Model model) {
         log.info("PostController list() - pageRequestDTO: " + pageRequestDTO);
 
         PageResultDTO<PostDTO, Post> result = postService.getList(pageRequestDTO);
@@ -52,14 +60,15 @@ public class PostController_local {
         return "post/post";
     }
 
+    @Operation(summary = "게시글 상세 페이지", description = "특정 게시글의 상세 내용을 보여주는 HTML 페이지를 반환합니다.")
     @GetMapping("/post/{id}")
-    public String detail(@PathVariable("id") Long id,
-                         @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
-                         Model model) {
+    public String detail(
+            @Parameter(description = "게시글 ID") @PathVariable("id") Long id,
+            @Parameter(description = "페이지 요청 정보") @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+            Model model) {
         PostDTO dto = postService.read(id);
         String placeId = dto.getPlaceId();
         model.addAttribute("dto", dto);
-
 
         // 게시글 작성자 정보 조회하여 모델에 추가
         if (dto.getUserId() != null) {
@@ -70,12 +79,12 @@ public class PostController_local {
             }
         }
 
-
         model.addAttribute("placeId", placeId);
         model.addAttribute("apiKey", apiKey);
         return "post/detail-post";
     }
 
+    @Operation(summary = "게시글 작성 페이지", description = "새 게시글을 작성하는 HTML 페이지를 반환합니다. 로그인이 필요합니다.")
     @GetMapping("/post/create")
     public String create(HttpSession session, Model model) {
         model.addAttribute("apiKey", apiKey);
@@ -86,23 +95,21 @@ public class PostController_local {
         return "post/create-post";
     }
 
+    @Operation(summary = "게시글 저장", description = "작성한 게시글을 저장합니다. 로그인이 필요하며 이미지 파일을 첨부할 수 있습니다.")
     @PostMapping("/post/create")
-    public String create(@ModelAttribute PostDTO dto,
-                         @RequestParam(value = "tags", required = false) List<String> tags,
-                         @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
-                         @RequestParam(value = "placeId", required = false) String placeId,
-                         @RequestParam(value = "placeName", required = false) String placeName,
-                         @RequestParam(value = "placeAddress", required = false) String placeAddress,
-                         HttpSession session,
-                         RedirectAttributes redirectAttributes) {
+    public String create(
+            @Parameter(description = "게시글 정보") @ModelAttribute PostDTO dto,
+            @Parameter(description = "태그 목록") @RequestParam(value = "tags", required = false) List<String> tags,
+            @Parameter(description = "이미지 파일 목록") @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+            @Parameter(description = "장소 ID") @RequestParam(value = "placeId", required = false) String placeId,
+            @Parameter(description = "장소 이름") @RequestParam(value = "placeName", required = false) String placeName,
+            @Parameter(description = "장소 주소") @RequestParam(value = "placeAddress", required = false) String placeAddress,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         log.info("PostController create() - dto: {}", dto);
         log.info("PostController create() - tags: {}", tags);
         log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
         log.info("PostController create() - placeId: {}", placeId);
-
-        // 🔍 추가 디버깅: 각 이미지 파일 정보 출력
-        System.out.println("=== Controller 이미지 파일 디버깅 ===");
-        System.out.println("받은 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : "null"));
 
         if (imageFiles != null) {
             for (int i = 0; i < imageFiles.size(); i++) {
@@ -133,13 +140,8 @@ public class PostController_local {
             dto.setPlaceName(placeName);
             dto.setPlaceAddress(placeAddress);
 
-            // 🔍 배열 변환 전 추가 로그
-            System.out.println("배열 변환 전 리스트 크기: " + (imageFiles != null ? imageFiles.size() : 0));
-
             // 이미지 배열로 변환
             MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
-
-            System.out.println("배열 변환 후 크기: " + imagesArray.length);
 
             // 서비스 호출
             Long pno = postService.create(dto, imagesArray);
@@ -155,7 +157,6 @@ public class PostController_local {
             return "redirect:/post/create";
         }
     }
-
 
     // 이미지 파일 유효성 검사 메서드
     private boolean isValidImageFile(MultipartFile file) {
@@ -176,12 +177,13 @@ public class PostController_local {
                         contentType.equals("image/gif"));
     }
 
+    @Operation(summary = "게시글 수정 페이지", description = "특정 게시글의 수정 페이지를 로드합니다. 본인이 작성한 게시글만 수정 가능합니다.")
     @GetMapping("/post/modify/{id}")
-    public String modify(@PathVariable("id") Long id,
-                         @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
-                         HttpSession session,
-                         Model model) {
-
+    public String modify(
+            @Parameter(description = "수정할 게시글 ID") @PathVariable("id") Long id,
+            @Parameter(description = "페이지 요청 정보") @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+            HttpSession session,
+            Model model) {
 
         // 로그인 체크
         if (!isLoggedIn(session)) {
@@ -189,12 +191,7 @@ public class PostController_local {
         }
 
         try {
-            System.out.println("=== 게시글 수정 페이지 로드 시작 ===");
-            System.out.println("게시글 ID: " + id);
-
             PostDTO dto = postService.read(id);
-
-            System.out.println("=== PostDTO 확인 ===");
             if (dto != null) {
                 System.out.println("제목: " + dto.getTitle());
                 System.out.println("내용: " + dto.getContent());
@@ -217,9 +214,6 @@ public class PostController_local {
             model.addAttribute("requestDTO", requestDTO);
             model.addAttribute("apiKey", apiKey);
 
-            System.out.println("=== Model에 데이터 추가 완료 ===");
-            System.out.println("템플릿 반환: post/modify-post");
-
             return "post/modify-post";
         } catch (Exception e) {
             System.err.println("❌ 게시글 수정 페이지 로드 중 오류: " + e.getMessage());
@@ -228,14 +222,16 @@ public class PostController_local {
         }
     }
 
+    @Operation(summary = "게시글 수정 처리", description = "수정된 게시글 정보를 저장합니다.")
     @PostMapping("/post/modify")
-    public String modify(PostDTO dto,
-                         @RequestParam(value = "tags", required = false) List<String> tags,
-                         @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
-                         @RequestParam(value = "deleteImageIndexes", required = false) List<Integer> deleteImageIndexes,
-                         @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
-                         HttpSession session,
-                         RedirectAttributes redirectAttributes) {
+    public String modify(
+            @Parameter(description = "수정할 게시글 정보") PostDTO dto,
+            @Parameter(description = "태그 목록") @RequestParam(value = "tags", required = false) List<String> tags,
+            @Parameter(description = "새로 업로드할 이미지 파일 목록") @RequestParam(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+            @Parameter(description = "삭제할 이미지 인덱스 목록") @RequestParam(value = "deleteImageIndexes", required = false) List<Integer> deleteImageIndexes,
+            @Parameter(description = "페이지 요청 정보") @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
 
         log.info("PostController modify() - dto: " + dto);
         log.info("PostController modify() - tags: " + tags);
@@ -273,11 +269,13 @@ public class PostController_local {
         }
     }
 
+    @Operation(summary = "게시글 삭제", description = "특정 게시글을 삭제합니다. 본인이 작성한 게시글만 삭제 가능합니다.")
     @PostMapping("/post/remove")
-    public String remove(@RequestParam("id") Long id,
-                         @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
-                         HttpSession session,
-                         RedirectAttributes redirectAttributes) {
+    public String remove(
+            @Parameter(description = "삭제할 게시글 ID") @RequestParam("id") Long id,
+            @Parameter(description = "페이지 요청 정보") @ModelAttribute("requestDTO") PageRequestDTO requestDTO,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
         log.info("PostController remove() - id: " + id);
 
         // 로그인 체크
@@ -303,6 +301,4 @@ public class PostController_local {
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
-
-
 }
