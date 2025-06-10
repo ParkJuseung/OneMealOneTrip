@@ -86,7 +86,8 @@
 <br><br>
 
 ## 서비스 구조도 🔍
-<img width="750" alt="image" src="https://user-images.githubusercontent.com/60915285/188927329-3cf2a1a5-1e58-4896-9163-2049ab7cfa5f.png">
+<img width="1004" alt="스크린샷 2025-06-10 오후 12 44 53" src="https://github.com/user-attachments/assets/f3aba686-3c2d-4bea-b6f7-d76eb3a4f439" />
+
 <br><br>
 
 ## 주요 기능 📚
