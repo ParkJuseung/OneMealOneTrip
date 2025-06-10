@@ -97,7 +97,7 @@
                 <div class="section-header">
                     <h3 class="section-title">나의 소개</h3>
                     <!-- 데모용으로 조건부 표시 제거 -->
-                    <div class="section-actions">
+                    <div class="section-actions" th:if="${isOwner}">
                         <button id="intro-edit-btn" class="profile-button">수정</button>
                         <button id="intro-delete-btn" class="profile-button">삭제</button>
                     </div>
