@@ -12,6 +12,14 @@
           rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/header-dropdown.css}">
     <link rel="stylesheet" th:href="@{/css/mypage.css}">
+
+    <!-- CSRF 토큰이 존재할 때만 메타 태그 렌더링 -->
+    <meta th:if="${_csrf != null}"
+          name="_csrf"
+          th:content="${_csrf.token}"/>
+    <meta th:if="${_csrf != null}"
+          name="_csrf_header"
+          th:content="${_csrf.headerName}"/>
 </head>
 <body th:data-session-user-id="${sessionUserId}" th:data-page-owner-id="${pageOwnerId}">
 <div class="container">
@@ -24,9 +32,7 @@
         <header th:replace="~{layout/fragments/mypageheader :: header}"></header>
 
 
-
         <!-- 기존 마이페이지 제목 등 -->
-
 
 
         <!-- 프로필 상단 영역 -->
@@ -97,33 +103,35 @@
                 <div class="section-header">
                     <h3 class="section-title">나의 소개</h3>
                     <!-- 데모용으로 조건부 표시 제거 -->
-                    <div class="section-actions" th:if="${isOwner}">
+                    <!-- 본인 페이지이면서, 소개글이 있을 때만 버튼 표시 -->
+                    <div class="section-actions"
+                         th:if="${isOwner} and ${user.userInfo} != null">
                         <button id="intro-edit-btn" class="profile-button">수정</button>
                         <button id="intro-delete-btn" class="profile-button">삭제</button>
                     </div>
                 </div>
 
-                <!-- 읽기 모드: 소개글이 있을 때 표시 (데모용으로 기본 표시) -->
-                <div id="intro-view">
-                    <p class="introduce-content">안녕하세요! 여행을 통해 새로운 문화를 경험하고 소중한 추억을 만드는 것을 좋아합니다. 특히 현지 음식을 맛보고 역사적인 장소를
-                        탐방하는 것에 큰 흥미를 가지고 있습니다.</p>
-                    <div class="tag-list">
-                        <span class="interest-tag">#여행</span>
-                        <span class="interest-tag">#맛집탐방</span>
-                        <span class="interest-tag">#역사</span>
-                        <span class="interest-tag">#사진</span>
-                        <span class="interest-tag">#문화체험</span>
+                <!-- 읽기 모드 컨테이너: 항상 DOM에 있고, userInfo null이면 hidden -->
+                <div id="intro-view"
+                     th:classappend="${user.userInfo} == null ? 'hidden' : ''">
+                    <!-- userInfo가 있을 때만 이 블록 전체를 렌더링 -->
+                    <div th:if="${user.userInfo} != null">
+                        <p class="introduce-content"
+                           th:text="${user.userInfo.content}">설명</p>
+                        <div class="tag-list">
+                            <span class="interest-tag"
+                                  th:each="tag : ${user.userInfo.tags.split(',')}"
+                                  th:text="${'#' + tag}"></span>
+                        </div>
                     </div>
                 </div>
-
-                <!-- 읽기 모드: 소개글이 없을 때 보여줄 부분 (데모용으로 숨김) -->
-                <div id="intro-view-empty" class="hidden">
-                    <p class="no-intro-text">아직 작성된 소개글이 없습니다.</p>
-                    <div class="intro-empty-action">
-                        <button id="intro-create-btn" class="profile-button">
-                            나의 소개 작성하기
-                        </button>
-                    </div>
+                <!-- 작성하기 모드 (빈 상태) -->
+                <div id="intro-view-empty"
+                     class="intro-empty-action"
+                     th:classappend="${isOwner} and ${user.userInfo} == null ? '' : 'hidden'">
+                    <button id="intro-create-btn" class="profile-button">
+                        나의 소개 작성하기
+                    </button>
                 </div>
 
                 <!-- 편집 모드 (쓰기/수정 폼) -->
