@@ -18,9 +18,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+
+
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/signup")
+@Tag(name = "Signup", description = "회원가입 API")
 public class SignupController {
 
     private final UserRepository userRepository;
@@ -29,7 +35,10 @@ public class SignupController {
 
 
 
-
+    @Operation(
+            summary = "회원가입 페이지 조회",
+            description = "신규 회원가입 폼을 보여줍니다."
+    )
     @GetMapping
     public String showSignupForm(HttpSession session, Model model) {
         String sid = session != null ? session.getId() : "세션없음";
@@ -55,6 +64,11 @@ public class SignupController {
         return "user/login";  // login.html 안의 signup 섹션 활성화
     }
 
+
+    @Operation(
+            summary = "회원가입 처리",
+            description = "회원 정보를 저장하고 포스트 목록 페이지로 리다이렉트합니다."
+    )
     @PostMapping
     public String processSignup(
             @Valid @ModelAttribute("signupDTO") SignupDTO signupDTO,
