@@ -45,7 +45,7 @@ public class ChatRoomUserService {
         Long lastMessageId = chatMessageRepository.findLastMessageIdByChatRoomId(chatRoomId);
 
         if (entry == null) {
-            // 처음 참여하는 경우
+            // ✅ 처음 참여
             String role = chatRoom.getUser().getId().equals(user.getId()) ? "OWNER" : "MEMBER";
 
             ChatroomUser newUser = ChatroomUser.builder()
@@ -55,15 +55,17 @@ public class ChatRoomUserService {
                     .status("JOINED")
                     .joinedAt(LocalDateTime.now())
                     .statusUpdatedAt(LocalDateTime.now())
-                    .lastReadMessageId(lastMessageId)
+                    .lastReadMessageId(lastMessageId) // ✅ 마지막 메시지를 기준으로 읽음 처리
                     .build();
             chatroomUserRepository.save(newUser);
-        } else {
-            // 재입장 시 도메인 메서드 호출
-            entry.rejoin(lastMessageId);
-        }
-    }
 
+        } else if ("LEFT".equals(entry.getStatus())) {
+            // ✅ 재입장한 경우 → 과거 기록 초기화
+            entry.rejoin(); // ❗ lastMessageId 넘기지 마세요 → 내부에서 null 처리
+        }
+
+        // 이미 JOINED 상태인 경우는 아무 처리 안 함 (탭 닫기 후 재접속 등)
+    }
     /**
      * 사용자가 채팅방을 나가는 경우 상태를 LEFT로 변경
      */
@@ -73,7 +75,7 @@ public class ChatRoomUserService {
                 .findByChatRoom_IdAndUser_Id(chatRoomId, userId)
                 .orElseThrow(() -> new RuntimeException("참여 기록이 없습니다."));
 
-        chatUser.leave();
+        chatUser.leave(); // 이 메서드가 채팅방 나가기 핵심 메서드
     }
 
     /**
