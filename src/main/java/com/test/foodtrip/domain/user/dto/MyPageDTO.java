@@ -2,6 +2,8 @@
 
 package com.test.foodtrip.domain.user.dto;
 
+import com.test.foodtrip.domain.post.dto.PostDTO;
+import com.test.foodtrip.domain.travel.dto.TravelRouteListItemDTO;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,7 +11,6 @@ import java.util.List;
 
 //import com.test.foodtrip.domain.post.dto.PostDTO;
 //import com.test.foodtrip.domain.post.dto.CommentDTO;
-import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 import org.springframework.format.annotation.DateTimeFormat;
 //import com.test.foodtrip.domain.user.dto.TravelBucketDTO;
 import org.springframework.web.multipart.MultipartFile;
@@ -98,7 +99,13 @@ public class MyPageDTO {
 
     /** 사용자가 작성한 게시글 목록 */
 
-    //private List<PostDTO> posts;
+    /** 사용자가 작성한 게시글 목록 */
+    private List<PostPreviewDTO> previewPosts;
+
+    /** 사용자가 작성한 추천 여행 경로 목록 */
+    private List<TravelPreviewDTO> previewTravels;
+
+
 
     /** 사용자가 작성한 댓글 목록 */
     //private List<CommentDTO> comments;
@@ -118,4 +125,8 @@ public class MyPageDTO {
     /** 사용자를 팔로우하는 사람 수 */
     @Schema(description = "팔로워 수", example = "1")
     private int followersCount;
+
+    /** Post/TravelRoute 통합 미리보기 리스트 */
+    //private List<PreviewDTO> items;
+    private List<PostPreviewDTO> items;
 }

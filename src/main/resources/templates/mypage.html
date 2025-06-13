@@ -196,7 +196,7 @@
                 </div>
             </div>
 
-            <!-- 대표 사진첩 섹션 -->
+<!--            &lt;!&ndash; 대표 사진첩 섹션 &ndash;&gt;
             <div class="content-section">
                 <div class="section-header">
                     <h3 class="section-title">대표 사진첩</h3>
@@ -220,84 +220,56 @@
                         <div class="photo-overlay">홍콩 야경</div>
                     </div>
                 </div>
-            </div>
+            </div>-->
+
+
 
             <!-- 대표 게시글 섹션 -->
             <div class="content-section">
                 <div class="section-header">
                     <h3 class="section-title">대표 게시글</h3>
-                    <a href="#" class="more-link">더보기 <i class="fas fa-chevron-right"></i></a>
+                    <a th:href="@{/users/{id}/posts(pageOwnerId=${user.id})}" class="more-link">
+                        더보기 <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
                 <div class="posts-list">
-                    <div class="post-item">
-                        <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
+                    <div class="post-item" th:each="post : ${user.previewPosts}">
+                        <img th:src="${post.thumbnailUrl}" th:alt="${post.title}" class="post-thumbnail"/>
                         <div class="post-info">
-                            <div class="post-title">제주도 3박 4일 자유여행 일정 공유</div>
+                            <div class="post-title" th:text="${post.title}">제목</div>
                             <div class="post-stats">
-                                <div class="post-stat"><i class="far fa-eye"></i> 248</div>
-                                <div class="post-stat"><i class="far fa-heart"></i> 54</div>
-                                <div class="post-stat"><i class="far fa-comment"></i> 12</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="post-item">
-                        <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
-                        <div class="post-info">
-                            <div class="post-title">도쿄 맛집 투어 가이드 & 추천 맛집 15곳</div>
-                            <div class="post-stats">
-                                <div class="post-stat"><i class="far fa-eye"></i> 356</div>
-                                <div class="post-stat"><i class="far fa-heart"></i> 89</div>
-                                <div class="post-stat"><i class="far fa-comment"></i> 27</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="post-item">
-                        <img src="/api/placeholder/80/60" alt="게시글 썸네일" class="post-thumbnail">
-                        <div class="post-info">
-                            <div class="post-title">태국 방콕+치앙마이 자유여행 경비 정리</div>
-                            <div class="post-stats">
-                                <div class="post-stat"><i class="far fa-eye"></i> 412</div>
-                                <div class="post-stat"><i class="far fa-heart"></i> 67</div>
-                                <div class="post-stat"><i class="far fa-comment"></i> 15</div>
+                                <div class="post-stat"><i class="far fa-eye"></i> <span th:text="${post.viewCount}">0</span></div>
+                                <div class="post-stat"><i class="far fa-heart"></i> <span th:text="${post.likeCount}">0</span></div>
+                                <div class="post-stat"><i class="far fa-comment"></i> <span th:text="${post.commentCount}">0</span></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 추천 여행 경로 섹션 -->
+
+            <!-- 추천 여행 경로 섹션 (DTO에 맞춘 버전) -->
             <div class="content-section">
                 <div class="section-header">
                     <h3 class="section-title">추천 여행 경로</h3>
-                    <a href="#" class="more-link">더보기 <i class="fas fa-chevron-right"></i></a>
+                    <a th:href="@{/users/{id}/travels(pageOwnerId=${user.id})}" class="more-link">
+                        더보기 <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
                 <div class="routes-list">
-                    <div class="route-item">
-                        <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
+                    <div class="route-item" th:each="route : ${user.previewTravels}">
+                        <img th:src="${route.mapImageUrl}" th:alt="${route.title}" class="route-map"/>
                         <div class="route-info">
-                            <div class="route-title">제주도 서부권 드라이브 코스</div>
-                            <div class="route-description">협재해수욕장 → 곽지해수욕장 → 한림공원 → 오설록 티뮤지엄</div>
-                            <div class="route-days">1일 코스</div>
-                        </div>
-                    </div>
-                    <div class="route-item">
-                        <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
-                        <div class="route-info">
-                            <div class="route-title">일본 간사이 지역 베스트 코스</div>
-                            <div class="route-description">오사카 → 교토 → 나라 → 고베</div>
-                            <div class="route-days">4일 코스</div>
-                        </div>
-                    </div>
-                    <div class="route-item">
-                        <img src="/api/placeholder/80/60" alt="여행 경로 지도" class="route-map">
-                        <div class="route-info">
-                            <div class="route-title">태국 방콕 시내 당일 투어</div>
-                            <div class="route-description">왕궁 → 왓아룬 → 짜뚜짝 시장 → 아시아티크</div>
-                            <div class="route-days">1일 코스</div>
+                            <div class="route-title" th:text="${route.title}">경로 제목</div>
+                            <div class="route-description" th:text="${route.description}">설명</div>
+                            <div class="route-days" th:text="${route.days} + '일 코스'">n일 코스</div>
                         </div>
                     </div>
                 </div>
+
             </div>
+
+
 
             <!-- 방명록 섹션 -->
             <div class="content-section">
