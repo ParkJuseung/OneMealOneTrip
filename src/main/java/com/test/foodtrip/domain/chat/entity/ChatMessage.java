@@ -31,7 +31,8 @@ public class ChatMessage {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
+    
+    
     @Column(name = "message_type", nullable = false, length = 20)
     private String messageType = "TEXT";
 

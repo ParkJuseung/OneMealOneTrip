@@ -118,4 +118,8 @@ public interface PostService {
     void increaseViewCount(Long id);
     void modify(PostDTO dto, MultipartFile[] images, List<Integer> deleteImageIndexes);
 
+    PageResultDTO<PostDTO, Post> searchPosts(String keyword, PageRequestDTO requestDTO);
+    PageResultDTO<PostDTO, Post> searchPostsByTag(String tagKeyword, PageRequestDTO requestDTO);
+
+    List<String> getTopTags(int limit);
 }

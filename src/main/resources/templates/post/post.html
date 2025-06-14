@@ -40,13 +40,6 @@
 
 <body>
 <th:block layout:fragment="content">
-    <!--    &lt;!&ndash; 검색 영역 &ndash;&gt;-->
-    <!--    <div class="search-container">-->
-    <!--        <div class="search-input-wrap">-->
-    <!--            <i class="fas fa-search search-icon-input"></i>-->
-    <!--            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">-->
-    <!--        </div>-->
-    <!--    </div>-->
 
     <!-- 사용자 선택 탭 -->
     <div class="user-selection">
@@ -71,20 +64,27 @@
 
     <!-- 검색 결과 영역 -->
     <div class="search-container">
-        <div class="search-input-wrap">
-            <i class="fas fa-search search-icon-input"></i>
-            <input type="text" class="search-input" placeholder="전세계 맛집 리스트 먹버려뭐야">
-        </div>
+        <form id="searchForm" action="/post/search" method="get">
+            <div class="search-input-wrap">
+                <i class="fas fa-search search-icon-input"></i>
+                <input type="text" class="search-input" name="keyword"
+                       th:value="${searchValue}" placeholder="전세계 맛집 리스트 먹버려뭐야">
+                <input type="hidden" name="page" value="1">
+            </div>
+        </form>
     </div>
 
     <div class="trending-topics">
-        <div class="topic-badge active"># 인기 여행지</div>
-        <div class="topic-badge"># 제주도</div>
-        <div class="topic-badge"># 맛집투어</div>
-        <div class="topic-badge"># 유럽여행</div>
-        <div class="topic-badge"># 배낭여행</div>
-        <div class="topic-badge"># 프라하</div>
-        <div class="topic-badge"># 동행구함</div>
+        <a href="/post" class="topic-badge" th:classappend="${searchType == null ? 'active' : ''}">
+            # 전체보기
+        </a>
+        <!-- 동적으로 인기 태그 표시 -->
+        <a th:each="tag : ${topTags}"
+           th:href="@{/post/search(tag=${tag})}"
+           class="topic-badge"
+           th:classappend="${searchType == 'tag' && searchValue == tag ? 'active' : ''}">
+            <span th:text="${tag}"></span>
+        </a>
     </div>
 
     <!-- 정렬 옵션 -->
@@ -266,6 +266,40 @@
                 viewOptions.forEach(o => o.classList.remove('active'));
                 this.classList.add('active');
             });
+        });
+
+        // 검색 입력란에서 Enter 키 누르면 검색 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.search-input');
+            const searchForm = document.getElementById('searchForm');
+
+            if (searchInput && searchForm) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchForm.submit();
+                    }
+                });
+            }
+
+            // 페이지네이션 링크에 검색 파라미터 유지
+            const paginationLinks = document.querySelectorAll('.pagination a');
+
+            if (paginationLinks.length > 0) {
+                const searchType = '[[${searchType}]]';
+                const searchValue = '[[${searchValue}]]';
+
+                paginationLinks.forEach(link => {
+                    const href = link.getAttribute('href');
+
+                    if (href && searchType && searchValue) {
+                        const newHref = href + (searchType === 'tag'
+                            ? '&tag=' + searchValue
+                            : '&keyword=' + searchValue);
+                        link.setAttribute('href', newHref);
+                    }
+                });
+            }
         });
     </script>
 </th:block>
