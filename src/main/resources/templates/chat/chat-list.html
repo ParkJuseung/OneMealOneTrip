@@ -14,10 +14,10 @@
 
 		<!-- 탭 네비게이션 -->
 		<div class="tab-navigation">
-			<div class="tab" data-tab="all" onclick="location.href='/post'">포스트</div>
+			<div class="tab active" data-tab="all" onclick="location.href='/post'">포스트</div>
 			<div class="tab" data-tab="companion" onclick="location.href='/travel'">추천 여행경로</div>
-			<div class="tab active" data-tab="chat" onclick="location.href='/chat'">채팅</div>
-<!--			<div class="tab" data-tab="explorer" style="display: none"></div>-->
+			<div class="tab" data-tab="post" onclick="location.href='/chat'">채팅</div>
+			<div class="tab" data-tab="explorer"></div>
 			<div class="tab-indicator"></div>
 		</div>
 
@@ -605,50 +605,6 @@
 	</script>
 
 </th:block>
-
-<script>
-	document.addEventListener('DOMContentLoaded', () => {
-		const tabs = document.querySelectorAll('.tab');
-		const indicator = document.querySelector('.tab-indicator');
-		const path = window.location.pathname;
-
-		function getTabNameByPath(path) {
-			if (path.startsWith('/post')) return 'all';
-			if (path.startsWith('/travel')) return 'companion';
-			if (path.startsWith('/chat')) return 'chat';
-			return '';
-		}
-
-		const currentTabName = getTabNameByPath(path);
-
-		// ✅ 기존 active 제거
-		tabs.forEach(tab => tab.classList.remove('active'));
-
-		tabs.forEach(tab => {
-			const tabName = tab.getAttribute('data-tab');
-			if (tabName === currentTabName) {
-				tab.classList.add('active');
-				setIndicatorPosition(tab);
-			}
-		});
-
-		function setIndicatorPosition(activeTab) {
-			const tabRect = activeTab.getBoundingClientRect();
-			const navRect = document.querySelector('.tab-navigation').getBoundingClientRect();
-			indicator.style.width = `${tabRect.width}px`;
-			indicator.style.left = `${tabRect.left - navRect.left}px`;
-		}
-
-		window.addEventListener('resize', () => {
-			const activeTab = document.querySelector('.tab.active');
-			if (activeTab) {
-				setIndicatorPosition(activeTab);
-			}
-		});
-	});
-</script>
-
-
 </body>
 
 </html>

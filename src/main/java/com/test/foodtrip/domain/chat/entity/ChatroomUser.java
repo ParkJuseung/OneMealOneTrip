@@ -56,22 +56,19 @@ public class ChatroomUser {
         this.joinedAt = LocalDateTime.now();
     }
     
-    // ✅ 수정된 rejoin()
-    public void rejoin() {
+    // 사용자가 채팅방에 나갔다가 다시 들어왔을때
+    public void rejoin(Long lastMessageId) {
         this.status = "JOINED";
         this.joinedAt = LocalDateTime.now();
         this.statusUpdatedAt = LocalDateTime.now();
-        this.leftAt = null;
-        //this.lastReadMessageId = null; // ✅ 재입장 시 이전 읽음 기록 초기화
+        this.lastReadMessageId = lastMessageId;
     }
-
     
     // 채팅방 삭제 및 채팅방 나갈경우 status = LEFT로 수정함.
     public void leave() {
         this.status = "LEFT";
         this.leftAt = LocalDateTime.now();
         this.statusUpdatedAt = LocalDateTime.now();
-        this.lastReadMessageId = null; // ✅ 나갈 때 읽음 위치 초기화
     }
 
     // 채팅방에서 사용자 강퇴 할 경우 KICKED 로 상태 바꿈.

@@ -14,7 +14,7 @@ import com.test.foodtrip.domain.post.repository.PostTaggingRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -404,114 +404,6 @@ public class PostServiceImpl_local implements PostService {
         }
     }
 
-    @Override
-    @Transactional
-    public PageResultDTO<PostDTO, Post> searchPosts(String keyword, PageRequestDTO requestDTO) {
-        Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
-
-        // 키워드가 null이거나 비어있으면 모든 게시글 반환
-        Page<Post> result = postRepository.searchPosts(keyword, pageable);
-
-        if (result.isEmpty()) {
-            return new PageResultDTO<>(result, entity -> new PostDTO());
-        }
-
-        // 결과 후처리는 getList 메소드와 동일하게 진행
-        List<Long> postIds = result.getContent().stream()
-                .map(Post::getId)
-                .collect(Collectors.toList());
-
-        // 태그 정보 조회
-        List<Object[]> tagResults = postTaggingRepository.findTagsByPostIds(postIds);
-        Map<Long, List<String>> tagsMap = tagResults.stream()
-                .collect(Collectors.groupingBy(
-                        arr -> (Long) arr[0],
-                        Collectors.mapping(arr -> (String) arr[1], Collectors.toList())
-                ));
-
-        // 이미지 정보 조회
-        List<PostImage> imageResults = postImageRepository.findByPostIdIn(postIds);
-        Map<Long, List<PostImage>> imagesMap = imageResults.stream()
-                .collect(Collectors.groupingBy(
-                        image -> image.getPost().getId(),
-                        Collectors.toList()
-                ));
-
-        Function<Post, PostDTO> fn = (entity -> {
-            PostDTO dto = entityToDto(entity);
-
-            // 태그 정보 설정
-            List<String> tags = tagsMap.getOrDefault(entity.getId(), Collections.emptyList());
-            dto.setTags(tags);
-
-            // 이미지 정보 설정
-            List<PostImage> images = imagesMap.getOrDefault(entity.getId(), Collections.emptyList());
-            List<String> imageUrls = images.stream()
-                    .sorted(Comparator.comparing(PostImage::getImageOrder))
-                    .map(PostImage::getImageUrl)
-                    .collect(Collectors.toList());
-            dto.setImageUrls(imageUrls);
-
-            return dto;
-        });
-
-        return new PageResultDTO<>(result, fn);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PageResultDTO<PostDTO, Post> searchPostsByTag(String tagKeyword, PageRequestDTO requestDTO) {
-        Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
-        Page<Post> result;
-
-        try {
-            // 1순위: 가장 안전한 방법
-            result = postRepository.findPostsByTagKeyword(tagKeyword, pageable);
-
-        } catch (Exception e) {
-            // 실패 시 빈 결과 반환
-            result = Page.empty(pageable);
-        }
-
-        // 이하 로직은 searchPosts와 동일
-        List<Long> postIds = result.getContent().stream()
-                .map(Post::getId)
-                .collect(Collectors.toList());
-
-        List<Object[]> tagResults = postTaggingRepository.findTagsByPostIds(postIds);
-        Map<Long, List<String>> tagsMap = tagResults.stream()
-                .collect(Collectors.groupingBy(
-                        arr -> (Long) arr[0],
-                        Collectors.mapping(arr -> (String) arr[1], Collectors.toList())
-                ));
-
-        List<PostImage> imageResults = postImageRepository.findByPostIdIn(postIds);
-        Map<Long, List<PostImage>> imagesMap = imageResults.stream()
-                .collect(Collectors.groupingBy(
-                        image -> image.getPost().getId(),
-                        Collectors.toList()
-                ));
-
-        Function<Post, PostDTO> fn = (entity -> {
-            PostDTO dto = entityToDto(entity);
-
-            List<String> tags = tagsMap.getOrDefault(entity.getId(), Collections.emptyList());
-            dto.setTags(tags);
-
-            List<PostImage> images = imagesMap.getOrDefault(entity.getId(), Collections.emptyList());
-            List<String> imageUrls = images.stream()
-                    .sorted(Comparator.comparing(PostImage::getImageOrder))
-                    .map(PostImage::getImageUrl)
-                    .collect(Collectors.toList());
-            dto.setImageUrls(imageUrls);
-
-            return dto;
-        });
-
-        return new PageResultDTO<>(result, fn);
-    }
-
-
     // ========== 최적화된 헬퍼 메서드들 ==========
 
     /**
@@ -616,15 +508,5 @@ public class PostServiceImpl_local implements PostService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    // PostServiceImpl_local 클래스에 추가
-    @Override
-    public List<String> getTopTags(int limit) {
-        List<Object[]> results = postTagRepository.findTopTags();
-        return results.stream()
-                .map(row -> (String) row[0])  // 첫 번째 열은 태그 텍스트
-                .limit(limit)
-                .collect(Collectors.toList());
     }
 }

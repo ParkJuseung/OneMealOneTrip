@@ -11,7 +11,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <link rel="stylesheet" th:href="@{/css/travel-create.css}">
-  <link rel="stylesheet" th:href="@{/css/header-dropdown.css}">
 </head>
 <body>
 <div class="container">
@@ -19,25 +18,23 @@
   <!-- 오른쪽 콘텐츠 영역 -->
   <div class="right-content">
     <!-- 헤더 -->
-<!--    <div class="header">-->
-<!--      <div class="header-left">-->
-<!--        <div class="back-button" id="back-button">-->
-<!--          <i class="fas fa-arrow-left"></i>-->
-<!--        </div>-->
-<!--        <h2 class="header-title">여행 경로 계획</h2>-->
-<!--      </div>-->
-<!--      <div class="header-actions">-->
-<!--        <div class="notification-icon">-->
-<!--          <i class="far fa-bell"></i>-->
-<!--        </div>-->
-<!--        <div class="profile-area">-->
-<!--          <img th:src="${#authentication.principal.profileImage != null ? #authentication.principal.profileImage : '/api/placeholder/36/36'}" alt="프로필" class="profile-pic">-->
-<!--          <span th:text="${userNickname}">닉네임</span>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-
-    <header th:replace="~{layout/fragments/header :: header}"></header>
+    <div class="header">
+      <div class="header-left">
+        <div class="back-button" id="back-button">
+          <i class="fas fa-arrow-left"></i>
+        </div>
+        <h2 class="header-title">여행 경로 계획</h2>
+      </div>
+      <div class="header-actions">
+        <div class="notification-icon">
+          <i class="far fa-bell"></i>
+        </div>
+        <div class="profile-area">
+          <img th:src="${#authentication.principal.profileImage != null ? #authentication.principal.profileImage : '/api/placeholder/36/36'}" alt="프로필" class="profile-pic">
+          <span th:text="${userNickname}">닉네임</span>
+        </div>
+      </div>
+    </div>
 
     <!-- 여행 정보 입력 영역 -->
     <div class="trip-info-inputs">
@@ -113,7 +110,6 @@
   </div>
 </div>
 <div id="login-info" th:attr="data-user-id=${loginUserId}"></div>
-<script th:src="@{/js/header-dropdown.js}"></script>
 <script>
   // 전역 변수 선언
   let map;

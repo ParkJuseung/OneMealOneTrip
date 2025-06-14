@@ -188,6 +188,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .header-left {
@@ -285,62 +286,27 @@ body {
     border: 2px solid var(--primary-color);
 }
 
-/* 사용자 선택 탭 */
-.user-selection {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.user-tab {
-    flex: 1;
-    padding: 14px 10px;
-    text-align: center;
-    background-color: var(--background-color);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    font-weight: 500;
-}
-
-.user-tab.active {
-    background-color: var(--primary-light);
-    color: var(--primary-dark);
-    font-weight: 600;
-    box-shadow: var(--shadow-sm);
-}
-
-.user-tab:hover:not(.active) {
-    background-color: #eeeeee;
-}
-
-.user-tab i {
-    margin-right: 8px;
-}
-
 /* 탭 네비게이션 */
 .tab-navigation {
     display: flex;
+    position: relative;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 25px;
-    position: relative;
 }
 
 .tab {
-    padding: 14px 24px;
-    cursor: pointer;
-    color: var(--text-light);
+    flex: 1;
+    text-align: center;
+    padding: 15px 10px;
     font-weight: 500;
-    position: relative;
+    color: var(--text-secondary);
+    cursor: pointer;
     transition: var(--transition);
-}
-
-.tab:hover:not(.active) {
-    color: var(--primary-dark);
+    position: relative;
 }
 
 .tab.active {
-    color: var(--primary-dark);
+    color: var(--primary-color);
     font-weight: 600;
 }
 
@@ -348,18 +314,18 @@ body {
     position: absolute;
     bottom: -1px;
     height: 3px;
+    width: 25%;
     background-color: var(--primary-color);
-    transition: var(--transition);
-    border-radius: 3px 3px 0 0;
+    transition: transform 0.3s ease;
 }
 
 /* 선택된 탭에 따라 indicator 위치 변경 */
 .tab:nth-child(1).active ~ .tab-indicator {
-    transform: translateX(100%);
+    transform: translateX(0);
 }
 
 .tab:nth-child(2).active ~ .tab-indicator {
-    transform: translateX(0%);
+    transform: translateX(100%);
 }
 
 .tab:nth-child(3).active ~ .tab-indicator {

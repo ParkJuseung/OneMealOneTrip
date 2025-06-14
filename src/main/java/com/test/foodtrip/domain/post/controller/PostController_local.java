@@ -48,16 +48,14 @@ public class PostController_local {
 
     @Operation(summary = "게시글 목록 페이지", description = "페이징 처리된 게시글 목록을 보여주는 HTML 페이지를 반환합니다.")
     @GetMapping("/post")
-    public String list(PageRequestDTO pageRequestDTO, Model model) {
-        log.info("PostController_local list() - pageRequestDTO: " + pageRequestDTO);
+    public String list(
+            @Parameter(description = "페이지 요청 정보 (페이지 번호, 검색 조건 등)") PageRequestDTO pageRequestDTO,
+            Model model) {
+        log.info("PostController list() - pageRequestDTO: " + pageRequestDTO);
 
         PageResultDTO<PostDTO, Post> result = postService.getList(pageRequestDTO);
         model.addAttribute("result", result);
         model.addAttribute("apiKey", apiKey);
-
-        // 인기 태그 가져오기
-        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
-        model.addAttribute("topTags", topTags);
 
         return "post/post";
     }
@@ -113,6 +111,10 @@ public class PostController_local {
         log.info("PostController create() - imageFiles: {}개", imageFiles != null ? imageFiles.size() : 0);
         log.info("PostController create() - placeId: {}", placeId);
 
+        // 🔍 추가 디버깅: 각 이미지 파일 정보 출력
+        System.out.println("=== Controller 이미지 파일 디버깅 ===");
+        System.out.println("받은 이미지 파일 수: " + (imageFiles != null ? imageFiles.size() : "null"));
+
         if (imageFiles != null) {
             for (int i = 0; i < imageFiles.size(); i++) {
                 MultipartFile file = imageFiles.get(i);
@@ -142,8 +144,13 @@ public class PostController_local {
             dto.setPlaceName(placeName);
             dto.setPlaceAddress(placeAddress);
 
+            // 🔍 배열 변환 전 추가 로그
+            System.out.println("배열 변환 전 리스트 크기: " + (imageFiles != null ? imageFiles.size() : 0));
+
             // 이미지 배열로 변환
             MultipartFile[] imagesArray = imageFiles != null ? imageFiles.toArray(new MultipartFile[0]) : new MultipartFile[0];
+
+            System.out.println("배열 변환 후 크기: " + imagesArray.length);
 
             // 서비스 호출
             Long pno = postService.create(dto, imagesArray);
@@ -193,7 +200,12 @@ public class PostController_local {
         }
 
         try {
+            System.out.println("=== 게시글 수정 페이지 로드 시작 ===");
+            System.out.println("게시글 ID: " + id);
+
             PostDTO dto = postService.read(id);
+
+            System.out.println("=== PostDTO 확인 ===");
             if (dto != null) {
                 System.out.println("제목: " + dto.getTitle());
                 System.out.println("내용: " + dto.getContent());
@@ -215,6 +227,9 @@ public class PostController_local {
             model.addAttribute("dto", dto);
             model.addAttribute("requestDTO", requestDTO);
             model.addAttribute("apiKey", apiKey);
+
+            System.out.println("=== Model에 데이터 추가 완료 ===");
+            System.out.println("템플릿 반환: post/modify-post");
 
             return "post/modify-post";
         } catch (Exception e) {
@@ -299,41 +314,8 @@ public class PostController_local {
         }
     }
 
-    @GetMapping("/post/search")
-    public String search(@RequestParam(required = false) String keyword,
-                         @RequestParam(required = false) String tag,
-                         PageRequestDTO pageRequestDTO, Model model) {
-        log.info("PostController_local search() - keyword: " + keyword);
-        log.info("PostController_local search() - tag: " + tag);
-
-        PageResultDTO<PostDTO, Post> result;
-
-        // 태그 검색인 경우
-        if (tag != null && !tag.isEmpty()) {
-            result = postService.searchPostsByTag(tag, pageRequestDTO);
-            model.addAttribute("searchType", "tag");
-            model.addAttribute("searchValue", tag);
-        }
-        // 일반 검색인 경우
-        else {
-            result = postService.searchPosts(keyword, pageRequestDTO);
-            model.addAttribute("searchType", "keyword");
-            model.addAttribute("searchValue", keyword);
-        }
-
-        model.addAttribute("result", result);
-        model.addAttribute("apiKey", apiKey);
-
-        // 인기 태그 가져오기
-        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
-        model.addAttribute("topTags", topTags);
-
-        return "post/post";
-    }
-
     // 로그인 상태를 확인하는 헬퍼 메서드
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
-
 }
