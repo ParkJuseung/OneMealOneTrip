@@ -483,12 +483,15 @@ public class PostServiceImpl implements PostService {
     @Transactional
     public PageResultDTO<PostDTO, Post> searchPostsByTag(String tagKeyword, PageRequestDTO requestDTO) {
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
+        Page<Post> result;
 
-        // 태그 키워드로 게시글 검색
-        Page<Post> result = postRepository.searchPostsByTag(tagKeyword, pageable);
+        try {
+            // 안전한 검색 방법 사용
+            result = postRepository.searchPostsByTagViaTagging(tagKeyword, pageable);
 
-        if (result.isEmpty()) {
-            return new PageResultDTO<>(result, entity -> new PostDTO());
+        } catch (Exception e) {
+
+            result = Page.empty(pageable);
         }
 
         // 이하 로직은 searchPosts와 동일

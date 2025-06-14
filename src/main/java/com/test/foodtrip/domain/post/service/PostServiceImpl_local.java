@@ -14,7 +14,7 @@ import com.test.foodtrip.domain.post.repository.PostTaggingRepository;
 import com.test.foodtrip.domain.user.entity.User;
 import com.test.foodtrip.domain.user.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -459,15 +459,18 @@ public class PostServiceImpl_local implements PostService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public PageResultDTO<PostDTO, Post> searchPostsByTag(String tagKeyword, PageRequestDTO requestDTO) {
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
+        Page<Post> result;
 
-        // 태그 키워드로 게시글 검색
-        Page<Post> result = postRepository.searchPostsByTag(tagKeyword, pageable);
+        try {
+            // 1순위: 가장 안전한 방법
+            result = postRepository.findPostsByTagKeyword(tagKeyword, pageable);
 
-        if (result.isEmpty()) {
-            return new PageResultDTO<>(result, entity -> new PostDTO());
+        } catch (Exception e) {
+            // 실패 시 빈 결과 반환
+            result = Page.empty(pageable);
         }
 
         // 이하 로직은 searchPosts와 동일
