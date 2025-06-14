@@ -48,14 +48,16 @@ public class PostController_local {
 
     @Operation(summary = "게시글 목록 페이지", description = "페이징 처리된 게시글 목록을 보여주는 HTML 페이지를 반환합니다.")
     @GetMapping("/post")
-    public String list(
-            @Parameter(description = "페이지 요청 정보 (페이지 번호, 검색 조건 등)") PageRequestDTO pageRequestDTO,
-            Model model) {
-        log.info("PostController list() - pageRequestDTO: " + pageRequestDTO);
+    public String list(PageRequestDTO pageRequestDTO, Model model) {
+        log.info("PostController_local list() - pageRequestDTO: " + pageRequestDTO);
 
         PageResultDTO<PostDTO, Post> result = postService.getList(pageRequestDTO);
         model.addAttribute("result", result);
         model.addAttribute("apiKey", apiKey);
+
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
 
         return "post/post";
     }
@@ -297,8 +299,41 @@ public class PostController_local {
         }
     }
 
+    @GetMapping("/post/search")
+    public String search(@RequestParam(required = false) String keyword,
+                         @RequestParam(required = false) String tag,
+                         PageRequestDTO pageRequestDTO, Model model) {
+        log.info("PostController_local search() - keyword: " + keyword);
+        log.info("PostController_local search() - tag: " + tag);
+
+        PageResultDTO<PostDTO, Post> result;
+
+        // 태그 검색인 경우
+        if (tag != null && !tag.isEmpty()) {
+            result = postService.searchPostsByTag(tag, pageRequestDTO);
+            model.addAttribute("searchType", "tag");
+            model.addAttribute("searchValue", tag);
+        }
+        // 일반 검색인 경우
+        else {
+            result = postService.searchPosts(keyword, pageRequestDTO);
+            model.addAttribute("searchType", "keyword");
+            model.addAttribute("searchValue", keyword);
+        }
+
+        model.addAttribute("result", result);
+        model.addAttribute("apiKey", apiKey);
+
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
+
+        return "post/post";
+    }
+
     // 로그인 상태를 확인하는 헬퍼 메서드
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
+
 }
