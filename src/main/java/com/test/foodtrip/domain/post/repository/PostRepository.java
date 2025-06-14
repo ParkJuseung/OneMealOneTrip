@@ -59,4 +59,25 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p ORDER BY p.createdAt DESC")
     Page<Post> findAllOptimized(Pageable pageable);
 
+    //기본 검색
+    @Query("""
+    SELECT p FROM Post p 
+    WHERE 
+        (:keyword IS NULL OR :keyword = '' OR 
+         p.title LIKE %:keyword% OR 
+         p.content LIKE %:keyword% OR 
+         p.placeName LIKE %:keyword%)
+    ORDER BY p.createdAt DESC
+    """)
+    Page<Post> searchPosts(@Param("keyword") String keyword, Pageable pageable);
+
+    // 태그 검색을 위한 메소드 (태그로 검색할 때 사용)
+    @Query(value = """
+    SELECT DISTINCT p FROM Post p 
+    JOIN p.tags t
+    JOIN t.postTag pt
+    WHERE DBMS_LOB.SUBSTR(pt.tagText, 4000, 1) LIKE %:tagKeyword%
+    ORDER BY p.createdAt DESC
+    """, nativeQuery = true)
+    Page<Post> searchPostsByTag(@Param("tagKeyword") String tagKeyword, Pageable pageable);
 }
