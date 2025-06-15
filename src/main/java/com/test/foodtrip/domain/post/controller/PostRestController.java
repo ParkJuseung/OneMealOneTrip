@@ -23,7 +23,7 @@ public class PostRestController {
 
     private final PostService postService;
 
-    public PostRestController(@Qualifier("postServiceImpl_local") PostService postService) {
+    public PostRestController(@Qualifier("postServiceImpl") PostService postService) {
         this.postService = postService;
     }
 

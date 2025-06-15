@@ -51,6 +51,10 @@ public class PostController {
         model.addAttribute("result", result);
         model.addAttribute("apiKey", apiKey);
 
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
+
         return "post/post";
     }
 
@@ -241,12 +245,7 @@ public class PostController {
         }
 
         try {
-            System.out.println("=== 게시글 수정 페이지 로드 시작 ===");
-            System.out.println("게시글 ID: " + id);
-
             PostDTO dto = postService.read(id);
-
-            System.out.println("=== PostDTO 확인 ===");
             if (dto != null) {
                 System.out.println("제목: " + dto.getTitle());
                 System.out.println("내용: " + dto.getContent());
@@ -412,6 +411,38 @@ public class PostController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/post";
         }
+    }
+
+    @GetMapping("/post/search")
+    public String search(@RequestParam(required = false) String keyword,
+                         @RequestParam(required = false) String tag,
+                         PageRequestDTO pageRequestDTO, Model model) {
+        log.info("PostController_local search() - keyword: " + keyword);
+        log.info("PostController_local search() - tag: " + tag);
+
+        PageResultDTO<PostDTO, Post> result;
+
+        // 태그 검색인 경우
+        if (tag != null && !tag.isEmpty()) {
+            result = postService.searchPostsByTag(tag, pageRequestDTO);
+            model.addAttribute("searchType", "tag");
+            model.addAttribute("searchValue", tag);
+        }
+        // 일반 검색인 경우
+        else {
+            result = postService.searchPosts(keyword, pageRequestDTO);
+            model.addAttribute("searchType", "keyword");
+            model.addAttribute("searchValue", keyword);
+        }
+
+        model.addAttribute("result", result);
+        model.addAttribute("apiKey", apiKey);
+
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
+
+        return "post/post";
     }
 
     // 로그인 상태를 확인하는 헬퍼 메서드

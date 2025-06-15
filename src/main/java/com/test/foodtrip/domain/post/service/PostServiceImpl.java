@@ -51,10 +51,6 @@ public class PostServiceImpl implements PostService {
             throw new IllegalStateException("로그인된 사용자를 찾을 수 없습니다.");
         }
 
-        System.out.println("=== 게시글 생성 시작 ===");
-        System.out.println("DTO 이미지 URL 개수: " + (dto.getImageUrls() != null ? dto.getImageUrls().size() : 0));
-        System.out.println("전달받은 MultipartFile 배열: " + (images != null ? images.length : "null"));
-
         Post post = dtoToEntity(dto, currentUser);
 
         // S3 URL 기반 이미지 처리 (Controller에서 이미 S3에 업로드됨)
@@ -104,7 +100,6 @@ public class PostServiceImpl implements PostService {
         System.out.println("Post에 연결된 최종 이미지 수: " + post.getImages().size());
 
         postRepository.save(post);
-        System.out.println("게시글 저장 완료 ID: " + post.getId());
 
         // 태그 저장
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
@@ -119,32 +114,26 @@ public class PostServiceImpl implements PostService {
     public PageResultDTO<PostDTO, Post> getList(PageRequestDTO requestDTO) {
         Pageable pageable = requestDTO.getPageable(Sort.by("createdAt").descending());
 
-        // 1단계: 기본 Post 정보만 페이징 조회
         Page<Post> result = postRepository.findAll(pageable);
 
         if (result.isEmpty()) {
             return new PageResultDTO<>(result, entity -> new PostDTO());
         }
 
-        // 2단계: 해당 페이지의 모든 Post ID 수집
         List<Long> postIds = result.getContent().stream()
                 .map(Post::getId)
                 .collect(Collectors.toList());
 
-        // 3단계: 모든 태그 정보를 한번에 조회 (N+1 해결)
         List<Object[]> tagResults = postTaggingRepository.findTagsByPostIds(postIds);
 
-        // 4단계: Post ID별로 태그를 그룹핑
         Map<Long, List<String>> tagsMap = tagResults.stream()
                 .collect(Collectors.groupingBy(
                         arr -> (Long) arr[0], // Post ID
                         Collectors.mapping(arr -> (String) arr[1], Collectors.toList()) // Tag Text
                 ));
 
-        // 추가: 모든 이미지 정보를 한번에 조회 (N+1 해결)
         List<PostImage> imageResults = postImageRepository.findByPostIdIn(postIds);
 
-        // 추가: Post ID별로 이미지를 그룹핑
         Map<Long, List<PostImage>> imagesMap = imageResults.stream()
                 .collect(Collectors.groupingBy(
                         image -> image.getPost().getId(),
@@ -488,11 +477,11 @@ public class PostServiceImpl implements PostService {
         Page<Post> result;
 
         try {
-            // 안전한 검색 방법 사용
-            result = postRepository.searchPostsByTagViaTagging(tagKeyword, pageable);
+            // 1순위: 가장 안전한 방법
+            result = postRepository.findPostsByTagKeyword(tagKeyword, pageable);
 
         } catch (Exception e) {
-
+            // 실패 시 빈 결과 반환
             result = Page.empty(pageable);
         }
 
