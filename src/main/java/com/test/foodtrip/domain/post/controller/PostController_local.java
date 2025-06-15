@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Tag(name = "게시글 HTML View (개발용)", description = "Thymeleaf 기반 게시글 관련 HTML 페이지 반환 컨트롤러 (로컬 개발용)")
 @Controller
@@ -48,14 +47,16 @@ public class PostController_local {
 
     @Operation(summary = "게시글 목록 페이지", description = "페이징 처리된 게시글 목록을 보여주는 HTML 페이지를 반환합니다.")
     @GetMapping("/post")
-    public String list(
-            @Parameter(description = "페이지 요청 정보 (페이지 번호, 검색 조건 등)") PageRequestDTO pageRequestDTO,
-            Model model) {
-        log.info("PostController list() - pageRequestDTO: " + pageRequestDTO);
+    public String list(PageRequestDTO pageRequestDTO, Model model) {
+        log.info("PostController_local list() - pageRequestDTO: " + pageRequestDTO);
 
         PageResultDTO<PostDTO, Post> result = postService.getList(pageRequestDTO);
         model.addAttribute("result", result);
         model.addAttribute("apiKey", apiKey);
+
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
 
         return "post/post";
     }
@@ -79,9 +80,61 @@ public class PostController_local {
             }
         }
 
+        // 관련 포스팅 조회 (현재 게시글의 태그 기반)
+        List<PostDTO> relatedPosts = getRelatedPosts(id, dto.getTags());
+        model.addAttribute("relatedPosts", relatedPosts);
+        model.addAttribute("currentTags", dto.getTags());
+
         model.addAttribute("placeId", placeId);
         model.addAttribute("apiKey", apiKey);
         return "post/detail-post";
+    }
+
+    /**
+     * 관련 포스팅 조회 (같은 태그를 가진 다른 게시글)
+     */
+    private List<PostDTO> getRelatedPosts(Long currentPostId, List<String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return List.of(); // 빈 리스트 반환
+        }
+
+        List<PostDTO> allRelatedPosts = new ArrayList<>();
+        Set<Long> addedPostIds = new HashSet<>();
+        addedPostIds.add(currentPostId); // 현재 게시글 제외
+
+        // 각 태그별로 관련 포스팅 조회
+        for (String tag : tags) {
+            if (allRelatedPosts.size() >= 6) { // 최대 6개까지만
+                break;
+            }
+
+            try {
+                // 기존 태그 검색 기능 활용
+                PageRequestDTO pageRequest = PageRequestDTO.builder()
+                        .page(1)
+                        .size(10) // 여유분을 두고 가져오기
+                        .build();
+
+                PageResultDTO<PostDTO, Post> taggedPosts = postService.searchPostsByTag(tag, pageRequest);
+
+                // 현재 게시글과 이미 추가된 게시글 제외하고 추가
+                for (PostDTO post : taggedPosts.getDtoList()) {
+                    if (!addedPostIds.contains(post.getId()) && allRelatedPosts.size() < 6) {
+                        allRelatedPosts.add(post);
+                        addedPostIds.add(post.getId());
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("태그 '{}' 검색 중 오류: {}", tag, e.getMessage());
+            }
+        }
+
+        // 최신순으로 정렬
+        allRelatedPosts.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+
+        log.info("관련 포스팅 {}개 조회 완료 (현재 게시글: {})", allRelatedPosts.size(), currentPostId);
+        return allRelatedPosts;
     }
 
     @Operation(summary = "게시글 작성 페이지", description = "새 게시글을 작성하는 HTML 페이지를 반환합니다. 로그인이 필요합니다.")
@@ -297,8 +350,41 @@ public class PostController_local {
         }
     }
 
+    @GetMapping("/post/search")
+    public String search(@RequestParam(required = false) String keyword,
+                         @RequestParam(required = false) String tag,
+                         PageRequestDTO pageRequestDTO, Model model) {
+        log.info("PostController_local search() - keyword: " + keyword);
+        log.info("PostController_local search() - tag: " + tag);
+
+        PageResultDTO<PostDTO, Post> result;
+
+        // 태그 검색인 경우
+        if (tag != null && !tag.isEmpty()) {
+            result = postService.searchPostsByTag(tag, pageRequestDTO);
+            model.addAttribute("searchType", "tag");
+            model.addAttribute("searchValue", tag);
+        }
+        // 일반 검색인 경우
+        else {
+            result = postService.searchPosts(keyword, pageRequestDTO);
+            model.addAttribute("searchType", "keyword");
+            model.addAttribute("searchValue", keyword);
+        }
+
+        model.addAttribute("result", result);
+        model.addAttribute("apiKey", apiKey);
+
+        // 인기 태그 가져오기
+        List<String> topTags = postService.getTopTags(7); // 7개 태그 가져오기
+        model.addAttribute("topTags", topTags);
+
+        return "post/post";
+    }
+
     // 로그인 상태를 확인하는 헬퍼 메서드
     private boolean isLoggedIn(HttpSession session) {
         return session != null && session.getAttribute("user_id") != null;
     }
+
 }
