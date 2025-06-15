@@ -145,7 +145,7 @@ class CommentManager {
                 },
                 body: JSON.stringify({
                     postId: this.postId,
-                    userId: 1, // 임시 사용자 ID
+                    // userId 제거 - 백엔드에서 세션으로 처리
                     content: content,
                     parentId: parentId
                 })
@@ -182,7 +182,7 @@ class CommentManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userId: 1, // 임시 사용자 ID
+                    // userId 제거 - 백엔드에서 세션으로 처리
                     content: content
                 })
             });
@@ -241,7 +241,7 @@ class CommentManager {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userId: 1, // 임시 사용자 ID
+                    // userId 제거 - 백엔드에서 세션으로 처리
                     reactionType: reactionType
                 })
             });
