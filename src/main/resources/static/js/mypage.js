@@ -179,10 +179,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const editMode = document.getElementById('intro-edit');
     const cancelBtn = document.getElementById('intro-cancel-btn');
     const saveBtn = document.getElementById('intro-save-btn');
+    console.log('▶ saveBtn element:', saveBtn);
+
+
     const textarea = document.getElementById('intro-content');
     const charCount = document.getElementById('intro-char-count');
     const tagInput = document.getElementById('intro-tag-input');
     const tagList = document.getElementById('intro-new-tags');
+    const sectionActions = document.querySelector('#intro-section .section-actions');
+
+    // CSRF 메타 태그가 있으면 꺼내고, 없으면 빈 문자열로
+    const csrfMeta       = document.querySelector('meta[name="_csrf"]');
+    const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+    const csrfToken      = csrfMeta       ? csrfMeta.getAttribute('content')       : '';
+    const csrfHeader     = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : '';
 
     let isComposing = false;
     tagInput.addEventListener('compositionstart', () => {
@@ -227,11 +237,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 삭제 버튼 클릭
     if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-            if (confirm('정말로 나의 소개를 삭제하시겠습니까?')) {
-                viewMode.classList.add('hidden');
-                viewEmpty.classList.remove('hidden');
-                alert('나의 소개가 삭제되었습니다.');
+        deleteBtn.addEventListener('click', async () => {
+            if (!confirm('정말로 나의 소개를 삭제하시겠습니까?')) return;
+            try {
+                const resp = await fetch('/mypage/intro', {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: csrfHeader ? { [csrfHeader]: csrfToken } : {}
+                });
+                if (!resp.ok) {
+                    return alert(`삭제에 실패했습니다. (${resp.status})`);
+                }
+                // ★ 성공하면 새로고침하고 바로 리턴 ★
+                return window.location.reload();
+            } catch (err) {
+                console.error('소개 삭제 실패', err);
+                alert('삭제 중 오류가 발생했습니다.');
             }
         });
     }
@@ -300,55 +321,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 저장 버튼 클릭
     if (saveBtn) {
+        console.log('▶ 바인딩: saveBtn에 클릭 리스너 연결');
         saveBtn.addEventListener('click', async () => {
             const content = textarea.value.trim();
             if (!content) {
-                alert('소개글을 입력해주세요.');
-                return;
+                return alert('소개글을 입력해주세요.');
             }
+            // 수정 vs 신규 분기: 읽기 모드(뷰)가 숨겨져 있으면 작성
+            const isCreate = viewMode.classList.contains('hidden');
+            const method   = isCreate ? 'POST' : 'PUT';
+
+            // 헤더 설정
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfHeader) headers[csrfHeader] = csrfToken;
 
             try {
                 const resp = await fetch('/mypage/intro', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method,
                     credentials: 'include',
-                    body: JSON.stringify({
-                        content,
-                        tags: tags.join(',')
-                    })
+                    headers,
+                    body: JSON.stringify({ content, tags: tags.join(',') })
                 });
-
                 if (!resp.ok) {
-                    alert('저장에 실패했습니다. (' + resp.status + ')');
-                    return;
+                    return alert(`저장에 실패했습니다. (${resp.status})`);
                 }
-
-                // 서버가 반환한 DTO(JSON) 받기
-                const dto = await resp.json();
-                // 화면 갱신
-                document.querySelector('#intro-view .introduce-content').textContent = dto.content;
-
-                const tagContainer = document.querySelector('#intro-view .tag-list');
-                tagContainer.innerHTML = '';
-                dto.tags.split(',').forEach(t => {
-                    const span = document.createElement('span');
-                    span.className = 'interest-tag';
-                    span.textContent = `#${t}`;
-                    tagContainer.appendChild(span);
-                });
-
-                // 모드 전환
-                editMode.classList.add('hidden');
-                viewMode.classList.remove('hidden');
-
+                // ★ 성공하면 새로고침하고 바로 리턴 ★
+                return window.location.reload();
             } catch (err) {
-                console.error(err);
+                console.error('소개 저장 중 에러', err);
                 alert('서버 오류가 발생했습니다.');
             }
         });
     }
+
 
     // 팔로우/언팔로우 버튼 클릭
     const followBtn = document.getElementById('follow-button');

@@ -1,7 +1,10 @@
 // src/main/java/com/test/foodtrip/domain/user/service/impl/MyPageServiceImpl.java
 package com.test.foodtrip.domain.user.service.impl;
 
+import com.test.foodtrip.domain.travel.service.TravelRouteService;
 import com.test.foodtrip.domain.user.dto.MyPageDTO;
+import com.test.foodtrip.domain.user.dto.PostPreviewDTO;
+import com.test.foodtrip.domain.user.dto.TravelPreviewDTO;
 import com.test.foodtrip.domain.user.dto.UsersInfoDTO;
 import com.test.foodtrip.domain.user.entity.UsersInfo;
 import com.test.foodtrip.domain.user.entity.User;
@@ -9,8 +12,14 @@ import com.test.foodtrip.domain.user.repository.UserRepository;
 import com.test.foodtrip.domain.user.repository.UsersInfoRepository;
 import com.test.foodtrip.domain.user.service.MyPageService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +28,15 @@ public class MyPageServiceImpl implements MyPageService {
     private final UserRepository userRepository;
     private final UsersInfoRepository infoRepository;
 
+    private final TravelRouteService travelRouteService;
+
     @Override
     public MyPageDTO getMyPage(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 회원입니다."));
 
-        // DTO로 매핑 (필드 매핑 부분을 반드시 채워주세요)
-        return MyPageDTO.builder()
+        // 1) 프로필·통계 빌더
+        MyPageDTO.MyPageDTOBuilder builder = MyPageDTO.builder()
                 .id(user.getId())
                 .socialType(user.getSocialType())
                 .socialEmail(user.getSocialEmail())
@@ -36,19 +47,51 @@ public class MyPageServiceImpl implements MyPageService {
                 .phone(user.getPhone())
                 .greeting(user.getGreeting())
                 .profileImage(user.getProfileImage())
-                // 추가로 필요한 필드들이 있다면 아래에 계속 매핑
-                // .role(user.getRole())
-                // .active(user.getActive())
-                // .createdAt(user.getCreatedAt())
-                // .updatedAt(user.getUpdatedAt())
                 .followingCount(user.getFollowing().size())
                 .followersCount(user.getFollowers().size())
-                .userInfo(UsersInfoDTO.fromEntity(user.getUserInfo()))
-                // 컬렉션 관계도 필요하면 변환해서 넣어줍니다.
-                // .posts(user.getPosts().stream().map(PostDTO::from).toList())
-                // .comments(user.getComments().stream().map(CommentDTO::from).toList())
+                .userInfo(UsersInfoDTO.fromEntity(user.getUserInfo()));
+
+        // 2) Post → PostPreviewDTO 매핑
+        List<PostPreviewDTO> previewsPost = user.getPosts().stream()
+                .map(p -> new PostPreviewDTO(
+                        p.getId(),
+                        p.getTitle(),
+                        p.getImages().isEmpty()
+                                ? "/images/default.png"
+                                : p.getImages().get(0).getImageUrl(),   // :contentReference[oaicite:0]{index=0}
+                        p.getViewCount(),
+                        p.getLikes().size(),
+                        p.getComments().size(),
+                        p.getImages().stream()
+                                .map(img -> img.getImageUrl())
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+
+        // 3) TravelRoute → TravelPreviewDTO 매핑
+        List<TravelPreviewDTO> previewsTravel = user.getTravels().stream()
+                .map(r -> new TravelPreviewDTO(
+                        r.getRouteId(),
+                        r.getTitle(),
+                        // TravelRouteService 에서 썸네일 URL을 가져옴
+                        travelRouteService.getThumbnailUrlByRouteId(r.getRouteId()),
+                        r.getDescription(),
+                        r.getTotalTime()
+                ))
+                .collect(Collectors.toList());
+
+        // 4) 빌더에 주입
+        return builder
+                .previewPosts(previewsPost)
+                .previewTravels(previewsTravel)
                 .build();
     }
+
+
+
+
+
+
 
     @Override
     public void updateProfile(Long userId, MyPageDTO formDto) {

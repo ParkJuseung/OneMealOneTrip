@@ -940,7 +940,10 @@
     </footer>
   </div>
 </div>
-<script th:src="@{/js/signup.js}"></script>
+<!--<script th:src="@{/js/signup.js}"></script>-->
+<th:block th:if="${showSignup}">
+  <script th:src="@{/js/signup.js}"></script>
+</th:block>
 
 </body>
 </html>

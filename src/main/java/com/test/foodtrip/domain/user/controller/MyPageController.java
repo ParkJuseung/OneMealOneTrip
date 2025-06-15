@@ -24,8 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+
+
 @Controller
 @RequiredArgsConstructor
+@Tag(name = "MyPage", description = "마이페이지 관련 API")
 public class MyPageController {
 
 
@@ -67,6 +72,10 @@ public class MyPageController {
      * 다른 사람 마이페이지 조회
      */
     // 이 하나의 메서드가 /mypage 와 /users/{pageOwnerId} 둘 다 처리
+    @Operation(
+            summary = "마이페이지 조회",
+            description = "로그인된 사용자의 마이페이지를 조회합니다."
+    )
     @GetMapping({ "/mypage", "/users/{pageOwnerId}" })
     public String viewUserPage(
             // pageOwnerId가 없으면(null) 내 페이지 요청으로 간주
@@ -126,6 +135,10 @@ public class MyPageController {
     /**
      * 프로필 수정 처리 (AJAX)
      */
+    @Operation(
+            summary = "프로필 수정",
+            description = "사용자 프로필을 업데이트합니다."
+    )
     @PostMapping("/mypage/edit")
     @ResponseBody
     public ResponseEntity<Void> updateProfileAjax(
@@ -154,7 +167,10 @@ public class MyPageController {
     }
 
 
-
+    @Operation(
+            summary = "소개 생성",
+            description = "사용자 소개를 생성합니다."
+    )
     /** 나의 소개 생성 */
     @PostMapping("/mypage/intro")
     @ResponseBody
@@ -170,6 +186,11 @@ public class MyPageController {
         return ResponseEntity.ok(saved);
     }
 
+
+    @Operation(
+            summary = "소개 수정",
+            description = "사용자 소개를 수정합니다."
+    )
     /** 나의 소개 수정 */
     @PutMapping("/mypage/intro")
     @ResponseBody
@@ -185,7 +206,13 @@ public class MyPageController {
         return ResponseEntity.ok(updated);
     }
 
+
+
     /** 나의 소개 삭제 */
+    @Operation(
+            summary = "소개 삭제",
+            description = "사용자 소개를 삭제합니다."
+    )
     @DeleteMapping("/mypage/intro")
     @ResponseBody
     public ResponseEntity<Void> deleteIntro(HttpSession session) {
@@ -200,6 +227,10 @@ public class MyPageController {
     /**
      * 팔로우 요청 처리 (AJAX)
      */
+    @Operation(
+            summary = "팔로우 요청",
+            description = "다른 사용자를 팔로우합니다."
+    )
     @PostMapping("/follow/{followeeId}")
     @ResponseBody
     public ResponseEntity<Map<String, Integer>> followUser(
@@ -242,6 +273,10 @@ public class MyPageController {
     }
 
     // 팔로워 리스트 JSON 반환
+    @Operation(
+            summary = "팔로워 목록 조회",
+            description = "특정 사용자의 팔로워 목록을 반환합니다."
+    )
     @GetMapping("/users/{userId}/followers")
     @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getFollowers(
@@ -263,6 +298,10 @@ public class MyPageController {
     }
 
     // 팔로잉 리스트 JSON 반환
+    @Operation(
+            summary = "팔로잉 목록 조회",
+            description = "특정 사용자의 팔로잉 목록을 반환합니다."
+    )
     @GetMapping("/users/{userId}/followings")
     @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getFollowings(
