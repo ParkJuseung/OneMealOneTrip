@@ -10,7 +10,7 @@
   2025.05.07 ~ 2025.05.23
   <br><br>
 
-  [Notion](https://friendly-sternum-f92.notion.site/19da6b30f99980ad8530e8e65396a025?pvs=74)  |  [UCC]()
+  [Notion](https://friendly-sternum-f92.notion.site/19da6b30f99980ad8530e8e65396a025?pvs=74)  |  [Live Site](http://ec2-3-36-239-230.ap-northeast-2.compute.amazonaws.com:8091/login)
 
 </div>
 <br/>
