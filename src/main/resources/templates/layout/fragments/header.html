@@ -17,10 +17,10 @@
         <!-- 인증된 사용자일 때 프로필 영역 표시 -->
         <div sec:authorize="isAuthenticated()" class="profile-dropdown">
             <button class="profile-area" onclick="toggleDropdown()">
-                <img th:if="${currentUser.profileImage != null}"
+                <img th:if="${currentUser != null and currentUser.profileImage != null}"
                      th:src="@{/images/profiles/{fn}(fn=${currentUser.profileImage})}"
                      class="profile-pic"/>
-                <img th:if="${currentUser.profileImage == null}"
+                <img th:if="${currentUser == null or currentUser.profileImage == null}"
                      src="/images/default-profile.png"
                      class="profile-pic"/>
                 <span class="profile-name" th:text="${#authentication.principal.nickname}">김여행</span>

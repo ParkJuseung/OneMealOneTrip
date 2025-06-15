@@ -2,6 +2,7 @@ package com.test.foodtrip.domain.user.entity;
 
 import com.test.foodtrip.domain.post.entity.Comment;
 import com.test.foodtrip.domain.post.entity.Post;
+import com.test.foodtrip.domain.travel.entity.TravelRoute;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -93,12 +94,13 @@ public class User {
     private List<Follow> followers = new ArrayList<>();
 
     @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
+    public void prePersist() { this.createdAt = LocalDateTime.now(); }
 
     @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    public void preUpdate() { this.updatedAt = LocalDateTime.now(); }
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TravelRoute> travels = new ArrayList<>();
+
 }
