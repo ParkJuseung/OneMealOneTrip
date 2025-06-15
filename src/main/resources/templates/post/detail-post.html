@@ -1094,11 +1094,14 @@
         };
 
 
-        // detail-post.html의 <script> 태그 내용을 다음으로 교체
+        // detail-post.html의 마지막 <script> 태그를 이것으로 완전히 교체하세요
 
         $(document).ready(function () {
+            console.log('페이지 로드 완료'); // 디버깅용
+
             // 현재 로그인한 사용자 ID 가져오기
             const currentUserId = /*[[${session.user_id}]]*/ null;
+            console.log('Current User ID:', currentUserId); // 디버깅용
 
             // 댓글 매니저
             const commentManager = {
@@ -1111,18 +1114,65 @@
                 loadedComments: 0,
 
                 init() {
+                    console.log('댓글 매니저 초기화 시작');
                     this.bindEvents();
                     this.loadTotalCommentCount();
                     this.loadComments();
                 },
 
                 bindEvents() {
-                    // 댓글 작성 버튼
+                    console.log('이벤트 바인딩 시작');
+
+                    // 기존 이벤트 제거 후 새로 바인딩
+                    $(document).off('click.commentReaction');
+
+                    // ⭐ 중요: 이벤트 위임을 사용하여 동적으로 생성되는 요소에도 이벤트 적용
+                    $(document).on('click.commentReaction', '.comment-like-btn', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('좋아요 버튼 클릭됨', e.currentTarget);
+
+                        // 여러 방법으로 댓글 ID 찾기
+                        let commentId = $(e.currentTarget).attr('data-comment-id') ||
+                            $(e.currentTarget).data('comment-id') ||
+                            $(e.currentTarget).closest('[data-comment-id]').attr('data-comment-id');
+
+                        console.log('추출된 Comment ID:', commentId);
+
+                        if (commentId) {
+                            this.toggleReaction(parseInt(commentId), 'LIKE');
+                        } else {
+                            console.error('댓글 ID를 찾을 수 없습니다:', e.currentTarget);
+                            this.showToast('댓글 ID를 찾을 수 없습니다.', 'error');
+                        }
+                    });
+
+                    $(document).on('click.commentReaction', '.comment-dislike-btn', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('싫어요 버튼 클릭됨', e.currentTarget);
+
+                        // 여러 방법으로 댓글 ID 찾기
+                        let commentId = $(e.currentTarget).attr('data-comment-id') ||
+                            $(e.currentTarget).data('comment-id') ||
+                            $(e.currentTarget).closest('[data-comment-id]').attr('data-comment-id');
+
+                        console.log('추출된 Comment ID:', commentId);
+
+                        if (commentId) {
+                            this.toggleReaction(parseInt(commentId), 'DISLIKE');
+                        } else {
+                            console.error('댓글 ID를 찾을 수 없습니다:', e.currentTarget);
+                            this.showToast('댓글 ID를 찾을 수 없습니다.', 'error');
+                        }
+                    });
+
+                    // 댓글 작성 관련 이벤트
                     $('.comment-submit').off('click').on('click', () => {
+                        console.log('댓글 작성 버튼 클릭');
                         this.createComment();
                     });
 
-                    // 엔터키로 댓글 작성
                     $('.comment-input').off('keypress').on('keypress', (e) => {
                         if (e.which === 13 && !e.shiftKey) {
                             e.preventDefault();
@@ -1130,138 +1180,147 @@
                         }
                     });
 
-                    // 더보기 버튼
                     $('#showMoreBtn').off('click').on('click', () => {
                         this.loadMoreComments();
                     });
 
-                    // 동적 이벤트 바인딩
-                    $(document).off('click.comment').on('click.comment', '.comment-like-btn', (e) => {
-                        this.toggleReaction($(e.currentTarget).data('comment-id'), 'LIKE');
-                    });
-
-                    $(document).off('click.comment').on('click.comment', '.comment-dislike-btn', (e) => {
-                        this.toggleReaction($(e.currentTarget).data('comment-id'), 'DISLIKE');
-                    });
-
-                    // 신고 버튼 이벤트 (새로 추가)
-                    $(document).off('click.comment').on('click.comment', '.report-btn', (e) => {
-                        this.showReportModal($(e.currentTarget).closest('.comment-item, .reply-item').data('comment-id'));
-                    });
-                },
-
-                // 전체 댓글 수 로드
-                async loadTotalCommentCount() {
-                    try {
-                        const response = await fetch(`/api/comments/test/${this.postId}`);
-                        const text = await response.text();
-                        const match = text.match(/댓글 수: (\d+)/);
-                        if (match) {
-                            this.totalComments = parseInt(match[1]);
-                            $('.comments-count').text(this.totalComments);
-                            this.updateMoreButton();
+                    // 신고 버튼 이벤트
+                    $(document).on('click.commentReaction', '.report-btn', (e) => {
+                        e.preventDefault();
+                        let commentId = $(e.currentTarget).attr('data-comment-id') ||
+                            $(e.currentTarget).closest('[data-comment-id]').attr('data-comment-id');
+                        if (commentId) {
+                            this.showReportModal(parseInt(commentId));
                         }
-                    } catch (error) {
-                        console.error('댓글 수 로드 실패:', error);
-                    }
+                    });
+
+                    console.log('이벤트 바인딩 완료');
                 },
 
-                // 댓글 로드
-                async loadComments() {
-                    if (this.isLoading) return;
+                // 반응 토글 메서드 - 강화된 디버깅
+                async toggleReaction(commentId, reactionType) {
+                    console.log(`=== 반응 토글 시작 ===`);
+                    console.log('댓글 ID:', commentId, '타입:', typeof commentId);
+                    console.log('반응 타입:', reactionType);
+                    console.log('현재 사용자 ID:', this.currentUserId);
 
-                    this.isLoading = true;
-                    this.updateMoreButton();
+                    if (!commentId || commentId === 'undefined') {
+                        console.error('잘못된 댓글 ID:', commentId);
+                        this.showToast('잘못된 댓글 정보입니다.', 'error');
+                        return;
+                    }
+
+                    if (!this.currentUserId) {
+                        console.log('사용자 로그인 필요');
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
 
                     try {
-                        const response = await fetch(`/api/comments/post/${this.postId}?page=${this.currentPage}&size=${this.pageSize}`);
+                        console.log('API 호출 시작 - URL:', `/api/comments/${commentId}/reaction`);
+
+                        const requestBody = {
+                            reactionType: reactionType
+                        };
+                        console.log('요청 본문:', requestBody);
+
+                        const response = await fetch(`/api/comments/${commentId}/reaction`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify(requestBody)
+                        });
+
+                        console.log('응답 상태:', response.status);
+                        console.log('응답 헤더:', [...response.headers.entries()]);
+
                         if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            const errorText = await response.text();
+                            console.error('HTTP 에러:', response.status, errorText);
+                            throw new Error(`HTTP ${response.status}: ${errorText}`);
                         }
 
                         const result = await response.json();
+                        console.log('API 응답 데이터:', result);
 
-                        if (result.success && result.data && result.data.dtoList) {
-                            if (this.currentPage === 0) {
-                                this.renderComments(result.data.dtoList);
-                                this.loadedComments = result.data.dtoList.length;
-                            } else {
-                                this.appendComments(result.data.dtoList);
-                                this.loadedComments += result.data.dtoList.length;
+                        if (result.success) {
+                            console.log('API 성공 - UI 업데이트 시작');
+                            this.updateReactionUI(commentId, result.data, reactionType);
+
+                            const message = reactionType === 'LIKE' ?
+                                (result.data.isLikedByCurrentUser ? '좋아요를 눌렀습니다.' : '좋아요를 취소했습니다.') :
+                                (result.data.isDislikedByCurrentUser ? '싫어요를 눌렀습니다.' : '싫어요를 취소했습니다.');
+                            this.showToast(message, 'success');
+
+                            // 블라인드 처리 확인
+                            if (reactionType === 'DISLIKE' && (result.data.dislikeCount || 0) >= 10) {
+                                this.showToast('댓글이 블라인드 처리되었습니다.', 'info');
+                                setTimeout(() => location.reload(), 1500);
                             }
                         } else {
-                            this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
+                            console.error('API 실패:', result);
+                            this.showToast(result.message || '반응 처리에 실패했습니다.', 'error');
                         }
                     } catch (error) {
-                        console.error('댓글 로드 실패:', error);
-                        this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
-                    } finally {
-                        this.isLoading = false;
-                        this.updateMoreButton();
+                        console.error('반응 처리 실패:', error);
+                        console.error('에러 스택:', error.stack);
+                        this.showToast('반응 처리에 실패했습니다: ' + error.message, 'error');
                     }
+
+                    console.log(`=== 반응 토글 종료 ===`);
                 },
 
-                // 더 많은 댓글 로드
-                async loadMoreComments() {
-                    if (this.isLoading || this.loadedComments >= this.totalComments) return;
-                    this.currentPage++;
-                    await this.loadComments();
-                },
+                // UI 업데이트 메서드 - 강화된 디버깅
+                updateReactionUI(commentId, reactionData, reactionType) {
+                    console.log('=== UI 업데이트 시작 ===');
+                    console.log('댓글 ID:', commentId);
+                    console.log('반응 데이터:', reactionData);
 
-                // 더보기 버튼 상태 업데이트
-                updateMoreButton() {
-                    const moreButton = $('#showMoreBtn');
+                    // 더 정확한 선택자 사용
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                    console.log('찾은 댓글 요소:', commentItem.length, '개');
 
-                    if (this.isLoading) {
-                        moreButton.show().text('로딩 중...').prop('disabled', true);
+                    if (commentItem.length === 0) {
+                        console.error('댓글 요소를 찾을 수 없습니다. 댓글 ID:', commentId);
+                        console.log('현재 페이지의 모든 댓글 요소:', $('[data-comment-id]').length);
                         return;
                     }
 
-                    if (this.totalComments < 11) {
-                        moreButton.hide();
-                        return;
+                    // 좋아요 버튼 업데이트
+                    const likeBtn = commentItem.find('.comment-like-btn');
+                    console.log('좋아요 버튼:', likeBtn.length, '개');
+                    if (likeBtn.length > 0) {
+                        const likeCountSpan = likeBtn.find('.like-count');
+                        likeCountSpan.text(reactionData.likeCount || 0);
+
+                        if (reactionData.isLikedByCurrentUser !== undefined) {
+                            likeBtn.toggleClass('active', reactionData.isLikedByCurrentUser);
+                            console.log('좋아요 활성 상태:', reactionData.isLikedByCurrentUser);
+                        }
                     }
 
-                    if (this.loadedComments < this.totalComments) {
-                        moreButton.show()
-                            .text(`댓글 더보기 (${this.loadedComments}/${this.totalComments})`)
-                            .prop('disabled', false);
-                    } else {
-                        moreButton.show()
-                            .text('더 이상 댓글이 없습니다')
-                            .prop('disabled', true);
+                    // 싫어요 버튼 업데이트
+                    const dislikeBtn = commentItem.find('.comment-dislike-btn');
+                    console.log('싫어요 버튼:', dislikeBtn.length, '개');
+                    if (dislikeBtn.length > 0) {
+                        const dislikeCountSpan = dislikeBtn.find('.dislike-count');
+                        dislikeCountSpan.text(reactionData.dislikeCount || 0);
+
+                        if (reactionData.isDislikedByCurrentUser !== undefined) {
+                            dislikeBtn.toggleClass('active', reactionData.isDislikedByCurrentUser);
+                            console.log('싫어요 활성 상태:', reactionData.isDislikedByCurrentUser);
+                        }
                     }
+
+                    console.log('=== UI 업데이트 완료 ===');
                 },
 
-                // 댓글 렌더링
-                async renderComments(comments) {
-                    const container = $('.comments-list');
-                    container.empty();
-
-                    if (comments.length === 0) {
-                        container.append('<p class="no-comments">아직 댓글이 없습니다.</p>');
-                        return;
-                    }
-
-                    for (const comment of comments) {
-                        const commentHtml = await this.createCommentHTML(comment);
-                        container.append(commentHtml);
-                        await this.loadReplies(comment.id);
-                    }
-                },
-
-                // 댓글 추가
-                async appendComments(comments) {
-                    const container = $('.comments-list');
-                    for (const comment of comments) {
-                        const commentHtml = await this.createCommentHTML(comment);
-                        container.append(commentHtml);
-                        await this.loadReplies(comment.id);
-                    }
-                },
-
-                // 댓글 HTML 생성 (신고 기능 포함)
+                // 댓글 HTML 생성 - 신고 기능 포함
                 async createCommentHTML(comment) {
+                    console.log('댓글 HTML 생성:', comment.id);
+
                     const isOwner = this.currentUserId && this.currentUserId == comment.userId;
                     const isDeleted = comment.isDeleted === 'Y';
                     const isBlinded = (comment.dislikeCount || 0) >= 10;
@@ -1278,12 +1337,12 @@
                         console.warn('신고 상태 조회 실패:', error);
                     }
 
+                    // 기본 댓글 구조
                     let html = `
-                <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${comment.id}">
-                    ${comment.userProfileImage ?
-                        `<img src="${getProfileImageUrl(comment.userProfileImage)}" alt="${comment.userNickname}" class="comment-avatar">` :
-                        '<div class="comment-avatar-placeholder"></div>'
-                    }
+                <div class="comment-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}"
+                     data-comment-id="${comment.id}">
+                    <img src="${getProfileImageUrl(comment.userProfileImage)}"
+                         alt="${comment.userNickname}" class="comment-avatar">
                     <div class="comment-content">
                         <div class="comment-header">
                             <div class="comment-header-left">
@@ -1308,29 +1367,29 @@
                     }
 
                     html += `
-                        </div>
-                    </div>
-                    <div class="comment-text-container">
-                        <p class="comment-text" data-original-content="${comment.content}">
-                            ${isDeleted ? '삭제된 댓글입니다.' :
-                        (isBlinded ? '블라인드 처리된 댓글입니다.' : comment.content)}
-                        </p>
-                        <div class="comment-edit-form">
-                            <textarea class="comment-edit-textarea">${comment.content}</textarea>
-                            <div class="comment-edit-actions">
-                                <button class="comment-save-btn" onclick="commentManager.saveEditComment(${comment.id})">저장</button>
-                                <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${comment.id})">취소</button>
                             </div>
                         </div>
-                    </div>
+                        <div class="comment-text-container">
+                            <p class="comment-text" data-original-content="${comment.content}">
+                                ${isDeleted ? '삭제된 댓글입니다.' :
+                        (isBlinded ? '블라인드 처리된 댓글입니다.' : comment.content)}
+                            </p>
+                            <div class="comment-edit-form">
+                                <textarea class="comment-edit-textarea">${comment.content}</textarea>
+                                <div class="comment-edit-actions">
+                                    <button class="comment-save-btn" onclick="commentManager.saveEditComment(${comment.id})">저장</button>
+                                    <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${comment.id})">취소</button>
+                                </div>
+                            </div>
+                        </div>
             `;
 
-                    // 액션 버튼들
+                    // 액션 버튼들 (삭제되지 않은 댓글만)
                     if (!isDeleted) {
                         html += '<div class="comment-actions">';
 
                         if (!isBlinded) {
-                            // 일반 댓글: 좋아요, 싫어요, 답글 버튼
+                            // 좋아요/싫어요/답글 버튼
                             html += `
                         <div class="comment-action comment-like-btn ${comment.isLikedByCurrentUser ? 'active' : ''}"
                              data-comment-id="${comment.id}">
@@ -1349,7 +1408,7 @@
                     `;
                         }
 
-                        // 신고 버튼 (모든 댓글에 표시, 조건에 따라 비활성화)
+                        // 신고 버튼
                         if (reportStatus.canReport) {
                             html += `
                         <div class="comment-action report-btn" data-comment-id="${comment.id}">
@@ -1365,7 +1424,6 @@
                         </div>
                     `;
                         } else if (this.currentUserId) {
-                            // 로그인했지만 신고할 수 없는 경우 (본인 댓글 등)
                             html += `
                         <div class="comment-action" style="color: #6c757d; cursor: not-allowed; opacity: 0.6;"
                              title="신고할 수 없습니다">
@@ -1381,433 +1439,20 @@
                     html += `
                     </div>
                 </div>
-
-                <!-- 대댓글 입력 컨테이너 -->
                 <div class="reply-input-container" id="reply-input-${comment.id}">
                     <div class="reply-input-wrapper">
-                        <img src="/api/placeholder/30/30" alt="내 프로필" class="comment-avatar" style="width: 30px; height: 30px;">
                         <textarea class="reply-input" placeholder="답글을 입력하세요..." rows="2"></textarea>
                         <button class="reply-submit" onclick="commentManager.createReply(${comment.id})">등록</button>
                         <button class="reply-cancel" onclick="commentManager.hideReplyInput(${comment.id})">취소</button>
                     </div>
                 </div>
-
-                <!-- 대댓글 목록 컨테이너 -->
-                <div class="replies-container" id="replies-${comment.id}">
-                </div>
+                <div class="replies-container" id="replies-${comment.id}"></div>
             `;
 
                     return html;
                 },
 
-                // 신고 모달 표시
-                async showReportModal(commentId) {
-                    if (!this.currentUserId) {
-                        this.showToast('로그인이 필요합니다.', 'warning');
-                        return;
-                    }
-
-                    // 신고 상태 확인
-                    try {
-                        const statusResponse = await fetch(`/api/reports/comment/${commentId}/status`);
-                        const statusResult = await statusResponse.json();
-
-                        if (!statusResult.success) {
-                            this.showToast('신고 상태를 확인할 수 없습니다.', 'error');
-                            return;
-                        }
-
-                        const status = statusResult.data;
-
-                        if (!status.canReport) {
-                            this.showToast(status.cannotReportReason, 'warning');
-                            return;
-                        }
-
-                        // 신고 모달 생성
-                        this.createReportModal(commentId);
-
-                    } catch (error) {
-                        console.error('신고 상태 확인 실패:', error);
-                        this.showToast('신고 처리 중 오류가 발생했습니다.', 'error');
-                    }
-                },
-
-                // 신고 모달 생성
-                createReportModal(commentId) {
-                    const modalHtml = `
-                <div class="report-modal-overlay" style="
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(0, 0, 0, 0.6); z-index: 10000;
-                    display: flex; align-items: center; justify-content: center;
-                ">
-                    <div class="report-modal" style="
-                        background: white; border-radius: 12px; padding: 24px;
-                        max-width: 500px; width: 90%; max-height: 90%; overflow-y: auto;
-                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                    ">
-                        <div class="report-modal-header" style="
-                            display: flex; justify-content: space-between; align-items: center;
-                            margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef;
-                        ">
-                            <h3 style="margin: 0; color: #333; font-size: 18px;">댓글 신고</h3>
-                            <button class="report-modal-close" style="
-                                background: none; border: none; font-size: 24px; cursor: pointer;
-                                color: #666; padding: 0; width: 30px; height: 30px;
-                                display: flex; align-items: center; justify-content: center;
-                            ">&times;</button>
-                        </div>
-
-                        <div class="report-modal-body">
-                            <div class="report-info" style="
-                                background: #f8f9fa; padding: 12px; border-radius: 8px;
-                                margin-bottom: 20px; border-left: 4px solid #dc3545;
-                            ">
-                                <p style="margin: 0; font-size: 14px; color: #666;">
-                                    <i class="fas fa-info-circle" style="margin-right: 8px; color: #dc3545;"></i>
-                                    부적절한 댓글을 신고해주세요. 허위 신고는 제재를 받을 수 있습니다.
-                                </p>
-                            </div>
-
-                            <div class="report-reason-section" style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
-                                    신고 사유 <span style="color: #dc3545;">*</span>
-                                </label>
-                                <div class="report-reason-options">
-                                    ${this.createReportReasonOptions()}
-                                </div>
-                            </div>
-
-                            <div class="report-detail-section" style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
-                                    상세 내용
-                                </label>
-                                <textarea class="report-detail-input"
-                                          placeholder="신고 사유를 자세히 설명해주세요 (선택사항)"
-                                          style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid #ddd;
-                                                 border-radius: 8px; resize: vertical; font-family: inherit;
-                                                 font-size: 14px; box-sizing: border-box;"
-                                          maxlength="1000"></textarea>
-                                <div style="text-align: right; margin-top: 4px; font-size: 12px; color: #666;">
-                                    <span class="char-count">0</span>/1000
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="report-modal-footer" style="
-                            display: flex; gap: 12px; justify-content: flex-end;
-                            padding-top: 20px; border-top: 1px solid #e9ecef;
-                        ">
-                            <button class="report-cancel-btn" style="
-                                padding: 10px 20px; border: 1px solid #ddd; background: white;
-                                color: #666; border-radius: 6px; cursor: pointer; font-size: 14px;
-                                transition: all 0.2s;
-                            ">취소</button>
-                            <button class="report-submit-btn" style="
-                                padding: 10px 20px; border: none; background: #dc3545;
-                                color: white; border-radius: 6px; cursor: pointer; font-size: 14px;
-                                transition: all 0.2s;
-                            " data-comment-id="${commentId}">신고하기</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-                    $('body').append(modalHtml);
-
-                    // 이벤트 바인딩
-                    this.bindReportModalEvents(commentId);
-                },
-
-                // 신고 사유 옵션 생성
-                createReportReasonOptions() {
-                    const reasons = [
-                        { value: 'SPAM', label: '스팸 및 광고' },
-                        { value: 'INAPPROPRIATE', label: '부적절한 내용' },
-                        { value: 'HARASSMENT', label: '괴롭힘 및 욕설' },
-                        { value: 'HATE_SPEECH', label: '혐오 발언' },
-                        { value: 'OTHER', label: '기타' }
-                    ];
-
-                    return reasons.map(reason => `
-                <label style="
-                    display: block; margin-bottom: 8px; cursor: pointer;
-                    padding: 8px; border-radius: 6px; transition: background-color 0.2s;
-                " onmouseover="this.style.backgroundColor='#f8f9fa'"
-                   onmouseout="this.style.backgroundColor='transparent'">
-                    <input type="radio" name="reportReason" value="${reason.value}" style="margin-right: 8px;">
-                    ${reason.label}
-                </label>
-            `).join('');
-                },
-
-                // 신고 모달 이벤트 바인딩
-                bindReportModalEvents(commentId) {
-                    // 문자 수 카운터
-                    $('.report-detail-input').on('input', function() {
-                        $('.char-count').text($(this).val().length);
-                    });
-
-                    // 모달 닫기
-                    $('.report-modal-close, .report-cancel-btn').on('click', () => {
-                        $('.report-modal-overlay').remove();
-                    });
-
-                    // 배경 클릭으로 모달 닫기
-                    $('.report-modal-overlay').on('click', function(e) {
-                        if (e.target === this) {
-                            $(this).remove();
-                        }
-                    });
-
-                    // 신고 제출
-                    $('.report-submit-btn').on('click', () => {
-                        this.submitReport(commentId);
-                    });
-
-                    // ESC 키로 모달 닫기
-                    $(document).on('keydown.reportModal', function(e) {
-                        if (e.keyCode === 27) {
-                            $('.report-modal-overlay').remove();
-                            $(document).off('keydown.reportModal');
-                        }
-                    });
-                },
-
-                // 신고 제출
-                async submitReport(commentId) {
-                    const selectedReason = $('input[name="reportReason"]:checked').val();
-                    const detail = $('.report-detail-input').val().trim();
-
-                    if (!selectedReason) {
-                        this.showToast('신고 사유를 선택해주세요.', 'warning');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch('/api/reports', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                reportType: 'COMMENT',
-                                targetId: commentId,
-                                reason: selectedReason,
-                                detail: detail
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            $('.report-modal-overlay').remove();
-                            this.showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
-
-                            // 신고 버튼을 "신고됨" 상태로 변경
-                            this.updateReportButtonState(commentId, true);
-                        } else {
-                            this.showToast(result.message || '신고 접수에 실패했습니다.', 'error');
-                        }
-                    } catch (error) {
-                        console.error('신고 제출 실패:', error);
-                        this.showToast('신고 접수 중 오류가 발생했습니다.', 'error');
-                    }
-                },
-
-                // 신고 버튼 상태 업데이트
-                updateReportButtonState(commentId, isReported) {
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
-                    const reportBtn = commentItem.find('.report-btn');
-
-                    if (isReported) {
-                        reportBtn.removeClass('report-btn').addClass('reported-btn');
-                        reportBtn.find('span').text('신고됨');
-                        reportBtn.css({
-                            'color': '#6c757d',
-                            'cursor': 'not-allowed',
-                            'opacity': '0.6'
-                        });
-                        reportBtn.off('click');
-                    }
-                },
-
-                // 기타 메서드들 (기존 코드 유지)
-                async createComment() {
-                    const content = $('.comment-input').val().trim();
-                    if (!content) {
-                        this.showToast('댓글 내용을 입력해주세요.', 'warning');
-                        return;
-                    }
-
-                    if (!this.currentUserId) {
-                        this.showToast('로그인이 필요합니다.', 'warning');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch('/api/comments', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                postId: this.postId,
-                                userId: this.currentUserId,
-                                content: content,
-                                parentId: null
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            $('.comment-input').val('');
-                            this.showToast('댓글이 등록되었습니다.', 'success');
-                            this.currentPage = 0;
-                            this.loadedComments = 0;
-                            await this.loadTotalCommentCount();
-                            await this.loadComments();
-                        } else {
-                            this.showToast(result.message || '댓글 작성에 실패했습니다.', 'error');
-                        }
-                    } catch (error) {
-                        console.error('댓글 작성 실패:', error);
-                        this.showToast('댓글 작성에 실패했습니다.', 'error');
-                    }
-                },
-
-                // 반응 토글
-                async toggleReaction(commentId, reactionType) {
-                    if (!this.currentUserId) {
-                        this.showToast('로그인이 필요합니다.', 'warning');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(`/api/comments/${commentId}/reaction`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userId: this.currentUserId,
-                                reactionType: reactionType
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            this.updateReactionUI(commentId, result.data, reactionType);
-                            const message = reactionType === 'LIKE' ?
-                                (result.data.isLikedByCurrentUser ? '좋아요를 눌렀습니다.' : '좋아요를 취소했습니다.') :
-                                (result.data.isDislikedByCurrentUser ? '싫어요를 눌렀습니다.' : '싫어요를 취소했습니다.');
-                            this.showToast(message, 'success');
-
-                            // 블라인드 처리 확인
-                            if (reactionType === 'DISLIKE' && (result.data.dislikeCount || 0) >= 10) {
-                                this.showToast('댓글이 블라인드 처리되었습니다.', 'info');
-                                setTimeout(() => location.reload(), 1500);
-                            }
-                        } else {
-                            this.showToast(result.message || '반응 처리에 실패했습니다.', 'error');
-                        }
-                    } catch (error) {
-                        console.error('반응 처리 실패:', error);
-                        this.showToast('반응 처리에 실패했습니다.', 'error');
-                    }
-                },
-
-                // 반응 UI 업데이트
-                updateReactionUI(commentId, reactionData, reactionType) {
-                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
-
-                    const likeBtn = commentItem.find('.comment-like-btn');
-                    likeBtn.find('.like-count').text(reactionData.likeCount || 0);
-                    if (reactionData.isLikedByCurrentUser !== undefined) {
-                        likeBtn.toggleClass('active', reactionData.isLikedByCurrentUser);
-                    }
-
-                    const dislikeBtn = commentItem.find('.comment-dislike-btn');
-                    dislikeBtn.find('.dislike-count').text(reactionData.dislikeCount || 0);
-                    if (reactionData.isDislikedByCurrentUser !== undefined) {
-                        dislikeBtn.toggleClass('active', reactionData.isDislikedByCurrentUser);
-                    }
-                },
-
-                // 대댓글 관련 메서드들 (기존 코드)
-                showReplyInput(commentId) {
-                    if (!this.currentUserId) {
-                        this.showToast('로그인이 필요합니다.', 'warning');
-                        return;
-                    }
-                    $('.reply-input-container').hide();
-                    $(`#reply-input-${commentId}`).show();
-                    $(`#reply-input-${commentId} .reply-input`).focus();
-                },
-
-                hideReplyInput(commentId) {
-                    $(`#reply-input-${commentId}`).hide();
-                    $(`#reply-input-${commentId} .reply-input`).val('');
-                },
-
-                async createReply(parentCommentId) {
-                    const replyContent = $(`#reply-input-${parentCommentId} .reply-input`).val().trim();
-
-                    if (!replyContent) {
-                        this.showToast('답글 내용을 입력해주세요.', 'warning');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch('/api/comments', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                postId: this.postId,
-                                userId: this.currentUserId,
-                                content: replyContent,
-                                parentId: parentCommentId
-                            })
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            this.hideReplyInput(parentCommentId);
-                            this.showToast('답글이 등록되었습니다.', 'success');
-                            await this.loadReplies(parentCommentId);
-                            await this.loadTotalCommentCount();
-                        } else {
-                            this.showToast(result.message || '답글 작성에 실패했습니다.', 'error');
-                        }
-                    } catch (error) {
-                        console.error('답글 작성 실패:', error);
-                        this.showToast('답글 작성에 실패했습니다.', 'error');
-                    }
-                },
-
-                async loadReplies(parentCommentId) {
-                    try {
-                        const response = await fetch(`/api/comments/${parentCommentId}/replies`);
-                        const result = await response.json();
-
-                        if (result.success && result.data && result.data.length > 0) {
-                            this.renderReplies(parentCommentId, result.data);
-                        }
-                    } catch (error) {
-                        console.error('대댓글 로드 실패:', error);
-                    }
-                },
-
-                async renderReplies(parentCommentId, replies) {
-                    const repliesContainer = $(`#replies-${parentCommentId}`);
-                    repliesContainer.empty();
-
-                    if (replies.length === 0) return;
-
-                    for (const reply of replies) {
-                        const replyHtml = await this.createReplyHTML(reply);
-                        repliesContainer.append(replyHtml);
-                    }
-                },
-
-                // 대댓글 HTML 생성
+                // 대댓글 HTML 생성 - 신고 기능 포함
                 async createReplyHTML(reply) {
                     const isOwner = this.currentUserId && this.currentUserId == reply.userId;
                     const isDeleted = reply.isDeleted === 'Y';
@@ -1826,8 +1471,10 @@
                     }
 
                     let html = `
-                <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}" data-comment-id="${reply.id}">
-                    <img src="${getProfileImageUrl(reply.userProfileImage)}" alt="${reply.userNickname}" class="comment-avatar">
+                <div class="reply-item ${isDeleted ? 'comment-deleted' : ''} ${isBlinded ? 'comment-blinded' : ''}"
+                     data-comment-id="${reply.id}">
+                    <img src="${getProfileImageUrl(reply.userProfileImage)}"
+                         alt="${reply.userNickname}" class="comment-avatar">
                     <div class="comment-content">
                         <div class="comment-header">
                             <div class="comment-header-left">
@@ -1852,21 +1499,21 @@
                     }
 
                     html += `
-                        </div>
-                    </div>
-                    <div class="comment-text-container">
-                        <p class="comment-text" data-original-content="${reply.content}">
-                            ${isDeleted ? '삭제된 댓글입니다.' :
-                        (isBlinded ? '블라인드 처리된 댓글입니다.' : reply.content)}
-                        </p>
-                        <div class="comment-edit-form">
-                            <textarea class="comment-edit-textarea">${reply.content}</textarea>
-                            <div class="comment-edit-actions">
-                                <button class="comment-save-btn" onclick="commentManager.saveEditComment(${reply.id})">저장</button>
-                                <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${reply.id})">취소</button>
                             </div>
                         </div>
-                    </div>
+                        <div class="comment-text-container">
+                            <p class="comment-text" data-original-content="${reply.content}">
+                                ${isDeleted ? '삭제된 댓글입니다.' :
+                        (isBlinded ? '블라인드 처리된 댓글입니다.' : reply.content)}
+                            </p>
+                            <div class="comment-edit-form">
+                                <textarea class="comment-edit-textarea">${reply.content}</textarea>
+                                <div class="comment-edit-actions">
+                                    <button class="comment-save-btn" onclick="commentManager.saveEditComment(${reply.id})">저장</button>
+                                    <button class="comment-cancel-btn" onclick="commentManager.cancelEditComment(${reply.id})">취소</button>
+                                </div>
+                            </div>
+                        </div>
             `;
 
                     // 액션 버튼들
@@ -1874,7 +1521,6 @@
                         html += '<div class="comment-actions">';
 
                         if (!isBlinded) {
-                            // 일반 대댓글: 좋아요, 싫어요 버튼
                             html += `
                         <div class="comment-action comment-like-btn ${reply.isLikedByCurrentUser ? 'active' : ''}"
                              data-comment-id="${reply.id}">
@@ -1915,6 +1561,217 @@
             `;
 
                     return html;
+                },
+
+                // 신고 모달 표시
+                async showReportModal(commentId) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        const statusResponse = await fetch(`/api/reports/comment/${commentId}/status`);
+                        const statusResult = await statusResponse.json();
+
+                        if (!statusResult.success) {
+                            this.showToast('신고 상태를 확인할 수 없습니다.', 'error');
+                            return;
+                        }
+
+                        const status = statusResult.data;
+                        if (!status.canReport) {
+                            this.showToast(status.cannotReportReason, 'warning');
+                            return;
+                        }
+
+                        this.createReportModal(commentId);
+                    } catch (error) {
+                        console.error('신고 상태 확인 실패:', error);
+                        this.showToast('신고 처리 중 오류가 발생했습니다.', 'error');
+                    }
+                },
+
+                // 신고 모달 생성
+                createReportModal(commentId) {
+                    const modalHtml = `
+                <div class="report-modal-overlay" style="
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0, 0, 0, 0.6); z-index: 10000;
+                    display: flex; align-items: center; justify-content: center;
+                ">
+                    <div class="report-modal" style="
+                        background: white; border-radius: 12px; padding: 24px;
+                        max-width: 500px; width: 90%; max-height: 90%; overflow-y: auto;
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                    ">
+                        <div class="report-modal-header" style="
+                            display: flex; justify-content: space-between; align-items: center;
+                            margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e9ecef;
+                        ">
+                            <h3 style="margin: 0; color: #333; font-size: 18px;">댓글 신고</h3>
+                            <button class="report-modal-close" style="
+                                background: none; border: none; font-size: 24px; cursor: pointer;
+                                color: #666; padding: 0; width: 30px; height: 30px;
+                                display: flex; align-items: center; justify-content: center;
+                            ">&times;</button>
+                        </div>
+                        <div class="report-modal-body">
+                            <div class="report-info" style="
+                                background: #f8f9fa; padding: 12px; border-radius: 8px;
+                                margin-bottom: 20px; border-left: 4px solid #dc3545;
+                            ">
+                                <p style="margin: 0; font-size: 14px; color: #666;">
+                                    <i class="fas fa-info-circle" style="margin-right: 8px; color: #dc3545;"></i>
+                                    부적절한 댓글을 신고해주세요. 허위 신고는 제재를 받을 수 있습니다.
+                                </p>
+                            </div>
+                            <div class="report-reason-section" style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+                                    신고 사유 <span style="color: #dc3545;">*</span>
+                                </label>
+                                <div class="report-reason-options">
+                                    ${this.createReportReasonOptions()}
+                                </div>
+                            </div>
+                            <div class="report-detail-section" style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">
+                                    상세 내용
+                                </label>
+                                <textarea class="report-detail-input"
+                                          placeholder="신고 사유를 자세히 설명해주세요 (선택사항)"
+                                          style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid #ddd;
+                                                 border-radius: 8px; resize: vertical; font-family: inherit;
+                                                 font-size: 14px; box-sizing: border-box;"
+                                          maxlength="1000"></textarea>
+                                <div style="text-align: right; margin-top: 4px; font-size: 12px; color: #666;">
+                                    <span class="char-count">0</span>/1000
+                                </div>
+                            </div>
+                        </div>
+                        <div class="report-modal-footer" style="
+                            display: flex; gap: 12px; justify-content: flex-end;
+                            padding-top: 20px; border-top: 1px solid #e9ecef;
+                        ">
+                            <button class="report-cancel-btn" style="
+                                padding: 10px 20px; border: 1px solid #ddd; background: white;
+                                color: #666; border-radius: 6px; cursor: pointer; font-size: 14px;
+                            ">취소</button>
+                            <button class="report-submit-btn" style="
+                                padding: 10px 20px; border: none; background: #dc3545;
+                                color: white; border-radius: 6px; cursor: pointer; font-size: 14px;
+                            " data-comment-id="${commentId}">신고하기</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+                    $('body').append(modalHtml);
+                    this.bindReportModalEvents(commentId);
+                },
+
+                // 신고 사유 옵션 생성
+                createReportReasonOptions() {
+                    const reasons = [
+                        { value: 'SPAM', label: '스팸 및 광고' },
+                        { value: 'INAPPROPRIATE', label: '부적절한 내용' },
+                        { value: 'HARASSMENT', label: '괴롭힘 및 욕설' },
+                        { value: 'HATE_SPEECH', label: '혐오 발언' },
+                        { value: 'OTHER', label: '기타' }
+                    ];
+
+                    return reasons.map(reason => `
+                <label style="
+                    display: block; margin-bottom: 8px; cursor: pointer;
+                    padding: 8px; border-radius: 6px; transition: background-color 0.2s;
+                " onmouseover="this.style.backgroundColor='#f8f9fa'"
+                   onmouseout="this.style.backgroundColor='transparent'">
+                    <input type="radio" name="reportReason" value="${reason.value}" style="margin-right: 8px;">
+                    ${reason.label}
+                </label>
+            `).join('');
+                },
+
+                // 신고 모달 이벤트 바인딩
+                bindReportModalEvents(commentId) {
+                    $('.report-detail-input').on('input', function() {
+                        $('.char-count').text($(this).val().length);
+                    });
+
+                    $('.report-modal-close, .report-cancel-btn').on('click', () => {
+                        $('.report-modal-overlay').remove();
+                    });
+
+                    $('.report-modal-overlay').on('click', function(e) {
+                        if (e.target === this) {
+                            $(this).remove();
+                        }
+                    });
+
+                    $('.report-submit-btn').on('click', () => {
+                        this.submitReport(commentId);
+                    });
+
+                    $(document).on('keydown.reportModal', function(e) {
+                        if (e.keyCode === 27) {
+                            $('.report-modal-overlay').remove();
+                            $(document).off('keydown.reportModal');
+                        }
+                    });
+                },
+
+                // 신고 제출
+                async submitReport(commentId) {
+                    const selectedReason = $('input[name="reportReason"]:checked').val();
+                    const detail = $('.report-detail-input').val().trim();
+
+                    if (!selectedReason) {
+                        this.showToast('신고 사유를 선택해주세요.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/api/reports', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                reportType: 'COMMENT',
+                                targetId: commentId,
+                                reason: selectedReason,
+                                detail: detail
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            $('.report-modal-overlay').remove();
+                            this.showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
+                            this.updateReportButtonState(commentId, true);
+                        } else {
+                            this.showToast(result.message || '신고 접수에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('신고 제출 실패:', error);
+                        this.showToast('신고 접수 중 오류가 발생했습니다.', 'error');
+                    }
+                },
+
+                // 신고 버튼 상태 업데이트
+                updateReportButtonState(commentId, isReported) {
+                    const commentItem = $(`.comment-item[data-comment-id="${commentId}"], .reply-item[data-comment-id="${commentId}"]`);
+                    const reportBtn = commentItem.find('.report-btn');
+
+                    if (isReported) {
+                        reportBtn.removeClass('report-btn').addClass('reported-btn');
+                        reportBtn.find('span').text('신고됨');
+                        reportBtn.css({
+                            'color': '#6c757d',
+                            'cursor': 'not-allowed',
+                            'opacity': '0.6'
+                        });
+                        reportBtn.off('click');
+                    }
                 },
 
                 // 댓글 수정/삭제 관련 메서드들
@@ -2003,7 +1860,233 @@
                     }
                 },
 
-                // 유틸리티 메서드들
+                // 나머지 메서드들은 기존과 동일하게 유지
+                async loadTotalCommentCount() {
+                    try {
+                        const response = await fetch(`/api/comments/test/${this.postId}`);
+                        const text = await response.text();
+                        const match = text.match(/댓글 수: (\d+)/);
+                        if (match) {
+                            this.totalComments = parseInt(match[1]);
+                            $('.comments-count').text(this.totalComments);
+                            this.updateMoreButton();
+                        }
+                    } catch (error) {
+                        console.error('댓글 수 로드 실패:', error);
+                    }
+                },
+
+                async loadComments() {
+                    if (this.isLoading) return;
+
+                    this.isLoading = true;
+                    this.updateMoreButton();
+
+                    try {
+                        const response = await fetch(`/api/comments/post/${this.postId}?page=${this.currentPage}&size=${this.pageSize}`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        console.log('댓글 로드 결과:', result);
+
+                        if (result.success && result.data && result.data.dtoList) {
+                            if (this.currentPage === 0) {
+                                await this.renderComments(result.data.dtoList);
+                                this.loadedComments = result.data.dtoList.length;
+                            } else {
+                                await this.appendComments(result.data.dtoList);
+                                this.loadedComments += result.data.dtoList.length;
+                            }
+                        } else {
+                            this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('댓글 로드 실패:', error);
+                        this.showToast('댓글을 불러오는데 실패했습니다.', 'error');
+                    } finally {
+                        this.isLoading = false;
+                        this.updateMoreButton();
+                    }
+                },
+
+                async renderComments(comments) {
+                    console.log('댓글 렌더링 시작:', comments.length, '개');
+                    const container = $('.comments-list');
+                    container.empty();
+
+                    if (comments.length === 0) {
+                        container.append('<p class="no-comments">아직 댓글이 없습니다.</p>');
+                        return;
+                    }
+
+                    for (const comment of comments) {
+                        const commentHtml = await this.createCommentHTML(comment);
+                        container.append(commentHtml);
+                        await this.loadReplies(comment.id);
+                    }
+
+                    console.log('댓글 렌더링 완료');
+
+                    // 렌더링 후 버튼 확인
+                    setTimeout(() => {
+                        const likeButtons = $('.comment-like-btn');
+                        console.log('렌더링 후 좋아요 버튼 수:', likeButtons.length);
+                        likeButtons.each(function(i, btn) {
+                            console.log(`버튼 ${i}:`, $(btn).attr('data-comment-id'));
+                        });
+                    }, 100);
+                },
+
+                async loadMoreComments() {
+                    if (this.isLoading || this.loadedComments >= this.totalComments) return;
+                    this.currentPage++;
+                    await this.loadComments();
+                },
+
+                updateMoreButton() {
+                    const moreButton = $('#showMoreBtn');
+
+                    if (this.isLoading) {
+                        moreButton.show().text('로딩 중...').prop('disabled', true);
+                        return;
+                    }
+
+                    if (this.totalComments < 11) {
+                        moreButton.hide();
+                        return;
+                    }
+
+                    if (this.loadedComments < this.totalComments) {
+                        moreButton.show()
+                            .text(`댓글 더보기 (${this.loadedComments}/${this.totalComments})`)
+                            .prop('disabled', false);
+                    } else {
+                        moreButton.show()
+                            .text('더 이상 댓글이 없습니다')
+                            .prop('disabled', true);
+                    }
+                },
+
+                async createComment() {
+                    const content = $('.comment-input').val().trim();
+                    if (!content) {
+                        this.showToast('댓글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                content: content,
+                                parentId: null
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            $('.comment-input').val('');
+                            this.showToast('댓글이 등록되었습니다.', 'success');
+                            this.currentPage = 0;
+                            this.loadedComments = 0;
+                            await this.loadTotalCommentCount();
+                            await this.loadComments();
+                        } else {
+                            this.showToast(result.message || '댓글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('댓글 작성 실패:', error);
+                        this.showToast('댓글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                // 대댓글 관련 메서드들
+                showReplyInput(commentId) {
+                    if (!this.currentUserId) {
+                        this.showToast('로그인이 필요합니다.', 'warning');
+                        return;
+                    }
+                    $('.reply-input-container').hide();
+                    $(`#reply-input-${commentId}`).show();
+                    $(`#reply-input-${commentId} .reply-input`).focus();
+                },
+
+                hideReplyInput(commentId) {
+                    $(`#reply-input-${commentId}`).hide();
+                    $(`#reply-input-${commentId} .reply-input`).val('');
+                },
+
+                async createReply(parentCommentId) {
+                    const replyContent = $(`#reply-input-${parentCommentId} .reply-input`).val().trim();
+
+                    if (!replyContent) {
+                        this.showToast('답글 내용을 입력해주세요.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('/api/comments', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                postId: this.postId,
+                                content: replyContent,
+                                parentId: parentCommentId
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            this.hideReplyInput(parentCommentId);
+                            this.showToast('답글이 등록되었습니다.', 'success');
+                            await this.loadReplies(parentCommentId);
+                            await this.loadTotalCommentCount();
+                        } else {
+                            this.showToast(result.message || '답글 작성에 실패했습니다.', 'error');
+                        }
+                    } catch (error) {
+                        console.error('답글 작성 실패:', error);
+                        this.showToast('답글 작성에 실패했습니다.', 'error');
+                    }
+                },
+
+                async loadReplies(parentCommentId) {
+                    try {
+                        const response = await fetch(`/api/comments/${parentCommentId}/replies`);
+                        const result = await response.json();
+
+                        if (result.success && result.data && result.data.length > 0) {
+                            this.renderReplies(parentCommentId, result.data);
+                        }
+                    } catch (error) {
+                        console.error('대댓글 로드 실패:', error);
+                    }
+                },
+
+                async renderReplies(parentCommentId, replies) {
+                    const repliesContainer = $(`#replies-${parentCommentId}`);
+                    repliesContainer.empty();
+
+                    if (replies.length === 0) return;
+
+                    for (const reply of replies) {
+                        const replyHtml = await this.createReplyHTML(reply);
+                        repliesContainer.append(replyHtml);
+                    }
+                },
+
+                // 유틸리티 메서드
                 formatDate(dateString) {
                     const date = new Date(dateString);
                     const now = new Date();
@@ -2021,6 +2104,8 @@
                 },
 
                 showToast(message, type = 'info') {
+                    console.log(`토스트 메시지: ${message} (${type})`);
+
                     const colors = {
                         success: '#28a745',
                         error: '#dc3545',
@@ -2032,17 +2117,12 @@
                 position: fixed; top: 20px; right: 20px;
                 background: ${colors[type] || colors.info};
                 color: ${type === 'warning' ? '#212529' : 'white'};
-                padding: 15px 20px;
-                border-radius: 6px;
-                z-index: 9999;
-                font-weight: 500;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                opacity: 0;
-                transition: opacity 0.3s ease;
+                padding: 15px 20px; border-radius: 6px; z-index: 9999;
+                font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                opacity: 0; transition: opacity 0.3s ease;
             ">${message}</div>`);
 
                     $('body').append(toast);
-
                     setTimeout(() => toast.css('opacity', '1'), 10);
                     setTimeout(() => {
                         toast.css('opacity', '0');
@@ -2053,26 +2133,18 @@
 
             // 댓글 매니저 시작
             commentManager.init();
-
-            // 전역 변수로 등록 (수정/삭제 버튼에서 사용)
             window.commentManager = commentManager;
 
-            // ===== 포스트 기능들 =====
-
-            // 수정된 포스트 수정 기능 - modify 페이지로 이동
+            // 게시글 관련 기능들
             window.editPost = function () {
                 const postId = [[${dto.id}]];
                 window.location.href = `/post/modify/${postId}`;
             };
 
-            // 포스트 삭제 기능
             window.deletePost = function () {
                 const postId = [[${dto.id}]];
-
-                if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.')) {
-                    fetch(`/api/posts/${postId}`, {
-                        method: 'DELETE'
-                    })
+                if (confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+                    fetch(`/api/posts/${postId}`, { method: 'DELETE' })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
@@ -2091,7 +2163,7 @@
                 }
             };
 
-            // 기존 게시글 상세 기능들...
+            // 기타 게시글 기능들
             $('#backButton').click(function () {
                 window.history.back();
             });
@@ -2134,7 +2206,7 @@
             });
         });
 
-        // ESC 키로 모달 닫기
+        // 전역 이벤트 리스너
         $(document).on('keydown', function (e) {
             if (e.keyCode === 27) { // ESC 키
                 $('.reply-input-container').hide();
@@ -2142,7 +2214,6 @@
             }
         });
 
-        // 엔터키로 답글 작성
         $(document).on('keypress', '.reply-input', function (e) {
             if (e.which === 13 && !e.shiftKey) {
                 e.preventDefault();
