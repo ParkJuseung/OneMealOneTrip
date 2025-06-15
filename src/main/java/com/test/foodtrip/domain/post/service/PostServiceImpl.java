@@ -17,6 +17,7 @@ import com.test.foodtrip.common.aws.S3Service;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Qualifier("postServiceImpl")
 public class PostServiceImpl implements PostService {
 
     private final UserRepository userRepository;
